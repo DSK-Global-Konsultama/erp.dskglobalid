@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { Button } from './ui/button';
-import { mockInvoices } from '../lib/mock-data';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
+import { Button } from '../../../components/ui/button';
+import { mockInvoices } from '../../../lib/mock-data';
 import { toast } from 'sonner';
 import { DollarSign, AlertCircle, Check, Clock } from 'lucide-react';
 

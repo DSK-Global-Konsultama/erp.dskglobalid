@@ -1,18 +1,24 @@
 import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select';
-import { Label } from './components/ui/label';
-import { Card } from './components/ui/card';
-import { Dashboard } from './components/Dashboard';
-import { LeadsManagement } from './components/LeadsManagement';
-import { DealsManagement } from './components/DealsManagement';
-import { ProjectManagement } from './components/ProjectManagement';
-import { InvoiceManagement } from './components/InvoiceManagement';
-import { PMDashboard } from './components/PMDashboard';
-import { AdminDashboard } from './components/AdminDashboard';
-import { Toaster } from './components/ui/sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Label } from '../components/ui/label';
+import { Card } from '../components/ui/card';
+import { Toaster } from '../components/ui/sonner';
 import { LayoutDashboard, Users, HandshakeIcon, FolderKanban, FileText } from 'lucide-react';
-import { bdContentCreators, bdExecutives, projectManagers } from './lib/mock-data';
+import { bdContentCreators, bdExecutives, projectManagers } from '../lib/mock-data';
+
+// BOD imports
+import { BODDashboard } from './routes/bod';
+import { LeadsPage } from './routes/bod/pages/LeadsPage';
+import { DealsPage } from './routes/bod/pages/DealsPage';
+import { ProjectsPage } from './routes/bod/pages/ProjectsPage';
+import { InvoicesPage } from './routes/bod/pages/InvoicesPage';
+
+// Other role imports
+import { BDContentDashboard } from './routes/bd-content';
+import { BDExecutiveDashboard } from './routes/bd-executive';
+import { PMDashboard } from './routes/pm/PMDashboard';
+import { AdminDashboard } from './routes/admin/AdminDashboard';
 
 type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin';
 
@@ -39,7 +45,7 @@ export default function App() {
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">ERP System</h1>
+            <h1 className="text-l font-sm text-black">ERP System</h1>
             <p className="text-gray-500 text-sm mt-1">Business Development & Project Management</p>
           </div>
           
@@ -107,11 +113,11 @@ export default function App() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="dashboard"><Dashboard /></TabsContent>
-            <TabsContent value="leads"><LeadsManagement userRole="BOD" userName="" /></TabsContent>
-            <TabsContent value="deals"><DealsManagement userRole="BOD" userName="" /></TabsContent>
-            <TabsContent value="projects"><ProjectManagement /></TabsContent>
-            <TabsContent value="invoices"><InvoiceManagement /></TabsContent>
+            <TabsContent value="dashboard"><BODDashboard /></TabsContent>
+            <TabsContent value="leads"><LeadsPage /></TabsContent>
+            <TabsContent value="deals"><DealsPage /></TabsContent>
+            <TabsContent value="projects"><ProjectsPage /></TabsContent>
+            <TabsContent value="invoices"><InvoicesPage /></TabsContent>
           </Tabs>
         )}
 
@@ -119,7 +125,7 @@ export default function App() {
         {userRole === 'BD-Content' && (
           <div>
             {userName ? (
-              <LeadsManagement userRole="BD-Content" userName={userName} />
+              <BDContentDashboard userName={userName} />
             ) : (
               <Card className="p-8 text-center">
                 <p className="text-gray-500">Pilih nama user terlebih dahulu</p>
@@ -130,34 +136,12 @@ export default function App() {
 
         {/* BD Executive View */}
         {userRole === 'BD-Executive' && (
-          <div>
-            {userName ? (
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="leads" className="flex items-center gap-2">
-                    <Users className="w-4 h-4" />
-                    Available Leads
-                  </TabsTrigger>
-                  <TabsTrigger value="deals" className="flex items-center gap-2">
-                    <HandshakeIcon className="w-4 h-4" />
-                    My Deals
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="leads"><LeadsManagement userRole="BD-Executive" userName={userName} /></TabsContent>
-                <TabsContent value="deals"><DealsManagement userRole="BD-Executive" userName={userName} /></TabsContent>
-              </Tabs>
-            ) : (
-              <Card className="p-8 text-center">
-                <p className="text-gray-500">Pilih nama user terlebih dahulu</p>
-              </Card>
-            )}
-          </div>
+          <BDExecutiveDashboard userName={userName} />
         )}
 
         {/* PM View */}
         {userRole === 'PM' && (
-      <div>
+          <div>
             {userName ? (
               <PMDashboard pmName={userName} />
             ) : (
@@ -165,7 +149,7 @@ export default function App() {
                 <p className="text-gray-500">Pilih nama user terlebih dahulu</p>
               </Card>
             )}
-      </div>
+          </div>
         )}
 
         {/* Admin View */}
@@ -175,6 +159,7 @@ export default function App() {
       </main>
 
       <Toaster />
-      </div>
+    </div>
   );
 }
+

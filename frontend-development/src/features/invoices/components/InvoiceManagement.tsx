@@ -1,6 +1,6 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { mockInvoices } from '../lib/mock-data';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
+import { mockInvoices } from '../../../lib/mock-data';
 import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
 
 export function InvoiceManagement() {
