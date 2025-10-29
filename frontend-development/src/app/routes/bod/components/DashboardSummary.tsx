@@ -1,32 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { Users, TrendingUp, AlertCircle, Clock, DollarSign } from 'lucide-react';
-import { mockLeads, mockDeals, mockProjects, mockInvoices } from '../../../../lib/mock-data';
+import { useBODStats } from '../hooks/useBODStats';
 
 export function DashboardSummary() {
-  const totalLeads = mockLeads.length;
-  const newLeads = mockLeads.filter(l => l.status === 'available').length;
-  const followUpLeads = mockLeads.filter(l => l.status === 'follow-up').length;
-  const missedLeads = mockLeads.filter(l => {
-    if (l.status !== 'follow-up' || !l.lastFollowUp) return false;
-    const daysSinceFollowUp = Math.floor(
-      (new Date().getTime() - new Date(l.lastFollowUp).getTime()) / (1000 * 60 * 60 * 24)
-    );
-    return daysSinceFollowUp > 90;
-  }).length;
-
-  const totalDeals = mockDeals.length;
-  const totalServices = mockDeals.reduce((sum, d) => sum + d.services.length, 0);
-
-  const activeProjects = mockProjects.filter(p => p.status === 'in-progress').length;
-  const waitingAssignment = mockProjects.filter(p => p.status === 'waiting-pm').length;
-  const waitingPayment = mockProjects.filter(p => p.status === 'waiting-first-payment').length;
-
-  const allPaymentTerms = mockInvoices.flatMap(inv => inv.paymentTerms);
-  const pendingPayments = allPaymentTerms.filter(t => t.status === 'pending').length;
-  const overduePayments = allPaymentTerms.filter(t => t.status === 'overdue').length;
-  const totalPendingAmount = allPaymentTerms
-    .filter(t => t.status === 'pending' || t.status === 'overdue')
-    .reduce((sum, t) => sum + t.amount, 0);
+  const stats = useBODStats();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -44,9 +21,9 @@ export function DashboardSummary() {
           <Users className="h-4 w-4 text-gray-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold">{totalLeads}</div>
+          <div className="text-2xl font-semibold">{stats.totalLeads}</div>
           <p className="text-xs text-gray-500 mt-1">
-            {followUpLeads} sedang di-follow up
+            {stats.followUpLeads} sedang di-follow up
           </p>
         </CardContent>
       </Card>
@@ -57,7 +34,7 @@ export function DashboardSummary() {
           <AlertCircle className="h-4 w-4 text-orange-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold text-orange-600">{newLeads}</div>
+          <div className="text-2xl font-semibold text-orange-600">{stats.availableLeads}</div>
           <p className="text-xs text-gray-500 mt-1">
             Perlu assign BD Executive
           </p>
@@ -70,7 +47,7 @@ export function DashboardSummary() {
           <AlertCircle className="h-4 w-4 text-red-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold text-red-600">{missedLeads}</div>
+          <div className="text-2xl font-semibold text-red-600">{stats.missedLeads}</div>
           <p className="text-xs text-gray-500 mt-1">
             Lebih dari 3 bulan tidak di-follow up
           </p>
@@ -83,9 +60,9 @@ export function DashboardSummary() {
           <TrendingUp className="h-4 w-4 text-gray-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold">{totalServices}</div>
+          <div className="text-2xl font-semibold">{stats.totalServices}</div>
           <p className="text-xs text-gray-500 mt-1">
-            dari {totalDeals} deals
+            dari {stats.totalDeals} deals
           </p>
         </CardContent>
       </Card>
@@ -96,9 +73,9 @@ export function DashboardSummary() {
           <Clock className="h-4 w-4 text-gray-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold">{activeProjects}</div>
+          <div className="text-2xl font-semibold">{stats.activeProjects}</div>
           <p className="text-xs text-gray-500 mt-1">
-            {waitingAssignment} belum assign PM
+            {stats.waitingAssignment} belum assign PM
           </p>
         </CardContent>
       </Card>
@@ -109,7 +86,7 @@ export function DashboardSummary() {
           <AlertCircle className="h-4 w-4 text-orange-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold text-orange-600">{waitingPayment}</div>
+          <div className="text-2xl font-semibold text-orange-600">{stats.waitingPayment}</div>
           <p className="text-xs text-gray-500 mt-1">
             Project belum bisa dimulai
           </p>
@@ -122,9 +99,9 @@ export function DashboardSummary() {
           <DollarSign className="h-4 w-4 text-gray-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold">{pendingPayments + overduePayments}</div>
+          <div className="text-2xl font-semibold">{stats.pendingPayments + stats.overduePayments}</div>
           <p className="text-xs text-red-500 mt-1">
-            {overduePayments} overdue
+            {stats.overduePayments} overdue
           </p>
         </CardContent>
       </Card>
@@ -135,7 +112,7 @@ export function DashboardSummary() {
           <DollarSign className="h-4 w-4 text-gray-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold">{formatCurrency(totalPendingAmount)}</div>
+          <div className="text-2xl font-semibold">{formatCurrency(stats.totalPendingAmount)}</div>
           <p className="text-xs text-gray-500 mt-1">
             Invoice yang belum dibayar
           </p>
