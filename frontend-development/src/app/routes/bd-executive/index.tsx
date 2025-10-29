@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Card } from '../../../components/ui/card';
-import { LeadsManagement } from '../../../features/leads/components/LeadsManagement';
-import { DealsManagement } from '../../../features/deals/components/DealsManagement';
+import { AvailableLeadsPage } from './pages/AvailableLeadsPage';
+import { MyDealsPage } from './pages/MyDealsPage';
 import { Users, HandshakeIcon } from 'lucide-react';
 
 interface BDExecutiveProps {
@@ -28,10 +28,10 @@ export function BDExecutiveDashboard({ userName }: BDExecutiveProps) {
           </TabsList>
 
           <TabsContent value="leads">
-            <LeadsManagement userRole="BD-Executive" userName={userName} />
+            <AvailableLeadsPage userName={userName} />
           </TabsContent>
           <TabsContent value="deals">
-            <DealsManagement userRole="BD-Executive" userName={userName} />
+            <MyDealsPage userName={userName} />
           </TabsContent>
         </Tabs>
       ) : (
