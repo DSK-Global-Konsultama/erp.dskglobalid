@@ -64,7 +64,7 @@ export interface Project {
   clientName: string;
   assignedPM?: string; // BOD yang assign PM
   assignedConsultant?: string; // PM yang assign Consultant
-  status: 'waiting-pm' | 'waiting-first-payment' | 'in-progress' | 'waiting-final-payment' | 'completed';
+  status: 'waiting-assignment' | 'waiting-pm' | 'waiting-el' | 'waiting-first-payment' | 'in-progress' | 'waiting-final-payment' | 'completed';
   dueDate: string;
   startDate?: string;
   completionDate?: string;

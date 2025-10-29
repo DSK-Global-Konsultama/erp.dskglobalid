@@ -176,7 +176,7 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">
+          <h2 className="text-xl font-semibold text-gray-900 mb-1">
             {userRole === 'BD-Content' && 'Input Leads'}
             {userRole === 'BD-Executive' && 'Available Leads'}
             {userRole === 'BOD' && 'All Leads'}

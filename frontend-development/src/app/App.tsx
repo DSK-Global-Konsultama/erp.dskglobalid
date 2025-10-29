@@ -17,7 +17,7 @@ import { InvoicesPage } from './routes/bod/pages/InvoicesPage';
 // Other role imports
 import { BDContentDashboard } from './routes/bd-content';
 import { BDExecutiveDashboard } from './routes/bd-executive';
-import { PMDashboard } from './routes/pm/PMDashboard';
+import { PMDashboard } from './routes/pm';
 import { AdminDashboard } from './routes/admin/AdminDashboard';
 
 type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin';
