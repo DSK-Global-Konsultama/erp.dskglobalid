@@ -7,17 +7,15 @@ import { Alert, AlertDescription, AlertTitle } from '../../../../components/ui/a
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../../../components/ui/dialog';
 import { Label } from '../../../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
-import { mockProjects, projectManagers, consultants, type Project } from '../../../../lib/mock-data';
-import { Clock, CheckCircle, AlertCircle, UserPlus, Users } from 'lucide-react';
+import { mockProjects, projectManagers, type Project } from '../../../../lib/mock-data';
+import { Clock, CheckCircle, AlertCircle, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>(mockProjects);
   const [isAssignPMOpen, setIsAssignPMOpen] = useState(false);
-  const [isAssignConsultantOpen, setIsAssignConsultantOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [selectedPM, setSelectedPM] = useState('');
-  const [selectedConsultant, setSelectedConsultant] = useState('');
 
   const handleAssignPM = () => {
     if (!selectedProject || !selectedPM) return;
@@ -27,7 +25,8 @@ export function ProjectsPage() {
         return {
           ...p,
           assignedPM: selectedPM,
-          status: 'waiting-el' as const,
+          status: 'waiting-first-payment' as const,
+          pmNotified: true,
         };
       }
       return p;
@@ -37,29 +36,8 @@ export function ProjectsPage() {
     setIsAssignPMOpen(false);
     setSelectedProject(null);
     setSelectedPM('');
-    toast.success(`PM ${selectedPM} berhasil di-assign!`);
+    toast.success(`PM ${selectedPM} berhasil di-assign! Project menunggu pembayaran 50%.`);
   };
-
-  const handleAssignConsultant = () => {
-    if (!selectedProject || !selectedConsultant) return;
-
-    const updatedProjects = projects.map(p => {
-      if (p.id === selectedProject.id) {
-        return {
-          ...p,
-          assignedConsultant: selectedConsultant,
-        };
-      }
-      return p;
-    });
-    
-    setProjects(updatedProjects);
-    setIsAssignConsultantOpen(false);
-    setSelectedProject(null);
-    setSelectedConsultant('');
-    toast.success(`Consultant ${selectedConsultant} berhasil di-assign!`);
-  };
-
 
   const completeProject = (id: string) => {
     const updatedProjects = projects.map(p => {
@@ -243,7 +221,6 @@ export function ProjectsPage() {
                   <TableHead>Project Name</TableHead>
                   <TableHead>Client</TableHead>
                   <TableHead>PM</TableHead>
-                  <TableHead>Consultant</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Due Date</TableHead>
                   <TableHead>Sisa Waktu</TableHead>
@@ -277,15 +254,6 @@ export function ProjectsPage() {
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell>
-                        {project.assignedConsultant ? (
-                          <span className="text-sm">{project.assignedConsultant}</span>
-                        ) : (
-                          <Badge variant="outline" className="bg-gray-50 text-gray-700">
-                            Belum Assign
-                          </Badge>
-                        )}
-                      </TableCell>
                       <TableCell>{getStatusBadge(project.status)}</TableCell>
                       <TableCell>{formatDate(project.dueDate)}</TableCell>
                       <TableCell>
@@ -312,21 +280,6 @@ export function ProjectsPage() {
                             >
                               <UserPlus className="w-3 h-3 mr-1" />
                               Assign PM
-                            </Button>
-                          )}
-
-                          {/* PM: Assign Consultant */}
-                          {project.assignedPM && !project.assignedConsultant && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedProject(project);
-                                setIsAssignConsultantOpen(true);
-                              }}
-                            >
-                              <Users className="w-3 h-3 mr-1" />
-                              Assign Consultant
                             </Button>
                           )}
 
@@ -399,38 +352,6 @@ export function ProjectsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Assign Consultant Dialog */}
-      <Dialog open={isAssignConsultantOpen} onOpenChange={setIsAssignConsultantOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Assign Consultant</DialogTitle>
-            <DialogDescription>
-              PM memilih Consultant untuk project: {selectedProject?.serviceName}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Consultant</Label>
-              <Select value={selectedConsultant} onValueChange={setSelectedConsultant}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih Consultant" />
-                </SelectTrigger>
-                <SelectContent>
-                  {consultants.map(consultant => (
-                    <SelectItem key={consultant} value={consultant}>{consultant}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAssignConsultantOpen(false)}>
-              Batal
-            </Button>
-            <Button onClick={handleAssignConsultant}>Assign Consultant</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
