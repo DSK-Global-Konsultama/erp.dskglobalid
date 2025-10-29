@@ -3,47 +3,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Button } from '../../../../components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../../components/ui/table';
 import { Badge } from '../../../../components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../../../components/ui/dialog';
 import { Label } from '../../../../components/ui/label';
-import { mockInvoices, type Invoice, type PaymentTerm } from '../../../../lib/mock-data';
+import { type Invoice, type PaymentTerm } from '../../../../lib/mock-data';
 import { AlertCircle, CheckCircle, Clock, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
-export function InvoicesPage() {
-  const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+interface PaymentsTableProps {
+  invoices: Invoice[];
+  onUpdateInvoices: (updatedInvoices: Invoice[]) => void;
+}
+
+export function PaymentsTable({ invoices, onUpdateInvoices }: PaymentsTableProps) {
   const [isViewDetailOpen, setIsViewDetailOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-
-  const filteredInvoices = invoices.filter(invoice => {
-    if (filterStatus === 'all') return true;
-    return invoice.paymentTerms.some(term => term.status === filterStatus);
-  });
-
-  const markTermAsPaid = (invoiceId: string, termId: string) => {
-    const updatedInvoices = invoices.map(inv => {
-      if (inv.id === invoiceId) {
-        return {
-          ...inv,
-          paymentTerms: inv.paymentTerms.map(term => {
-            if (term.id === termId) {
-              return {
-                ...term,
-                status: 'paid' as const,
-                paidDate: new Date().toISOString().split('T')[0],
-              };
-            }
-            return term;
-          }),
-        };
-      }
-      return inv;
-    });
-    
-    setInvoices(updatedInvoices);
-    toast.success('Payment term berhasil ditandai sebagai dibayar!');
-  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -93,24 +66,6 @@ export function InvoicesPage() {
     );
   };
 
-  // Statistics - count all payment terms across invoices
-  const allTerms = invoices.flatMap(inv => inv.paymentTerms);
-  const totalPending = allTerms.filter(t => t.status === 'pending').length;
-  const totalOverdue = allTerms.filter(t => t.status === 'overdue').length;
-  const totalPaid = allTerms.filter(t => t.status === 'paid').length;
-  
-  const amountPending = allTerms
-    .filter(t => t.status === 'pending')
-    .reduce((sum, t) => sum + t.amount, 0);
-  
-  const amountOverdue = allTerms
-    .filter(t => t.status === 'overdue')
-    .reduce((sum, t) => sum + t.amount, 0);
-  
-  const amountPaid = allTerms
-    .filter(t => t.status === 'paid')
-    .reduce((sum, t) => sum + t.amount, 0);
-
   const getInvoiceOverallStatus = (invoice: Invoice) => {
     const allPaid = invoice.paymentTerms.every(t => t.status === 'paid');
     const anyOverdue = invoice.paymentTerms.some(t => t.status === 'overdue');
@@ -120,78 +75,37 @@ export function InvoicesPage() {
     return 'Dalam Proses';
   };
 
+  const markTermAsPaid = (invoiceId: string, termId: string) => {
+    const updatedInvoices = invoices.map(inv => {
+      if (inv.id === invoiceId) {
+        return {
+          ...inv,
+          paymentTerms: inv.paymentTerms.map(term => {
+            if (term.id === termId) {
+              return {
+                ...term,
+                status: 'paid' as const,
+                paidDate: new Date().toISOString().split('T')[0],
+              };
+            }
+            return term;
+          }),
+        };
+      }
+      return inv;
+    });
+    
+    onUpdateInvoices(updatedInvoices);
+    toast.success('Payment berhasil dikonfirmasi!');
+  };
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-1">Invoice Management</h2>
-        <p className="text-gray-500">Kelola payment schedule yang flexible (50-50%, 50-35-15%, dll)</p>
-      </div>
-
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Pending Payments</CardTitle>
-            <Clock className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{totalPending}</div>
-            <p className="text-xs text-gray-500 mt-1">{formatCurrency(amountPending)}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Overdue Payments</CardTitle>
-            <AlertCircle className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold text-red-600">{totalOverdue}</div>
-            <p className="text-xs text-gray-500 mt-1">{formatCurrency(amountOverdue)}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Paid</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold text-green-600">{totalPaid}</div>
-            <p className="text-xs text-gray-500 mt-1">{formatCurrency(amountPaid)}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filter */}
+    <>
       <Card>
         <CardHeader>
-          <CardTitle>Filter Invoice</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="w-64">
-            <Label>Status Payment</Label>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="overdue">Overdue</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Invoices Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Daftar Invoice ({filteredInvoices.length})</CardTitle>
+          <CardTitle>Daftar Payment ({invoices.length})</CardTitle>
           <CardDescription>
-            Payment schedule flexible sesuai kesepakatan dengan client
+            Monitor dan konfirmasi pembayaran dari client
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -199,17 +113,17 @@ export function InvoicesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Invoice ID</TableHead>
+                  <TableHead>Invoice</TableHead>
                   <TableHead>Client</TableHead>
-                  <TableHead>Total Amount</TableHead>
-                  <TableHead>Payment Terms</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Terms</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Progress</TableHead>
                   <TableHead>Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredInvoices.map(invoice => {
+                {invoices.map(invoice => {
                   const paidTerms = invoice.paymentTerms.filter(t => t.status === 'paid').length;
                   const totalTerms = invoice.paymentTerms.length;
                   const paidAmount = invoice.paymentTerms
@@ -219,10 +133,14 @@ export function InvoicesPage() {
 
                   return (
                     <TableRow key={invoice.id}>
-                      <TableCell>{invoice.id}</TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="text-sm">{invoice.id}</p>
+                          <p className="text-xs text-gray-500">Project: {invoice.projectId}</p>
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <p className="text-sm">{invoice.clientName}</p>
-                        <p className="text-xs text-gray-500">Project: {invoice.projectId}</p>
                       </TableCell>
                       <TableCell>{formatCurrency(invoice.totalAmount)}</TableCell>
                       <TableCell>
@@ -240,7 +158,7 @@ export function InvoicesPage() {
                       <TableCell>
                         <div>
                           <div className="text-sm mb-1">
-                            {paidTerms}/{totalTerms} termin dibayar
+                            {paidTerms}/{totalTerms} termin
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
@@ -249,7 +167,7 @@ export function InvoicesPage() {
                             />
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
-                            {progressPercentage.toFixed(0)}% terbayar
+                            {progressPercentage.toFixed(0)}%
                           </div>
                         </div>
                       </TableCell>
@@ -279,7 +197,7 @@ export function InvoicesPage() {
       <Dialog open={isViewDetailOpen} onOpenChange={setIsViewDetailOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Detail Invoice: {selectedInvoice?.id}</DialogTitle>
+            <DialogTitle>Detail Payment: {selectedInvoice?.id}</DialogTitle>
             <DialogDescription>{selectedInvoice?.clientName}</DialogDescription>
           </DialogHeader>
           {selectedInvoice && (
@@ -290,7 +208,7 @@ export function InvoicesPage() {
                   <p className="text-lg mt-1">{formatCurrency(selectedInvoice.totalAmount)}</p>
                 </div>
                 <div>
-                  <Label>Project ID:</Label>
+                  <Label>Project:</Label>
                   <p className="text-sm mt-1">{selectedInvoice.projectId}</p>
                 </div>
               </div>
@@ -333,7 +251,7 @@ export function InvoicesPage() {
                           onClick={() => markTermAsPaid(selectedInvoice.id, term.id)}
                         >
                           <CheckCircle className="w-3 h-3 mr-1" />
-                          Tandai Dibayar
+                          Konfirmasi Pembayaran
                         </Button>
                       )}
                     </div>
@@ -372,6 +290,7 @@ export function InvoicesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
+
