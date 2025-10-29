@@ -163,36 +163,30 @@ export function InvoicesPage() {
         </Card>
       </div>
 
-      {/* Filter */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filter Invoice</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="w-64">
-            <Label>Status Payment</Label>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="overdue">Overdue</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Invoices Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Daftar Invoice ({filteredInvoices.length})</CardTitle>
-          <CardDescription>
-            Payment schedule flexible sesuai kesepakatan dengan client
-          </CardDescription>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle>Daftar Invoice ({filteredInvoices.length})</CardTitle>
+              <CardDescription>
+                Payment schedule flexible sesuai kesepakatan dengan client
+              </CardDescription>
+            </div>
+            <div className="w-48">
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
+                  <SelectItem value="overdue">Overdue</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">

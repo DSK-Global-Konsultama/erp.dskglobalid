@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { mockInvoices, mockProjects, type Invoice } from '../../../lib/mock-data';
 import { ActionRequiredAlert } from './components/ActionRequiredAlert';
 import { AdminStats } from './components/AdminStats';
-import { PaymentFilter } from './components/PaymentFilter';
 import { PaymentsTable } from './components/PaymentsTable';
 
 export function AdminDashboard() {
@@ -54,9 +53,12 @@ export function AdminDashboard() {
         completedProjectsCount={completedProjects.length}
       />
 
-      <PaymentFilter filterStatus={filterStatus} onFilterChange={setFilterStatus} />
-
-      <PaymentsTable invoices={filteredInvoices} onUpdateInvoices={setInvoices} />
+      <PaymentsTable
+        invoices={filteredInvoices}
+        filterStatus={filterStatus}
+        onFilterChange={setFilterStatus}
+        onUpdateInvoices={setInvoices}
+      />
     </div>
   );
 }

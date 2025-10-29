@@ -5,16 +5,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Badge } from '../../../../components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../../../components/ui/dialog';
 import { Label } from '../../../../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
 import { type Invoice, type PaymentTerm } from '../../../../lib/mock-data';
 import { AlertCircle, CheckCircle, Clock, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PaymentsTableProps {
   invoices: Invoice[];
+  filterStatus: string;
+  onFilterChange: (status: string) => void;
   onUpdateInvoices: (updatedInvoices: Invoice[]) => void;
 }
 
-export function PaymentsTable({ invoices, onUpdateInvoices }: PaymentsTableProps) {
+export function PaymentsTable({ invoices, filterStatus, onFilterChange, onUpdateInvoices }: PaymentsTableProps) {
   const [isViewDetailOpen, setIsViewDetailOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
@@ -103,10 +106,27 @@ export function PaymentsTable({ invoices, onUpdateInvoices }: PaymentsTableProps
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Daftar Payment ({invoices.length})</CardTitle>
-          <CardDescription>
-            Monitor dan konfirmasi pembayaran dari client
-          </CardDescription>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle>Daftar Payment ({invoices.length})</CardTitle>
+              <CardDescription>
+                Monitor dan konfirmasi pembayaran dari client
+              </CardDescription>
+            </div>
+            <div className="w-48">
+              <Select value={filterStatus} onValueChange={onFilterChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
+                  <SelectItem value="overdue">Overdue</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
