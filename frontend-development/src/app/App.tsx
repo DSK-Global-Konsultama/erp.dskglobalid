@@ -29,6 +29,7 @@ export default function App() {
   const [activeNav, setActiveNav] = useState('dashboard');
   const [userRole, setUserRole] = useState<UserRole>('BOD');
   const [userName, setUserName] = useState('');
+  const [bdExecutiveTab, setBdExecutiveTab] = useState('leads');
 
   const getUserOptions = () => {
     switch (userRole) {
@@ -43,8 +44,35 @@ export default function App() {
     }
   };
 
+  // Reset to correct initial nav when role changes
+  const handleRoleChange = (newRole: UserRole) => {
+    setUserRole(newRole);
+    setUserName('');
+    
+    // Set default active nav based on role
+    switch (newRole) {
+      case 'BD-Content':
+      case 'BD-Executive':
+        setActiveNav('leads');
+        setBdExecutiveTab('leads');
+        break;
+      default:
+        setActiveNav('dashboard');
+        setBdExecutiveTab('leads');
+    }
+  };
+
   const handleNavChange = (path: string) => {
     setActiveNav(path);
+    // Sync tab state for BD-Executive when clicking sidebar
+    if (userRole === 'BD-Executive' && (path === 'leads' || path === 'deals')) {
+      setBdExecutiveTab(path);
+    }
+  };
+
+  const handleBdExecutiveTabChange = (tab: string) => {
+    setBdExecutiveTab(tab);
+    setActiveNav(tab);
   };
 
   const renderContent = () => {
@@ -87,7 +115,24 @@ export default function App() {
               </Card>
             );
           }
-          return <BDExecutiveDashboard userName={userName} />;
+          // Only show BD Executive content if on leads or deals, otherwise show dashboard
+          if (activeNav === 'leads' || activeNav === 'deals') {
+            return (
+              <BDExecutiveDashboard 
+                userName={userName} 
+                activeTab={bdExecutiveTab}
+                onTabChange={handleBdExecutiveTabChange}
+              />
+            );
+          }
+          // Default to showing leads tab when first loading BD-Executive
+          return (
+            <BDExecutiveDashboard 
+              userName={userName} 
+              activeTab="leads"
+              onTabChange={handleBdExecutiveTabChange}
+            />
+          );
         } else if (userRole === 'PM') {
           if (!userName) {
             return (
@@ -118,7 +163,7 @@ export default function App() {
           <div className="flex items-center gap-4">
             <div className="w-48">
               <Label className="text-xs text-gray-500">Role</Label>
-              <Select value={userRole} onValueChange={(value: UserRole) => { setUserRole(value); setUserName(''); }}>
+              <Select value={userRole} onValueChange={handleRoleChange}>
                 <SelectTrigger className="h-9">
                   <SelectValue />
                 </SelectTrigger>

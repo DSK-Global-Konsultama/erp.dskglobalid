@@ -31,7 +31,19 @@ interface SidebarProps {
 
 export function Sidebar({ role, userName, activeNav: externalActiveNav, onNavChange }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [internalActiveNav, setInternalActiveNav] = useState('dashboard');
+  
+  // Set default activeNav based on role
+  const getDefaultActiveNav = () => {
+    switch (role) {
+      case 'BD-Content':
+      case 'BD-Executive':
+        return 'leads';
+      default:
+        return 'dashboard';
+    }
+  };
+  
+  const [internalActiveNav, setInternalActiveNav] = useState(getDefaultActiveNav());
   
   // Use external activeNav if provided, otherwise use internal
   const activeNav = externalActiveNav !== undefined ? externalActiveNav : internalActiveNav;
@@ -50,14 +62,12 @@ export function Sidebar({ role, userName, activeNav: externalActiveNav, onNavCha
         ];
       case 'BD-Content':
         return [
-          { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
           { id: 'leads', label: 'My Leads', icon: Users, path: 'dashboard' },
           { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
           { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
         ];
       case 'BD-Executive':
         return [
-          { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
           { id: 'leads', label: 'Available Leads', icon: Users, path: 'dashboard' },
           { id: 'deals', label: 'My Deals', icon: HandshakeIcon, path: 'dashboard' },
           { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },

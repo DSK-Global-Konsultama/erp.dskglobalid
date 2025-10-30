@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table';
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from '../../../components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '../../../components/ui/radio-group';
 import { mockDeals, type Deal, mockLeads, type Service, type EL } from '../../../lib/mock-data';
-import { Plus, FileText, Trash2, CheckCircle } from 'lucide-react';
+import { Plus, FileText, Trash2, CheckCircle, Filter, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DealsManagementProps {
@@ -20,6 +20,7 @@ interface DealsManagementProps {
 
 export function DealsManagement({ userRole, userName }: DealsManagementProps) {
   const [deals, setDeals] = useState<Deal[]>(mockDeals);
+  const [filteredDeals, setFilteredDeals] = useState<Deal[]>(mockDeals);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isViewDetailOpen, setIsViewDetailOpen] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
@@ -39,10 +40,62 @@ export function DealsManagement({ userRole, userName }: DealsManagementProps) {
     { name: '', description: '', estimatedValue: 0 },
   ]);
 
-  // BD Executive only sees their own deals
-  const filteredDeals = userRole === 'BD-Executive' 
-    ? deals.filter(d => d.bdExecutive === userName)
-    : deals;
+  // Filter states
+  const [filterProposalStatus, setFilterProposalStatus] = useState<string>('all');
+  const [filterELStatus, setFilterELStatus] = useState<string>('all');
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
+
+  const applyFilters = () => {
+    let filtered = [...deals];
+
+    // BD Executive only sees their own deals
+    if (userRole === 'BD-Executive') {
+      filtered = filtered.filter(d => d.bdExecutive === userName);
+    }
+
+    if (filterProposalStatus !== 'all') {
+      filtered = filtered.filter(d => d.proposalStatus === filterProposalStatus);
+    }
+
+    if (filterELStatus !== 'all') {
+      if (filterELStatus === 'all-approved') {
+        filtered = filtered.filter(d => d.els.every(el => el.status === 'approved'));
+      } else if (filterELStatus === 'has-draft') {
+        filtered = filtered.filter(d => d.els.some(el => el.status === 'draft'));
+      } else if (filterELStatus === 'has-submitted') {
+        filtered = filtered.filter(d => d.els.some(el => el.status === 'submitted'));
+      }
+    }
+
+    if (dateFrom) {
+      filtered = filtered.filter(d => new Date(d.createdDate) >= new Date(dateFrom));
+    }
+
+    if (dateTo) {
+      filtered = filtered.filter(d => new Date(d.createdDate) <= new Date(dateTo));
+    }
+
+    setFilteredDeals(filtered);
+  };
+
+  const resetFilters = () => {
+    setFilterProposalStatus('all');
+    setFilterELStatus('all');
+    setDateFrom('');
+    setDateTo('');
+    applyFilters();
+  };
+
+  // Apply filters when deals change
+  useEffect(() => {
+    applyFilters();
+  }, [deals]);
+
+  // Initial filter application
+  useEffect(() => {
+    applyFilters();
+  }, []);
 
   // BD Executive can only use leads they claimed
   const availableLeads = mockLeads.filter(l => {
@@ -493,6 +546,78 @@ export function DealsManagement({ userRole, userName }: DealsManagementProps) {
           </Dialog>
         )}
       </div>
+
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="w-4 h-4" />
+            Filter Deals
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label>Proposal Status</Label>
+              <Select value={filterProposalStatus} onValueChange={setFilterProposalStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Status</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="submitted">Submitted</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>EL Status</Label>
+              <Select value={filterELStatus} onValueChange={setFilterELStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Status</SelectItem>
+                  <SelectItem value="all-approved">All Approved</SelectItem>
+                  <SelectItem value="has-draft">Has Draft</SelectItem>
+                  <SelectItem value="has-submitted">Has Submitted</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                Tanggal Dari
+              </Label>
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={e => setDateFrom(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                Tanggal Sampai
+              </Label>
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={e => setDateTo(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2 mt-4">
+            <Button onClick={applyFilters}>Terapkan Filter</Button>
+            <Button variant="outline" onClick={resetFilters}>Reset</Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

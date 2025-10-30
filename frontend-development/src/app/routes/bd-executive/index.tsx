@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Card } from '../../../components/ui/card';
 import { AvailableLeadsPage } from './pages/AvailableLeadsPage';
@@ -7,15 +6,17 @@ import { Users, HandshakeIcon } from 'lucide-react';
 
 interface BDExecutiveProps {
   userName: string;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
-export function BDExecutiveDashboard({ userName }: BDExecutiveProps) {
-  const [activeTab, setActiveTab] = useState('leads');
+export function BDExecutiveDashboard({ userName, activeTab: externalActiveTab, onTabChange }: BDExecutiveProps) {
+  const activeTab = externalActiveTab || 'leads';
 
   return (
     <div>
       {userName ? (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={onTabChange || (() => {})} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="leads" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
