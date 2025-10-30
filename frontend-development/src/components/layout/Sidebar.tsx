@@ -25,12 +25,16 @@ type NavItem = {
 interface SidebarProps {
   role: UserRole;
   userName?: string;
+  activeNav?: string;
   onNavChange: (path: string) => void;
 }
 
-export function Sidebar({ role, userName, onNavChange }: SidebarProps) {
+export function Sidebar({ role, userName, activeNav: externalActiveNav, onNavChange }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [activeNav, setActiveNav] = useState('dashboard');
+  const [internalActiveNav, setInternalActiveNav] = useState('dashboard');
+  
+  // Use external activeNav if provided, otherwise use internal
+  const activeNav = externalActiveNav !== undefined ? externalActiveNav : internalActiveNav;
 
   const getNavItems = (): NavItem[] => {
     switch (role) {
@@ -80,9 +84,9 @@ export function Sidebar({ role, userName, onNavChange }: SidebarProps) {
 
   const navItems = getNavItems();
 
-  const handleNavClick = (path: string) => {
-    setActiveNav(path);
-    onNavChange(path);
+  const handleNavClick = (id: string) => {
+    setInternalActiveNav(id);
+    onNavChange(id);
   };
 
   const getRoleName = () => {
@@ -103,11 +107,11 @@ export function Sidebar({ role, userName, onNavChange }: SidebarProps) {
   };
 
   return (
-    <div className="flex-shrink-0 relative">
+    <div className="flex-shrink-0 relative h-full">
       <div
         className={`text-white transition-all duration-300 flex flex-col ${
           isCollapsed ? 'w-20' : 'w-64'
-        } h-[calc(100vh-2rem)] rounded-2xl shadow-2xl border border-gray-800/30`}
+        } h-full rounded-2xl shadow-2xl border border-gray-800/30`}
         style={{ backgroundColor: '#1e1e1e' }}
       >
       {/* User Profile Section */}
@@ -150,7 +154,7 @@ export function Sidebar({ role, userName, onNavChange }: SidebarProps) {
             return (
               <button
                 key={item.id}
-                onClick={() => handleNavClick(item.path)}
+                onClick={() => handleNavClick(item.id)}
                 className={`w-full flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-2 rounded-lg transition-colors group relative ${
                   isActive
                     ? 'bg-black/50 text-red-500'
