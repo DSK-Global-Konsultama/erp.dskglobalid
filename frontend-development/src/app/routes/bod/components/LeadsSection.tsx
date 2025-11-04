@@ -18,7 +18,11 @@ export function LeadsSection() {
       deal: 'outline',
       lost: 'destructive',
     };
-    return <Badge variant={variants[status] || 'default'}>{status.toUpperCase()}</Badge>;
+    const classNameMap: Record<string, string> = {
+      'follow-up': 'bg-yellow-50 text-yellow-700 border-yellow-400',
+      'deal': 'bg-green-50 text-green-700 border-green-500',
+    };
+    return <Badge variant={variants[status] || 'default'} className={classNameMap[status]}>{status.toUpperCase()}</Badge>;
   };
 
   const recentLeads = [...mockLeads]

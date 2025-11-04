@@ -127,7 +127,7 @@ export function Sidebar({ role, userName, activeNav: externalActiveNav, onNavCha
       {/* User Profile Section */}
       <div className={`border-b border-white/40 ${isCollapsed ? 'p-2' : 'p-4'}`}>
         <div className={`flex items-center mb-3 ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
-          <div className={`${isCollapsed ? 'w-8 h-8' : 'w-10 h-10'} rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center flex-shrink-0 border-2 border-pink-500`}>
+          <div className={`${isCollapsed ? 'w-8 h-8' : 'w-10 h-10'} rounded-full bg-gradient-to-br from-red-1000 to-red-600 flex items-center justify-center flex-shrink-0 border-2 border-red-800`}>
             {userName ? userName.charAt(0).toUpperCase() : 'U'}
           </div>
           {!isCollapsed && (

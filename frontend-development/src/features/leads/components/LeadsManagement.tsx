@@ -158,7 +158,11 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
       deal: 'Deal',
       lost: 'Lost',
     };
-    return <Badge variant={variants[status] || 'default'}>{labels[status]}</Badge>;
+    const classNameMap: Record<string, string> = {
+      'follow-up': 'bg-yellow-50 text-yellow-700 border-yellow-500',
+      'deal': 'bg-green-50 text-green-700 border-green-500',
+    };
+    return <Badge variant={variants[status] || 'default'} className={classNameMap[status]}>{labels[status]}</Badge>;
   };
 
   const isMissed = (lead: Lead) => {
@@ -476,7 +480,7 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
 
                         {/* BOD: View only */}
                         {userRole === 'BOD' && lead.status === 'deal' && (
-                          <Badge variant="outline" className="bg-green-50 text-green-700">
+                          <Badge variant="outline">
                             Converted
                           </Badge>
                         )}
