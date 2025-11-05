@@ -1,10 +1,8 @@
-import { useState } from 'react';
-import { Card } from '../components/ui/card';
+import { useState, useEffect } from 'react';
 import { Toaster } from '../components/ui/sonner';
+import { toast } from 'sonner';
 import { Sidebar } from '../components/layout/Sidebar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Label } from '../components/ui/label';
-import { bdContentCreators, bdExecutives, projectManagers } from '../lib/mock-data';
+import { authService, type User } from '../services/authService';
 
 // BOD imports
 import { BODDashboard } from './routes/bod';
@@ -23,49 +21,102 @@ import { AdminDashboard } from './routes/admin';
 import { TicketingPage } from './routes/ticketing';
 import { ReimbursePage } from './routes/reimburse';
 
-type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin';
+// Auth imports
+import { LoginPage, RegisterPage } from './routes/auth';
 
 export default function App() {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeNav, setActiveNav] = useState('dashboard');
-  const [userRole, setUserRole] = useState<UserRole>('BOD');
-  const [userName, setUserName] = useState('');
   const [bdExecutiveTab, setBdExecutiveTab] = useState('leads');
+  const [authView, setAuthView] = useState<'login' | 'register'>('login');
 
-  const getUserOptions = () => {
-    switch (userRole) {
-      case 'BD-Content':
-        return bdContentCreators;
-      case 'BD-Executive':
-        return bdExecutives;
-      case 'PM':
-        return projectManagers;
-      default:
-        return ['BOD', 'Admin'];
+  // Check for existing session on mount
+  useEffect(() => {
+    const user = authService.getCurrentUser();
+    if (user) {
+      setCurrentUser(user);
+      // Set default active nav based on role
+      if (user.role === 'BD-Content' || user.role === 'BD-Executive') {
+        setActiveNav('leads');
+      } else {
+        setActiveNav('dashboard');
+      }
+    }
+  }, []);
+
+  // Listen for storage changes (sync across tabs)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'erp_user_session') {
+        if (e.newValue === null) {
+          // User logged out in another tab
+          setCurrentUser(null);
+          toast.info('You have been logged out');
+        } else {
+          // User logged in in another tab
+          const user = authService.getCurrentUser();
+          if (user && !currentUser) {
+            setCurrentUser(user);
+            toast.info('Logged in from another tab');
+          }
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [currentUser]);
+
+  // Session validation and auto-logout check
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // Check session validity every minute
+    const intervalId = setInterval(() => {
+      const user = authService.getCurrentUser();
+      if (!user) {
+        // Session expired
+        setCurrentUser(null);
+        toast.error('Session expired. Please login again.');
+      }
+    }, 60 * 1000); // Check every 1 minute
+
+    // Update activity on user interaction
+    const handleActivity = () => {
+      authService.updateActivity();
+    };
+
+    window.addEventListener('click', handleActivity);
+    window.addEventListener('keypress', handleActivity);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('click', handleActivity);
+      window.removeEventListener('keypress', handleActivity);
+    };
+  }, [currentUser]);
+
+  const handleLogin = (user: User) => {
+    setCurrentUser(user);
+    // Set default active nav based on role
+    if (user.role === 'BD-Content' || user.role === 'BD-Executive') {
+      setActiveNav('leads');
+      setBdExecutiveTab('leads');
+    } else {
+      setActiveNav('dashboard');
     }
   };
 
-  // Reset to correct initial nav when role changes
-  const handleRoleChange = (newRole: UserRole) => {
-    setUserRole(newRole);
-    setUserName('');
-    
-    // Set default active nav based on role
-    switch (newRole) {
-      case 'BD-Content':
-      case 'BD-Executive':
-        setActiveNav('leads');
-        setBdExecutiveTab('leads');
-        break;
-      default:
-        setActiveNav('dashboard');
-        setBdExecutiveTab('leads');
-    }
+  const handleLogout = () => {
+    authService.logout();
+    setCurrentUser(null);
+    setActiveNav('dashboard');
   };
 
   const handleNavChange = (path: string) => {
     setActiveNav(path);
     // Sync tab state for BD-Executive when clicking sidebar
-    if (userRole === 'BD-Executive' && (path === 'leads' || path === 'deals')) {
+    if (currentUser?.role === 'BD-Executive' && (path === 'leads' || path === 'deals')) {
       setBdExecutiveTab(path);
     }
   };
@@ -76,6 +127,8 @@ export default function App() {
   };
 
   const renderContent = () => {
+    if (!currentUser) return null;
+
     switch (activeNav) {
       case 'ticketing':
         return <TicketingPage />;
@@ -83,7 +136,7 @@ export default function App() {
         return <ReimbursePage />;
       default:
         // Role-specific content
-        if (userRole === 'BOD') {
+        if (currentUser.role === 'BOD') {
           switch (activeNav) {
             case 'dashboard':
               return <BODDashboard />;
@@ -98,28 +151,14 @@ export default function App() {
             default:
               return <BODDashboard />;
           }
-        } else if (userRole === 'BD-Content') {
-          if (!userName) {
-            return (
-              <Card className="p-8 text-center">
-                <p className="text-gray-500">Pilih nama user terlebih dahulu</p>
-              </Card>
-            );
-          }
-          return <BDContentDashboard userName={userName} />;
-        } else if (userRole === 'BD-Executive') {
-          if (!userName) {
-            return (
-              <Card className="p-8 text-center">
-                <p className="text-gray-500">Pilih nama user terlebih dahulu</p>
-              </Card>
-            );
-          }
+        } else if (currentUser.role === 'BD-Content') {
+          return <BDContentDashboard userName={currentUser.name} />;
+        } else if (currentUser.role === 'BD-Executive') {
           // Only show BD Executive content if on leads or deals, otherwise show dashboard
           if (activeNav === 'leads' || activeNav === 'deals') {
             return (
               <BDExecutiveDashboard 
-                userName={userName} 
+                userName={currentUser.name} 
                 activeTab={bdExecutiveTab}
                 onTabChange={handleBdExecutiveTabChange}
               />
@@ -128,81 +167,57 @@ export default function App() {
           // Default to showing leads tab when first loading BD-Executive
           return (
             <BDExecutiveDashboard 
-              userName={userName} 
+              userName={currentUser.name} 
               activeTab="leads"
               onTabChange={handleBdExecutiveTabChange}
             />
           );
-        } else if (userRole === 'PM') {
-          if (!userName) {
-            return (
-              <Card className="p-8 text-center">
-                <p className="text-gray-500">Pilih nama user terlebih dahulu</p>
-              </Card>
-            );
-          }
-          return <PMDashboard pmName={userName} />;
-        } else if (userRole === 'Admin') {
+        } else if (currentUser.role === 'PM') {
+          return <PMDashboard pmName={currentUser.name} />;
+        } else if (currentUser.role === 'Admin') {
           return <AdminDashboard />;
         }
         return null;
     }
   };
 
+  // Show auth page if not authenticated
+  if (!currentUser) {
+    return (
+      <>
+        {authView === 'login' ? (
+          <LoginPage 
+            onLoginSuccess={handleLogin}
+            onNavigateToRegister={() => setAuthView('register')}
+          />
+        ) : (
+          <RegisterPage 
+            onNavigateToLogin={() => setAuthView('login')}
+          />
+        )}
+        <Toaster />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-2">
-        <div className="mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-black text-l font-semibold">ERP System</h1>
-            <p className="text-gray-500 text-sm mt-1">Business Development & Project Management</p>
-          </div>
-          
-          {/* Role Selector */}
-          <div className="flex items-center gap-4">
-            <div className="w-48">
-              <Label className="text-xs text-gray-500">Role</Label>
-              <Select value={userRole} onValueChange={handleRoleChange}>
-                <SelectTrigger className="h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="BOD">BOD</SelectItem>
-                  <SelectItem value="BD-Content">BD Content Creator</SelectItem>
-                  <SelectItem value="BD-Executive">BD Executive</SelectItem>
-                  <SelectItem value="PM">Project Manager</SelectItem>
-                  <SelectItem value="Admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {(userRole === 'BD-Content' || userRole === 'BD-Executive' || userRole === 'PM') && (
-              <div className="w-48">
-                <Label className="text-xs text-gray-500">User</Label>
-                <Select value={userName} onValueChange={setUserName}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Pilih nama" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getUserOptions().map(name => (
-                      <SelectItem key={name} value={name}>{name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
+        <div className="mx-auto">
+          <h1 className="text-black text-l font-semibold">ERP System</h1>
+          <p className="text-gray-500 text-sm mt-1">Business Development & Project Management</p>
         </div>
       </header>
 
       {/* Main Layout with Sidebar */}
       <div className="flex h-[calc(100vh-4rem)] overflow-hidden p-4 gap-4">
         <Sidebar 
-          role={userRole} 
-          userName={userName || userRole} 
+          role={currentUser.role} 
+          userName={currentUser.name} 
           activeNav={activeNav}
           onNavChange={handleNavChange}
+          onLogout={handleLogout}
         />
         
         <div className="flex-1 transition-all duration-300 overflow-hidden flex flex-col bg-white rounded-2xl shadow-lg h-full">

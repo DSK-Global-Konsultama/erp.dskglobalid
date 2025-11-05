@@ -27,9 +27,10 @@ interface SidebarProps {
   userName?: string;
   activeNav?: string;
   onNavChange: (path: string) => void;
+  onLogout?: () => void;
 }
 
-export function Sidebar({ role, userName, activeNav: externalActiveNav, onNavChange }: SidebarProps) {
+export function Sidebar({ role, userName, activeNav: externalActiveNav, onNavChange, onLogout }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   
   // Set default activeNav based on role
@@ -219,6 +220,7 @@ export function Sidebar({ role, userName, activeNav: externalActiveNav, onNavCha
           )}
         </button>
         <button
+          onClick={onLogout}
           className={`w-full flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-2 rounded-lg transition-colors text-white hover:text-red-500 group relative`}
         >
           <LogOut className="w-4 h-4 flex-shrink-0" />
