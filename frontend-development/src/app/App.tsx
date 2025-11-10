@@ -22,13 +22,12 @@ import { TicketingPage } from './routes/ticketing';
 import { ReimbursePage } from './routes/reimburse';
 
 // Auth imports
-import { LoginPage, RegisterPage } from './routes/auth';
+import { AuthPage } from './routes/auth/AuthPage';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeNav, setActiveNav] = useState('dashboard');
   const [bdExecutiveTab, setBdExecutiveTab] = useState('leads');
-  const [authView, setAuthView] = useState<'login' | 'register'>('login');
 
   // Check for existing session on mount
   useEffect(() => {
@@ -185,16 +184,7 @@ export default function App() {
   if (!currentUser) {
     return (
       <>
-        {authView === 'login' ? (
-          <LoginPage 
-            onLoginSuccess={handleLogin}
-            onNavigateToRegister={() => setAuthView('register')}
-          />
-        ) : (
-          <RegisterPage 
-            onNavigateToLogin={() => setAuthView('login')}
-          />
-        )}
+        <AuthPage onLoginSuccess={handleLogin} />
         <Toaster />
       </>
     );
