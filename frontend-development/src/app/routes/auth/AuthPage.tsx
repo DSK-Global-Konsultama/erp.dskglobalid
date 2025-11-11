@@ -7,6 +7,8 @@ import { InfoPanel } from './components/InfoPanel';
 import { LoginForm } from './components/LoginForm';
 import { RegisterForm } from './components/RegisterForm';
 import type { AuthPageProps } from './types/auth.types';
+import { useEffect } from 'react';
+import { authService } from '../../../services/authService';
 
 export function AuthPage({ onLoginSuccess }: AuthPageProps) {
   const {
@@ -25,6 +27,28 @@ export function AuthPage({ onLoginSuccess }: AuthPageProps) {
     setAgreePrivacy,
     setAgreeTerms,
   } = useAuthForm(onLoginSuccess);
+
+  // Handle Microsoft login callback (?auth=success from backend redirect)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ok = params.get('auth');
+    if (ok === 'success') {
+      authService.finalizeMicrosoftLogin().then((user) => {
+        if (user) {
+          onLoginSuccess(user);
+          // Setelah login berhasil, ganti URL dari /auth ke /
+          const to = new URL(window.location.href);
+          to.searchParams.delete('auth');
+          to.pathname = '/';
+          window.history.replaceState({}, '', to.toString());
+        }
+      });
+      // Clean the query param from URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete('auth');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [onLoginSuccess]);
 
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
@@ -171,6 +195,7 @@ export function AuthPage({ onLoginSuccess }: AuthPageProps) {
                       type="button"
                       variant="outline"
                       className="w-full h-8 sm:h-9 md:h-10 text-[10px] sm:text-xs md:text-sm border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 rounded-md"
+                      onClick={() => authService.loginWithMicrosoftStart()}
                     >
                       <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" viewBox="0 0 23 23" fill="none">
                         <path d="M0 0h10.9091v10.9091H0V0z" fill="#F25022"/>
@@ -178,7 +203,7 @@ export function AuthPage({ onLoginSuccess }: AuthPageProps) {
                         <path d="M0 12.0909h10.9091V23H0V12.0909z" fill="#00A4EF"/>
                         <path d="M12.0909 12.0909H23V23H12.0909V12.0909z" fill="#FFB900"/>
                       </svg>
-                      Microsoft
+                      Login menggunakan Microsoft
                     </Button>
                   </motion.div>
                 </motion.div>

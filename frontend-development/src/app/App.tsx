@@ -144,7 +144,7 @@ export default function App() {
         return <ReimbursePage />;
       default:
         // Role-specific content
-        if (currentUser.role === 'IT') {
+        if (currentUser.role === 'ITSpecialist') {
           switch (activeNav) {
             case 'dashboard':
               return <BODDashboard />;

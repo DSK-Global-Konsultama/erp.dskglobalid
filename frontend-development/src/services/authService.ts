@@ -2,7 +2,7 @@ export interface User {
   id: string;
   username: string;
   name: string;
-  role: 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'IT';
+  role: 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist';
   email: string;
 }
 
@@ -119,8 +119,8 @@ export const dummyUsers: Array<User & { password: string }> = [
     id: 'U013',
     username: 'it',
     password: 'it123',
-    name: 'IT Support',
-    role: 'IT',
+    name: 'IT Specialist',
+    role: 'ITSpecialist',
     email: 'it@dskglobal.com',
   },
 ];
@@ -135,6 +135,13 @@ interface SessionData {
   timestamp: number;
   rememberMe: boolean;
 }
+
+const getApiBase = (): string => {
+  const envBase = (import.meta.env.VITE_API_BASE_URL || '').toString().trim();
+  const base = envBase || 'http://localhost:3000';
+  // normalisasi: hilangkan trailing slash
+  return base.replace(/\/+$/, '');
+};
 
 export const authService = {
   // Login function with remember me support
@@ -177,6 +184,65 @@ export const authService = {
       url: window.location.href,
       storageArea: localStorage
     }));
+  },
+
+  // Start Microsoft login by redirecting to backend
+  loginWithMicrosoftStart: (): void => {
+    const base = getApiBase();
+    const url = `${base}/auth/login`;
+    window.location.href = url;
+  },
+
+  // Finalize Microsoft login: call backend /me with credentials, store session locally
+  finalizeMicrosoftLogin: async (): Promise<User | null> => {
+    try {
+      const base = getApiBase();
+      const res = await fetch(`${base}/me`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+      const data = await res.json();
+      const beUser = data?.user;
+      if (!beUser) return null;
+
+      // Map roles array from backend -> pick primary role for current app model
+      const roles: string[] = Array.isArray(beUser.roles) ? beUser.roles : [];
+      // Urutan prioritas supaya redirect konsisten
+      const priority: Array<User['role']> = [
+        'BOD',
+        'Admin',
+        'ITSpecialist',
+        'PM',
+        'BD-Executive',
+        'BD-Content'
+      ];
+      const normalized = roles.map(r => String(r));
+      let primaryRole = priority.find(p => normalized.includes(p)) as User['role'] | undefined;
+      if (!primaryRole) {
+        // fallback aman jika role dari DB tidak cocok union type
+        primaryRole = 'ITSpecialist';
+      }
+
+      const user: User = {
+        id: String(beUser.userId ?? beUser.id ?? ''),
+        username: beUser.email ?? beUser.name ?? '',
+        name: beUser.name ?? '',
+        role: primaryRole,
+        email: beUser.email ?? ''
+      };
+
+      const sessionData: SessionData = {
+        user,
+        timestamp: Date.now(),
+        rememberMe: true
+      };
+      localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+      const expiryTime = Date.now() + REMEMBER_ME_DURATION;
+      localStorage.setItem(SESSION_EXPIRY_KEY, expiryTime.toString());
+      return user;
+    } catch {
+      return null;
+    }
   },
 
   // Get current user from session with expiry check

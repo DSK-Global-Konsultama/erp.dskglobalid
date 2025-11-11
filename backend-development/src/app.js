@@ -53,7 +53,16 @@ app.use(session({
 
 // Keamanan & utilitas
 app.use(helmet());
-app.use(cors());
+// Konfigurasi CORS agar cookie sesi bisa disertakan dari frontend
+app.use(cors({
+  origin: (origin, cb) => {
+    const allowed = (process.env.CORS_ORIGIN || '').split(',').map(s => s.trim()).filter(Boolean);
+    // Izinkan non-browser tools (origin undefined) atau yang sesuai daftar
+    if (!origin || allowed.length === 0 || allowed.includes(origin)) return cb(null, true);
+    return cb(new Error('Not allowed by CORS'));
+  },
+  credentials: true
+}));
 app.use(express.json());
 // WAJIB kalau responseMode: 'form_post'
 app.use(express.urlencoded({ extended: false }));

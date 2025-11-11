@@ -94,7 +94,14 @@ async function finalizeLogin(req, res, next, claims) {
     // Simpan session sebelum redirect
     req.session.save(err => {
       if (err) return next(err);
-      return res.redirect('/me');
+      // Redirect ke frontend agar SPA bisa fetch /me dan lanjutkan flow
+      // Prefer FRONTEND_REDIRECT_URL, fallback ke CORS_ORIGIN + '/auth', lalu default dev URL
+      const fallbackFront = process.env.CORS_ORIGIN
+        ? `${process.env.CORS_ORIGIN.replace(/\/+$/, '')}/auth`
+        : 'http://localhost:5173/auth';
+      const base = process.env.FRONTEND_REDIRECT_URL || fallbackFront;
+      const redirectUrl = base.includes('?') ? `${base}&auth=success` : `${base}?auth=success`;
+      return res.redirect(redirectUrl);
     });
   } catch (e) {
     next(e);

@@ -15,7 +15,7 @@ import {
   Building2
 } from 'lucide-react';
 
-type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'IT';
+type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist';
 type NavItem = {
   id: string;
   label: string;
@@ -88,7 +88,7 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
           { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
           { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
         ];
-      case 'IT':
+      case 'ITSpecialist':
         return [
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
           { id: 'leads', label: 'Leads', icon: Users, path: 'leads' },
