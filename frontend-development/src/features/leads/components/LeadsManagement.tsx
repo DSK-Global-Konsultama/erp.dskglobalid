@@ -178,105 +178,6 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-1">
-            {userRole === 'BD-Content' && 'Input Leads'}
-            {userRole === 'BD-Executive' && 'Available Leads'}
-            {userRole === 'BOD' && 'All Leads'}
-          </h2>
-          <p className="text-gray-500">
-            {userRole === 'BD-Content' && 'Input lead baru dari berbagai sumber'}
-            {userRole === 'BD-Executive' && 'Claim leads untuk di-follow up sampai deal'}
-            {userRole === 'BOD' && 'Monitor semua leads dari berbagai sumber'}
-          </p>
-        </div>
-        {userRole === 'BD-Content' && (
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Tambah Lead
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Tambah Lead Baru</DialogTitle>
-                <DialogDescription>Input lead baru dari sumber marketing</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="clientName">Nama Client</Label>
-                  <Input
-                    id="clientName"
-                    value={newLead.clientName}
-                    onChange={e => setNewLead({ ...newLead, clientName: e.target.value })}
-                    placeholder="Nama lengkap client"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company">Perusahaan</Label>
-                  <Input
-                    id="company"
-                    value={newLead.company}
-                    onChange={e => setNewLead({ ...newLead, company: e.target.value })}
-                    placeholder="Nama perusahaan"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={newLead.email}
-                    onChange={e => setNewLead({ ...newLead, email: e.target.value })}
-                    placeholder="email@example.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">No. Telepon</Label>
-                  <Input
-                    id="phone"
-                    value={newLead.phone}
-                    onChange={e => setNewLead({ ...newLead, phone: e.target.value })}
-                    placeholder="08xxxxxxxxxx"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="source">Sumber Lead</Label>
-                  <Select value={newLead.source} onValueChange={(value: Lead['source']) => setNewLead({ ...newLead, source: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {leadSources.map(source => (
-                        <SelectItem key={source} value={source}>{source}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Catatan</Label>
-                  <Textarea
-                    id="notes"
-                    value={newLead.notes}
-                    onChange={e => setNewLead({ ...newLead, notes: e.target.value })}
-                    placeholder="Catatan tentang lead ini"
-                    rows={3}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  Batal
-                </Button>
-                <Button onClick={handleAddLead}>Simpan</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
-      </div>
-
       {/* Statistics */}
       {userRole === 'BD-Executive' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -378,12 +279,100 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
       {/* Leads Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Daftar Leads ({filteredLeads.length})</CardTitle>
-          <CardDescription>
-            {userRole === 'BD-Executive' && `${availableLeads} leads tersedia untuk di-claim`}
-            {userRole === 'BD-Content' && 'Leads yang saya input'}
-            {userRole === 'BOD' && 'Semua leads di sistem'}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Daftar Leads ({filteredLeads.length})</CardTitle>
+              <CardDescription>
+                {userRole === 'BD-Executive' && `${availableLeads} leads tersedia untuk di-claim`}
+                {userRole === 'BD-Content' && 'Leads yang saya input'}
+                {userRole === 'BOD' && 'Semua leads di sistem'}
+              </CardDescription>
+            </div>
+            {userRole === 'BD-Content' && (
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Tambah Lead
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Tambah Lead Baru</DialogTitle>
+                    <DialogDescription>Input lead baru dari sumber marketing</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="clientName">Nama Client</Label>
+                      <Input
+                        id="clientName"
+                        value={newLead.clientName}
+                        onChange={e => setNewLead({ ...newLead, clientName: e.target.value })}
+                        placeholder="Nama lengkap client"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="company">Perusahaan</Label>
+                      <Input
+                        id="company"
+                        value={newLead.company}
+                        onChange={e => setNewLead({ ...newLead, company: e.target.value })}
+                        placeholder="Nama perusahaan"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={newLead.email}
+                        onChange={e => setNewLead({ ...newLead, email: e.target.value })}
+                        placeholder="email@example.com"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">No. Telepon</Label>
+                      <Input
+                        id="phone"
+                        value={newLead.phone}
+                        onChange={e => setNewLead({ ...newLead, phone: e.target.value })}
+                        placeholder="08xxxxxxxxxx"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="source">Sumber Lead</Label>
+                      <Select value={newLead.source} onValueChange={(value: Lead['source']) => setNewLead({ ...newLead, source: value })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {leadSources.map(source => (
+                            <SelectItem key={source} value={source}>{source}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="notes">Catatan</Label>
+                      <Textarea
+                        id="notes"
+                        value={newLead.notes}
+                        onChange={e => setNewLead({ ...newLead, notes: e.target.value })}
+                        placeholder="Catatan tentang lead ini"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                      Batal
+                    </Button>
+                    <Button onClick={handleAddLead}>Simpan</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">

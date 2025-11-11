@@ -131,11 +131,6 @@ export function ProjectsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-1">Project Management</h2>
-        <p className="text-gray-500">BOD assign PM, PM assign Consultant untuk setiap project</p>
-      </div>
-
       {/* Alert for waiting PM assignment */}
       {projectsWaitingPM.length > 0 && (
         <Alert>

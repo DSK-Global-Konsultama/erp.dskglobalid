@@ -1,8 +1,5 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
-import { Card } from '../../../components/ui/card';
 import { AvailableLeadsPage } from './pages/AvailableLeadsPage';
 import { MyDealsPage } from './pages/MyDealsPage';
-import { Users, HandshakeIcon } from 'lucide-react';
 
 interface BDExecutiveProps {
   userName: string;
@@ -10,37 +7,15 @@ interface BDExecutiveProps {
   onTabChange?: (tab: string) => void;
 }
 
-export function BDExecutiveDashboard({ userName, activeTab: externalActiveTab, onTabChange }: BDExecutiveProps) {
+export function BDExecutiveDashboard({ userName, activeTab: externalActiveTab }: BDExecutiveProps) {
   const activeTab = externalActiveTab || 'leads';
 
-  return (
-    <div>
-      {userName ? (
-        <Tabs value={activeTab} onValueChange={onTabChange || (() => {})} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="leads" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Available Leads
-            </TabsTrigger>
-            <TabsTrigger value="deals" className="flex items-center gap-2">
-              <HandshakeIcon className="w-4 h-4" />
-              My Deals
-            </TabsTrigger>
-          </TabsList>
+  // Render content directly based on activeTab without tabs
+  if (activeTab === 'deals') {
+    return <MyDealsPage userName={userName} />;
+  }
 
-          <TabsContent value="leads">
-            <AvailableLeadsPage userName={userName} />
-          </TabsContent>
-          <TabsContent value="deals">
-            <MyDealsPage userName={userName} />
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <Card className="p-8 text-center">
-          <p className="text-gray-500">Pilih nama user terlebih dahulu</p>
-        </Card>
-      )}
-    </div>
-  );
+  // Default to leads
+  return <AvailableLeadsPage userName={userName} />;
 }
 

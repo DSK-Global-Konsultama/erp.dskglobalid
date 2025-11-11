@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Toaster } from '../components/ui/sonner';
 import { toast } from 'sonner';
 import { Sidebar } from '../components/layout/Sidebar';
+import { Header } from '../components/layout/Header';
 import { authService, type User } from '../services/authService';
 
 // BOD imports
@@ -192,28 +193,28 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-2">
-        <div className="mx-auto">
-          <h1 className="text-black text-l font-semibold">ERP System</h1>
-          <p className="text-gray-500 text-sm mt-1">Business Development & Project Management</p>
-        </div>
-      </header>
-
       {/* Main Layout with Sidebar */}
-      <div className="flex h-[calc(100vh-4rem)] overflow-hidden p-4 gap-4">
+      <div className="flex gap-4 p-4">
         <Sidebar 
           role={currentUser.role} 
-          userName={currentUser.name} 
           activeNav={activeNav}
           onNavChange={handleNavChange}
           onLogout={handleLogout}
         />
         
-        <div className="flex-1 transition-all duration-300 overflow-hidden flex flex-col bg-white rounded-2xl shadow-lg h-full">
+        <div className="flex-1 transition-all duration-300 overflow-hidden flex flex-col bg-white h-full relative z-10">
+          {/* Header */}
+          <Header 
+            role={currentUser.role} 
+            userName={currentUser.name}
+            activeNav={activeNav}
+          />
+          
           {/* Main Content */}
-          <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
-            {renderContent()}
+          <main className="flex-1 overflow-y-auto bg-gray-50">
+            <div className="flex flex-col gap-6 p-6">
+              {renderContent()}
+            </div>
           </main>
         </div>
       </div>

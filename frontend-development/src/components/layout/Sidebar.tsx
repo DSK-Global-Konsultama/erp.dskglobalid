@@ -11,7 +11,8 @@ import {
   ChevronRight,
   Settings,
   HelpCircle,
-  LogOut
+  LogOut,
+  Building2
 } from 'lucide-react';
 
 type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin';
@@ -24,13 +25,12 @@ type NavItem = {
 
 interface SidebarProps {
   role: UserRole;
-  userName?: string;
   activeNav?: string;
   onNavChange: (path: string) => void;
   onLogout?: () => void;
 }
 
-export function Sidebar({ role, userName, activeNav: externalActiveNav, onNavChange, onLogout }: SidebarProps) {
+export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLogout }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   
   // Set default activeNav based on role
@@ -100,41 +100,24 @@ export function Sidebar({ role, userName, activeNav: externalActiveNav, onNavCha
     onNavChange(id);
   };
 
-  const getRoleName = () => {
-    switch (role) {
-      case 'BD-Content':
-        return 'BD CONTENT';
-      case 'BD-Executive':
-        return 'BD EXECUTIVE';
-      case 'PM':
-        return 'PROJECT MANAGER';
-      default:
-        return role;
-    }
-  };
-
-  const getDisplayName = () => {
-    return userName || 'User';
-  };
-
   return (
-    <div className="flex-shrink-0 relative h-full">
+    <div className="flex-shrink-0 relative sticky top-4 self-start z-[100]" style={{ overflow: 'visible' }}>
       <div
         className={`text-white transition-all duration-300 flex flex-col ${
           isCollapsed ? 'w-20' : 'w-64'
-        } h-full rounded-2xl shadow-2xl border border-gray-800/30`}
-        style={{ backgroundColor: '#1e1e1e' }}
+        } h-[calc(100vh-2rem)] rounded-2xl shadow-2xl border border-gray-800/30`}
+        style={{ backgroundColor: '#1e1e1e', overflow: 'visible' }}
       >
-      {/* User Profile Section */}
-      <div className={`border-b border-white/40 ${isCollapsed ? 'p-2' : 'p-4'}`}>
-        <div className={`flex items-center mb-3 ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
-          <div className={`${isCollapsed ? 'w-8 h-8' : 'w-10 h-10'} rounded-full bg-gradient-to-br from-red-1000 to-red-600 flex items-center justify-center flex-shrink-0 border-2 border-red-800`}>
-            {userName ? userName.charAt(0).toUpperCase() : 'U'}
+      {/* Logo and ERP System Header */}
+      <div className={`border-b border-white/40 ${isCollapsed ? 'p-4' : 'p-4'}`}>
+        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+          <div className={`${isCollapsed ? 'w-8 h-8' : 'w-10 h-10'} rounded-lg bg-gradient-to-br from-red-1000 to-red-600 flex items-center justify-center flex-shrink-0`}>
+            <Building2 className={`${isCollapsed ? 'w-4 h-4' : 'w-5 h-5'} text-white`} />
           </div>
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-gray-400 font-semibold">{getRoleName()}</p>
-              <p className="text-xs font-bold truncate">{getDisplayName()}</p>
+              <h1 className="text-sm font-bold text-white">ERP System</h1>
+              <p className="text-[10px] text-gray-400">Business Management</p>
             </div>
           )}
         </div>
@@ -153,11 +136,11 @@ export function Sidebar({ role, userName, activeNav: externalActiveNav, onNavCha
       </button>
 
       {/* Navigation Section */}
-      <div className="flex-1 py-4">
+      <div className="flex-1 py-4" style={{ overflow: 'visible' }}>
         {!isCollapsed && (
           <p className="px-6 text-[10px] font-semibold text-white mb-2">MAIN</p>
         )}
-        <nav className={isCollapsed ? 'px-2 space-y-1' : 'px-3 space-y-1'}>
+        <nav className={isCollapsed ? 'px-2 space-y-1' : 'px-3 space-y-1'} style={{ overflow: 'visible', position: 'relative' }}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeNav === item.id;
@@ -177,7 +160,7 @@ export function Sidebar({ role, userName, activeNav: externalActiveNav, onNavCha
                   <span className="text-xs font-medium">{item.label}</span>
                 )}
                 {isCollapsed && (
-                  <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-[9999]">
                     {item.label}
                   </div>
                 )}
@@ -198,7 +181,7 @@ export function Sidebar({ role, userName, activeNav: externalActiveNav, onNavCha
             <Settings className="w-4 h-4 flex-shrink-0" />
             {!isCollapsed && <span className="text-xs font-medium">Settings</span>}
             {isCollapsed && (
-              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
+              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-[9999]">
                 Settings
               </div>
             )}
@@ -206,19 +189,22 @@ export function Sidebar({ role, userName, activeNav: externalActiveNav, onNavCha
         </nav>
       </div>
 
-      {/* Footer Links */}
-      <div className={`border-t border-white/40 space-y-2 ${isCollapsed ? 'p-2' : 'p-4'}`}>
+      {/* Footer Section - Help and Logout */}
+      <div className={`border-t border-white/40 ${isCollapsed ? 'p-3' : 'p-4'} space-y-3`} style={{ overflow: 'visible' }}>
+        {/* Help Button */}
         <button
           className={`w-full flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-2 rounded-lg transition-colors text-white hover:text-red-500 group relative`}
         >
           <HelpCircle className="w-4 h-4 flex-shrink-0" />
           {!isCollapsed && <span className="text-xs font-medium">Help</span>}
           {isCollapsed && (
-            <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
+            <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-[9999]">
               Help
             </div>
           )}
         </button>
+        
+        {/* Logout Button */}
         <button
           onClick={onLogout}
           className={`w-full flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-2 rounded-lg transition-colors text-white hover:text-red-500 group relative`}
@@ -226,7 +212,7 @@ export function Sidebar({ role, userName, activeNav: externalActiveNav, onNavCha
           <LogOut className="w-4 h-4 flex-shrink-0" />
           {!isCollapsed && <span className="text-xs font-medium">Logout</span>}
           {isCollapsed && (
-            <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
+            <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-[9999]">
               Logout Account
             </div>
           )}

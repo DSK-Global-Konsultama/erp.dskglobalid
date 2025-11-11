@@ -122,11 +122,6 @@ export function InvoicesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-1">Invoice Management</h2>
-        <p className="text-gray-500">Kelola payment schedule yang flexible (50-50%, 50-35-15%, dll)</p>
-      </div>
-
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>

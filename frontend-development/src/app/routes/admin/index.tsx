@@ -36,11 +36,6 @@ export function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-1">Admin Dashboard</h2>
-        <p className="text-gray-500">Monitor semua pembayaran dari awal sampai akhir</p>
-      </div>
-
       <ActionRequiredAlert completedProjects={completedProjects} />
 
       <AdminStats

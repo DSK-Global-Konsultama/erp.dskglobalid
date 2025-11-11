@@ -6,6 +6,10 @@ const morgan = require('morgan');
 
 const usersRouter = require('./routes/users.routes');
 const authRouter = require('./routes/auth.routes');
+const leadsRouter = require('./routes/leads.routes');
+const dealsRouter = require('./routes/deals.routes');
+const invoicesRouter = require('./routes/invoices.routes');
+const paymentsRouter = require('./routes/payments.routes');
 const { notFound, errorHandler } = require('./middlewares/error');
 const { checkConnection } = require('./config/db');
 
@@ -55,18 +59,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan('dev'));
 
-// Health check + cek DB
-app.get('/health', async (req, res, next) => {
-  try {
-    await checkConnection();
-    res.json({ ok: true, db: 'connected' });
-  } catch (e) {
-    next(e);
-  }
-});
+
 
 // Routes
 app.use('/api/v1/users', usersRouter);
+app.use('/api/v1/leads', leadsRouter);
+app.use('/api/v1/deals', dealsRouter);
+app.use('/api/v1/invoices', invoicesRouter);
+app.use('/api/v1/payments', paymentsRouter);
 
 app.use('/auth', authRouter);
 

@@ -317,236 +317,6 @@ export function DealsManagement({ userRole, userName }: DealsManagementProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-1">
-            {userRole === 'BD-Executive' ? 'My Deals' : 'All Deals'}
-          </h2>
-          <p className="text-gray-500">
-            {userRole === 'BD-Executive' 
-              ? 'BD Executive menggali kebutuhan client, buat proposal dan EL'
-              : 'Monitor semua deals'
-            }
-          </p>
-        </div>
-        {userRole === 'BD-Executive' && (
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Deal
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Create New Deal</DialogTitle>
-                <DialogDescription>Convert lead menjadi deal dengan detail layanan</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="leadId">Pilih Lead (yang sudah saya claim)</Label>
-                  <Select value={newDeal.leadId} onValueChange={(value) => setNewDeal({ ...newDeal, leadId: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih lead" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableLeads.map(lead => (
-                        <SelectItem key={lead.id} value={lead.id}>
-                          {lead.clientName} - {lead.company}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="clientNeeds">Kebutuhan Client</Label>
-                  <Textarea
-                    id="clientNeeds"
-                    value={newDeal.clientNeeds}
-                    onChange={e => setNewDeal({ ...newDeal, clientNeeds: e.target.value })}
-                    placeholder="Deskripsikan kebutuhan dan requirement dari client..."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="border-t pt-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <Label>Layanan yang Dibutuhkan</Label>
-                    <Button size="sm" variant="outline" onClick={handleAddService}>
-                      <Plus className="w-3 h-3 mr-1" />
-                      Tambah Layanan
-                    </Button>
-                  </div>
-
-                  {services.map((service, index) => (
-                    <div key={index} className="border rounded-lg p-4 mb-3 bg-gray-50">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm">Layanan {index + 1}</span>
-                        {services.length > 1 && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleRemoveService(index)}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        )}
-                      </div>
-                      <div className="space-y-3">
-                        <div className="space-y-2">
-                          <Label>Nama Layanan</Label>
-                          <Input
-                            value={service.name}
-                            onChange={e => handleServiceChange(index, 'name', e.target.value)}
-                            placeholder="e.g., Website Development, Mobile App"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Deskripsi</Label>
-                          <Textarea
-                            value={service.description}
-                            onChange={e => handleServiceChange(index, 'description', e.target.value)}
-                            placeholder="Detail layanan..."
-                            rows={2}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Estimasi Nilai</Label>
-                          <Input
-                            type="number"
-                            value={service.estimatedValue || ''}
-                            onChange={e => handleServiceChange(index, 'estimatedValue', Number(e.target.value))}
-                            placeholder="50000000"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-
-                  {services.length > 1 && (
-                    <div className="space-y-2 mt-4">
-                      <Label>Strategi EL</Label>
-                      <RadioGroup value={newDeal.elStrategy} onValueChange={(value: 'single' | 'separate') => setNewDeal({ ...newDeal, elStrategy: value })}>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="single" id="single" />
-                          <Label htmlFor="single" className="font-normal">
-                            Satu EL untuk semua layanan
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="separate" id="separate" />
-                          <Label htmlFor="separate" className="font-normal">
-                            EL terpisah per layanan
-                          </Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-                  )}
-
-                  <div className="space-y-2 mt-4">
-                    <Label>Termin Pembayaran (sesuai kesepakatan di EL)</Label>
-                    <Select value={paymentScheme} onValueChange={(value: typeof paymentScheme) => handlePaymentSchemeChange(value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="50-50">50% - 50% (2 Termin)</SelectItem>
-                        <SelectItem value="50-35-15">50% - 35% - 15% (3 Termin)</SelectItem>
-                        <SelectItem value="40-30-30">40% - 30% - 30% (3 Termin)</SelectItem>
-                        <SelectItem value="custom">Custom</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Detail Termin */}
-                  <div className="mt-4 border rounded-lg p-3 bg-white">
-                    <div className="flex items-center justify-between mb-3">
-                      <Label className="text-sm">Detail Termin</Label>
-                      {paymentScheme === 'custom' && (
-                        <Button size="sm" variant="outline" onClick={addCustomTerm}>
-                          <Plus className="w-3 h-3 mr-1" />
-                          Tambah Termin
-                        </Button>
-                      )}
-                    </div>
-
-                    {customTerms.map((term, index) => (
-                      <div key={index} className="border rounded-lg p-3 mb-2 bg-gray-50">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm">Termin {index + 1}</span>
-                          {paymentScheme === 'custom' && customTerms.length > 1 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => removeCustomTerm(index)}
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          )}
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="space-y-1">
-                            <Label className="text-xs">Persentase (%)</Label>
-                            <Input
-                              type="number"
-                              value={term.percentage}
-                              onChange={e => updateCustomTerm(index, 'percentage', Number(e.target.value))}
-                              disabled={paymentScheme !== 'custom'}
-                              min={0}
-                              max={100}
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">Nominal</Label>
-                            <Input
-                              value={formatCurrency((services.reduce((sum, s) => sum + (s.estimatedValue || 0), 0)) * term.percentage / 100)}
-                              disabled
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-1 mt-2">
-                          <Label className="text-xs">Deskripsi</Label>
-                          <Input
-                            value={term.description}
-                            onChange={e => updateCustomTerm(index, 'description', e.target.value)}
-                            placeholder="e.g., Pembayaran awal saat EL disetujui"
-                          />
-                        </div>
-                      </div>
-                    ))}
-
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mt-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Total Persentase:</span>
-                        <span className={customTerms.reduce((sum, t) => sum + t.percentage, 0) === 100 ? 'text-green-600' : 'text-red-600'}>
-                          {customTerms.reduce((sum, t) => sum + t.percentage, 0)}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
-                    <p className="text-sm">
-                      <span className="text-gray-700">Total Estimasi: </span>
-                      <span className="font-semibold">
-                        {formatCurrency(services.reduce((sum, s) => sum + (s.estimatedValue || 0), 0))}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  Batal
-                </Button>
-                <Button onClick={handleAddDeal}>Create Deal</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
-      </div>
-
       {/* Filters */}
       <Card>
         <CardHeader>
@@ -621,10 +391,230 @@ export function DealsManagement({ userRole, userName }: DealsManagementProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Daftar Deals ({filteredDeals.length})</CardTitle>
-          <CardDescription>
-            {userRole === 'BD-Executive' && 'BD Executive handle proposal & EL'}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Daftar Deals ({filteredDeals.length})</CardTitle>
+              <CardDescription>
+                {userRole === 'BD-Executive' && 'BD Executive handle proposal & EL'}
+              </CardDescription>
+            </div>
+            {userRole === 'BD-Executive' && (
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Deal
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Create New Deal</DialogTitle>
+                    <DialogDescription>Convert lead menjadi deal dengan detail layanan</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="leadId">Pilih Lead (yang sudah saya claim)</Label>
+                      <Select value={newDeal.leadId} onValueChange={(value) => setNewDeal({ ...newDeal, leadId: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih lead" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableLeads.map(lead => (
+                            <SelectItem key={lead.id} value={lead.id}>
+                              {lead.clientName} - {lead.company}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="clientNeeds">Kebutuhan Client</Label>
+                      <Textarea
+                        id="clientNeeds"
+                        value={newDeal.clientNeeds}
+                        onChange={e => setNewDeal({ ...newDeal, clientNeeds: e.target.value })}
+                        placeholder="Deskripsikan kebutuhan dan requirement dari client..."
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="border-t pt-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <Label>Layanan yang Dibutuhkan</Label>
+                        <Button size="sm" variant="outline" onClick={handleAddService}>
+                          <Plus className="w-3 h-3 mr-1" />
+                          Tambah Layanan
+                        </Button>
+                      </div>
+
+                      {services.map((service, index) => (
+                        <div key={index} className="border rounded-lg p-4 mb-3 bg-gray-50">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm">Layanan {index + 1}</span>
+                            {services.length > 1 && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleRemoveService(index)}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </div>
+                          <div className="space-y-3">
+                            <div className="space-y-2">
+                              <Label>Nama Layanan</Label>
+                              <Input
+                                value={service.name}
+                                onChange={e => handleServiceChange(index, 'name', e.target.value)}
+                                placeholder="e.g., Website Development, Mobile App"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Deskripsi</Label>
+                              <Textarea
+                                value={service.description}
+                                onChange={e => handleServiceChange(index, 'description', e.target.value)}
+                                placeholder="Detail layanan..."
+                                rows={2}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Estimasi Nilai</Label>
+                              <Input
+                                type="number"
+                                value={service.estimatedValue || ''}
+                                onChange={e => handleServiceChange(index, 'estimatedValue', Number(e.target.value))}
+                                placeholder="50000000"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {services.length > 1 && (
+                        <div className="space-y-2 mt-4">
+                          <Label>Strategi EL</Label>
+                          <RadioGroup value={newDeal.elStrategy} onValueChange={(value: 'single' | 'separate') => setNewDeal({ ...newDeal, elStrategy: value })}>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="single" id="single" />
+                              <Label htmlFor="single" className="font-normal">
+                                Satu EL untuk semua layanan
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="separate" id="separate" />
+                              <Label htmlFor="separate" className="font-normal">
+                                EL terpisah per layanan
+                              </Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+                      )}
+
+                      <div className="space-y-2 mt-4">
+                        <Label>Termin Pembayaran (sesuai kesepakatan di EL)</Label>
+                        <Select value={paymentScheme} onValueChange={(value: typeof paymentScheme) => handlePaymentSchemeChange(value)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="50-50">50% - 50% (2 Termin)</SelectItem>
+                            <SelectItem value="50-35-15">50% - 35% - 15% (3 Termin)</SelectItem>
+                            <SelectItem value="40-30-30">40% - 30% - 30% (3 Termin)</SelectItem>
+                            <SelectItem value="custom">Custom</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Detail Termin */}
+                      <div className="mt-4 border rounded-lg p-3 bg-white">
+                        <div className="flex items-center justify-between mb-3">
+                          <Label className="text-sm">Detail Termin</Label>
+                          {paymentScheme === 'custom' && (
+                            <Button size="sm" variant="outline" onClick={addCustomTerm}>
+                              <Plus className="w-3 h-3 mr-1" />
+                              Tambah Termin
+                            </Button>
+                          )}
+                        </div>
+
+                        {customTerms.map((term, index) => (
+                          <div key={index} className="border rounded-lg p-3 mb-2 bg-gray-50">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm">Termin {index + 1}</span>
+                              {paymentScheme === 'custom' && customTerms.length > 1 && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => removeCustomTerm(index)}
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Persentase (%)</Label>
+                                <Input
+                                  type="number"
+                                  value={term.percentage}
+                                  onChange={e => updateCustomTerm(index, 'percentage', Number(e.target.value))}
+                                  disabled={paymentScheme !== 'custom'}
+                                  min={0}
+                                  max={100}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Nominal</Label>
+                                <Input
+                                  value={formatCurrency((services.reduce((sum, s) => sum + (s.estimatedValue || 0), 0)) * term.percentage / 100)}
+                                  disabled
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-1 mt-2">
+                              <Label className="text-xs">Deskripsi</Label>
+                              <Input
+                                value={term.description}
+                                onChange={e => updateCustomTerm(index, 'description', e.target.value)}
+                                placeholder="e.g., Pembayaran awal saat EL disetujui"
+                              />
+                            </div>
+                          </div>
+                        ))}
+
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mt-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span>Total Persentase:</span>
+                            <span className={customTerms.reduce((sum, t) => sum + t.percentage, 0) === 100 ? 'text-green-600' : 'text-red-600'}>
+                              {customTerms.reduce((sum, t) => sum + t.percentage, 0)}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
+                        <p className="text-sm">
+                          <span className="text-gray-700">Total Estimasi: </span>
+                          <span className="font-semibold">
+                            {formatCurrency(services.reduce((sum, s) => sum + (s.estimatedValue || 0), 0))}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                      Batal
+                    </Button>
+                    <Button onClick={handleAddDeal}>Create Deal</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">

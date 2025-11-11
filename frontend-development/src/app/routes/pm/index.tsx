@@ -27,11 +27,6 @@ export function PMDashboard({ pmName }: PMDashboardProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-1">PM Dashboard - {pmName}</h2>
-        <p className="text-gray-500">Projects yang di-assign ke saya</p>
-      </div>
-
       <NewAssignmentAlert myProjects={myProjects} />
 
       <PMStats
