@@ -29,6 +29,9 @@ import { ReimbursePage } from './routes/reimburse';
 // Auth imports
 import { AuthPage } from './routes/auth/AuthPage';
 
+// Staff imports
+import { PendingApprovalPage } from './routes/staff/PendingApprovalPage';
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeNav, setActiveNav] = useState('dashboard');
@@ -205,6 +208,9 @@ export default function App() {
           return <PMDashboard pmName={currentUser.name} />;
         } else if (currentUser.role === 'Admin') {
           return <AdminDashboard />;
+        } else if (currentUser.role === 'Staff') {
+          // Staff role: show pending approval page
+          return <PendingApprovalPage userName={currentUser.name} userEmail={currentUser.email} />;
         }
         return null;
     }
@@ -217,6 +223,30 @@ export default function App() {
         <AuthPage onLoginSuccess={handleLogin} />
         <Toaster />
       </>
+    );
+  }
+
+  // For Staff role, don't show sidebar - just show pending approval page with header
+  if (currentUser.role === 'Staff') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="flex flex-col">
+          {/* Header */}
+          <Header 
+            role={currentUser.role} 
+            userName={currentUser.name}
+            activeNav="dashboard"
+          />
+          
+          {/* Main Content */}
+          <main className="flex-1 overflow-y-auto bg-gray-50">
+            <div className="flex flex-col gap-6 p-6">
+              {renderContent()}
+            </div>
+          </main>
+        </div>
+        <Toaster />
+      </div>
     );
   }
 

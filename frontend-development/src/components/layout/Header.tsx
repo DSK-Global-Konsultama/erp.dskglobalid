@@ -1,7 +1,7 @@
 import { Bell } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
-type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'IT';
+type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist' | 'Staff';
 
 interface HeaderProps {
   role: UserRole;
@@ -82,7 +82,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
           return 'Reimburse';
         }
         return 'Admin Dashboard';
-      case 'IT':
+      case 'ITSpecialist':
         if (activeNav === 'dashboard') {
           return 'Dashboard IT';
         } else if (activeNav === 'leads') {
@@ -103,6 +103,8 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
           return 'System Settings';
         }
         return 'Dashboard IT';
+      case 'Staff':
+        return 'Menunggu Persetujuan';
       default:
         return 'Dashboard';
     }
@@ -159,7 +161,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
           return 'Request pengembalian biaya operasional';
         }
         return 'Monitor semua pembayaran dari awal sampai akhir';
-      case 'IT':
+      case 'ITSpecialist':
         if (activeNav === 'dashboard') {
           return 'Monitoring Business Development & Project Management';
         } else if (activeNav === 'leads') {
@@ -180,6 +182,8 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
           return 'Pengaturan sistem dan konfigurasi';
         }
         return '';
+      case 'Staff':
+        return 'Akun Anda sedang menunggu persetujuan dari administrator';
       default:
         return '';
     }
@@ -187,14 +191,16 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
 
   const getRoleName = () => {
     switch (role) {
-      case 'IT':
-        return 'IT';
+      case 'ITSpecialist':
+        return 'IT SPECIALIST';
       case 'BD-Content':
         return 'BD CONTENT';
       case 'BD-Executive':
         return 'BD EXECUTIVE';
       case 'PM':
         return 'PROJECT MANAGER';
+      case 'Staff':
+        return 'STAFF';
       default:
         return role;
     }

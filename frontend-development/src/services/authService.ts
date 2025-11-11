@@ -2,7 +2,7 @@ export interface User {
   id: string;
   username: string;
   name: string;
-  role: 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist';
+  role: 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist' | 'Staff';
   email: string;
 }
 
@@ -208,19 +208,32 @@ export const authService = {
       // Map roles array from backend -> pick primary role for current app model
       const roles: string[] = Array.isArray(beUser.roles) ? beUser.roles : [];
       // Urutan prioritas supaya redirect konsisten
+      // Staff di urutan terakhir karena hanya digunakan jika tidak ada role lain
       const priority: Array<User['role']> = [
         'BOD',
         'Admin',
         'ITSpecialist',
         'PM',
         'BD-Executive',
-        'BD-Content'
+        'BD-Content',
+        'Staff'
       ];
-      const normalized = roles.map(r => String(r));
+      // Normalize roles: handle case sensitivity (Staff, STAFF, staff -> Staff)
+      const normalized = roles.map(r => {
+        const roleStr = String(r).trim();
+        // Map common variations to standard form
+        if (roleStr.toLowerCase() === 'staff') return 'Staff';
+        return roleStr;
+      });
+      
       let primaryRole = priority.find(p => normalized.includes(p)) as User['role'] | undefined;
       if (!primaryRole) {
-        // fallback aman jika role dari DB tidak cocok union type
-        primaryRole = 'ITSpecialist';
+        // Jika role dari DB tidak ada di priority list, gunakan role pertama yang ada
+        // atau fallback ke Staff jika roles kosong
+        const firstRole = normalized[0];
+        // Cek apakah firstRole adalah valid role (case-insensitive)
+        const matchedRole = priority.find(p => p.toLowerCase() === firstRole?.toLowerCase());
+        primaryRole = (matchedRole || 'Staff') as User['role'];
       }
 
       const user: User = {

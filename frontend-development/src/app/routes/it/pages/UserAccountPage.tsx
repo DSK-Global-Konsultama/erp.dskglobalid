@@ -17,7 +17,7 @@ export interface UserAccount {
   username: string;
   name: string;
   email: string;
-  role: 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | null;
+  role: 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist' | null;
   status: 'active' | 'inactive' | 'pending';
   createdAt: string;
 }
@@ -241,7 +241,7 @@ export function UserAccountPage() {
         return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'Admin':
         return 'bg-red-50 text-red-700 border-red-200';
-      case 'IT':
+      case 'ITSpecialist':
         return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'BD-Content':
         return 'bg-green-50 text-green-700 border-green-200';
