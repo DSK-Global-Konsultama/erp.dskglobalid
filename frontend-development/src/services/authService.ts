@@ -2,7 +2,7 @@ export interface User {
   id: string;
   username: string;
   name: string;
-  role: 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin';
+  role: 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'IT';
   email: string;
 }
 
@@ -113,6 +113,15 @@ export const dummyUsers: Array<User & { password: string }> = [
     name: 'Gita Sari',
     role: 'PM',
     email: 'gita@dskglobal.com',
+  },
+  // IT Account
+  {
+    id: 'U013',
+    username: 'it',
+    password: 'it123',
+    name: 'IT Support',
+    role: 'IT',
+    email: 'it@dskglobal.com',
   },
 ];
 

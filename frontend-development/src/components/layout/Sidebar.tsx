@@ -15,7 +15,7 @@ import {
   Building2
 } from 'lucide-react';
 
-type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin';
+type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'IT';
 type NavItem = {
   id: string;
   label: string;
@@ -87,6 +87,18 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
           { id: 'payments', label: 'Payments', icon: FileText, path: 'dashboard' },
           { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
           { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
+        ];
+      case 'IT':
+        return [
+          { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
+          { id: 'leads', label: 'Leads', icon: Users, path: 'leads' },
+          { id: 'deals', label: 'Deals', icon: HandshakeIcon, path: 'deals' },
+          { id: 'projects', label: 'Projects', icon: FolderKanban, path: 'projects' },
+          { id: 'invoices', label: 'Invoices', icon: FileText, path: 'invoices' },
+          { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
+          { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
+          { id: 'user-account', label: 'User Account', icon: Users, path: 'user-account' },
+          { id: 'settings', label: 'Settings', icon: Settings, path: 'settings' },
         ];
       default:
         return [];

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { authService } from '../../../../services/authService';
+import { pendingUsersService } from '../../../../services/pendingUsersService';
 import { toast } from 'sonner';
 import type { AuthFormData, RegisterFormData } from '../types/auth.types';
 
@@ -70,9 +71,26 @@ export function useAuthForm(onLoginSuccess: (user: any) => void) {
           setIsLoading(false);
           return;
         }
+
+        // Check if username or email already exists
+        if (pendingUsersService.checkExists(registerFormData.user_name, registerFormData.email)) {
+          toast.error('Username atau email sudah terdaftar!');
+          setIsLoading(false);
+          return;
+        }
         
-        console.log('Register data:', registerFormData);
-        toast.success('Akun berhasil dibuat! Silakan login.');
+        // Add to pending users (will be assigned role by IT)
+        const fullName = `${registerFormData.first_name} ${registerFormData.last_name}`.trim();
+        pendingUsersService.addPendingUser({
+          username: registerFormData.user_name,
+          firstName: registerFormData.first_name,
+          lastName: registerFormData.last_name,
+          name: fullName,
+          email: registerFormData.email,
+          password: registerFormData.password, // In real app, this should be hashed
+        });
+        
+        toast.success('Registrasi berhasil! Akun Anda sedang menunggu approval dari IT untuk assign role.');
         setIsLogin(true);
         setRegisterFormData({ first_name: '', last_name: '', user_name: '', email: '', password: '' });
         setAgreePrivacy(false);

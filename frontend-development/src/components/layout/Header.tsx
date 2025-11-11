@@ -1,7 +1,7 @@
 import { Bell } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
-type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin';
+type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'IT';
 
 interface HeaderProps {
   role: UserRole;
@@ -82,6 +82,27 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
           return 'Reimburse';
         }
         return 'Admin Dashboard';
+      case 'IT':
+        if (activeNav === 'dashboard') {
+          return 'Dashboard IT';
+        } else if (activeNav === 'leads') {
+          return 'All Leads';
+        } else if (activeNav === 'deals') {
+          return 'All Deals';
+        } else if (activeNav === 'projects') {
+          return 'Project Management';
+        } else if (activeNav === 'invoices') {
+          return 'Invoice Management';
+        } else if (activeNav === 'ticketing') {
+          return 'IT Ticketing';
+        } else if (activeNav === 'reimburse') {
+          return 'Reimburse Management';
+        } else if (activeNav === 'user-account') {
+          return 'User Account Management';
+        } else if (activeNav === 'settings') {
+          return 'System Settings';
+        }
+        return 'Dashboard IT';
       default:
         return 'Dashboard';
     }
@@ -138,6 +159,27 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
           return 'Request pengembalian biaya operasional';
         }
         return 'Monitor semua pembayaran dari awal sampai akhir';
+      case 'IT':
+        if (activeNav === 'dashboard') {
+          return 'Monitoring Business Development & Project Management';
+        } else if (activeNav === 'leads') {
+          return 'Monitor semua leads dari berbagai sumber';
+        } else if (activeNav === 'deals') {
+          return 'Monitor semua deals';
+        } else if (activeNav === 'projects') {
+          return 'BOD assign PM, PM assign Consultant untuk setiap project';
+        } else if (activeNav === 'invoices') {
+          return 'Kelola payment schedule yang flexible (50-50%, 50-35-15%, dll)';
+        } else if (activeNav === 'ticketing') {
+          return 'Kelola semua ticket yang masuk dari user';
+        } else if (activeNav === 'reimburse') {
+          return 'Review dan approve/reject pengajuan reimburse';
+        } else if (activeNav === 'user-account') {
+          return 'Kelola akun user dan atur role-nya';
+        } else if (activeNav === 'settings') {
+          return 'Pengaturan sistem dan konfigurasi';
+        }
+        return '';
       default:
         return '';
     }
@@ -145,6 +187,8 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
 
   const getRoleName = () => {
     switch (role) {
+      case 'IT':
+        return 'IT';
       case 'BD-Content':
         return 'BD CONTENT';
       case 'BD-Executive':

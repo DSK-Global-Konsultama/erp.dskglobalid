@@ -17,6 +17,10 @@ import { BDContentDashboard } from './routes/bd-content';
 import { BDExecutiveDashboard } from './routes/bd-executive';
 import { PMDashboard } from './routes/pm';
 import { AdminDashboard } from './routes/admin';
+import { ITDashboard } from './routes/it';
+import { UserAccountPage } from './routes/it/pages/UserAccountPage';
+import { ITReimbursePage } from './routes/it/pages/ReimbursePage';
+import { SettingPage } from './routes/it/pages/SettingPage';
 
 // Ticketing and Reimburse imports
 import { TicketingPage } from './routes/ticketing';
@@ -133,10 +137,35 @@ export default function App() {
       case 'ticketing':
         return <TicketingPage />;
       case 'reimburse':
+        // Use IT-specific reimburse page for IT role, otherwise use general one
+        if (currentUser.role === 'IT') {
+          return <ITReimbursePage />;
+        }
         return <ReimbursePage />;
       default:
         // Role-specific content
-        if (currentUser.role === 'BOD') {
+        if (currentUser.role === 'IT') {
+          switch (activeNav) {
+            case 'dashboard':
+              return <BODDashboard />;
+            case 'leads':
+              return <LeadsPage />;
+            case 'deals':
+              return <DealsPage />;
+            case 'projects':
+              return <ProjectsPage />;
+            case 'invoices':
+              return <InvoicesPage />;
+            case 'ticketing':
+              return <ITDashboard />;
+            case 'user-account':
+              return <UserAccountPage />;
+            case 'settings':
+              return <SettingPage />;
+            default:
+              return <BODDashboard />;
+          }
+        } else if (currentUser.role === 'BOD') {
           switch (activeNav) {
             case 'dashboard':
               return <BODDashboard />;
