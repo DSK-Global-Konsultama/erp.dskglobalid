@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ERP API Documentation</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Noto Sans, "Apple Color Emoji","Segoe UI Emoji"; margin: 24px; line-height: 1.5; }
+    h1, h2, h3 { margin-top: 28px; }
+    code, pre { background: rgba(127,127,127,.12); padding: 2px 6px; border-radius: 6px; }
+    pre { padding: 12px; overflow: auto; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    th, td { border: 1px solid rgba(127,127,127,.35); padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { background: rgba(127,127,127,.12); }
+    .method { font-weight: 700; }
+    .GET { color: #0b6dff; }
+    .POST { color: #0a8f3a; }
+    .PUT { color: #c77f00; }
+    .DELETE { color: #d11a2a; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; background: rgba(127,127,127,.2); margin-right: 6px; }
+    .role { background: #e5f1ff; color: #1256a0; }
+    .note { background: #fff7e5; color: #7a4d00; }
+    .grid { display: grid; gap: 8px; }
+    .endpoint { border: 1px solid rgba(127,127,127,.35); border-radius: 8px; padding: 12px; }
+    .muted { opacity: .8; }
+  </style>
+</head>
+<body>
+  <h1>ERP API Documentation</h1>
+  <p>Base URL default: <code>http://localhost:3000</code></p>
+  <p>Semua endpoint JSON. Gunakan header <code>Content-Type: application/json</code> untuk request dengan body.</p>
+
+  <h2>Autentikasi</h2>
+  <ul>
+    <li><code>GET /auth/login</code> → Redirect ke Microsoft login.</li>
+    <li><code>GET /me</code> → Cek session saat ini. Return roles yang aktif.</li>
+  </ul>
+  <p class="note badge">Catatan</p>
+  <p class="muted">Untuk menguji endpoint terproteksi di Postman, login lewat browser ke <code>/auth/login</code> → setelah sukses, salin cookie <code>erp.sid</code> ke Postman.</p>
+
+  <h2>Leads</h2>
+  <div class="grid">
+    <div class="endpoint">
+      <div><span class="method POST">POST</span> <code>/api/v1/leads/public</code> <span class="badge">Public</span></div>
+      <div class="muted">Buat lead dari form calon client/BD Content (tanpa login). Auto set status NOT_CLAIMED, buat company/contact jika belum ada.</div>
+      <pre>{
+  "companyName": "PT Maju Mundur",
+  "clientName": "Budi",
+  "email": "budi@example.com",
+  "phone": "08123456789",
+  "sourceCode": "WEBSITE",
+  "notes": "Butuh konsultasi"
+}</pre>
+      <div>Respon: <code>{ "id": number }</code></div>
+    </div>
+
+    <div class="endpoint">
+      <div><span class="method GET">GET</span> <code>/api/v1/leads</code> <span class="badge role">BDContentCreator</span><span class="badge role">BDExecutive</span><span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+      <div>List leads terbaru.</div>
+    </div>
+
+    <div class="endpoint">
+      <div><span class="method GET">GET</span> <code>/api/v1/leads/:id</code> <span class="badge role">BDContentCreator</span><span class="badge role">BDExecutive</span><span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+    </div>
+
+    <div class="endpoint">
+      <div><span class="method POST">POST</span> <code>/api/v1/leads</code> <span class="badge role">BDContentCreator</span><span class="badge role">BDExecutive</span><span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+      <pre>{
+  "companyName": "PT Sukses Selalu",
+  "clientName": "Sari",
+  "email": "sari@example.com",
+  "phone": "081234000111",
+  "sourceCode": "EVENT",
+  "statusCode": "NOT_CLAIMED",
+  "notes": "Prospek event Jakarta"
+}</pre>
+    </div>
+
+    <div class="endpoint">
+      <div><span class="method PUT">PUT</span> <code>/api/v1/leads/:id</code> <span class="badge role">BDContentCreator</span><span class="badge role">BDExecutive</span><span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+      <pre>{
+  "statusCode": "CONTACTED",
+  "notes": "Sudah dihubungi"
+}</pre>
+    </div>
+
+    <div class="endpoint">
+      <div><span class="method POST">POST</span> <code>/api/v1/leads/:id/claim</code> <span class="badge role">BDContentCreator</span><span class="badge role">BDExecutive</span><span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+      <div class="muted">Claim paten (trigger DB mengunci agar tidak bisa diubah).</div>
+    </div>
+
+    <div class="endpoint">
+      <div><span class="method DELETE">DELETE</span> <code>/api/v1/leads/:id</code> <span class="badge role">BDContentCreator</span><span class="badge role">BDExecutive</span><span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+    </div>
+  </div>
+
+  <h2>Deals</h2>
+  <div class="grid">
+    <div class="endpoint">
+      <div><span class="method GET">GET</span> <code>/api/v1/deals</code> <span class="badge role">BDExecutive</span><span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+    </div>
+    <div class="endpoint">
+      <div><span class="method GET">GET</span> <code>/api/v1/deals/:id</code> <span class="badge role">BDExecutive</span><span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+      <div>Respon menyertakan <code>items</code> (deal_service_items).</div>
+    </div>
+    <div class="endpoint">
+      <div><span class="method POST">POST</span> <code>/api/v1/deals</code> <span class="badge role">BDExecutive</span><span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+      <pre>{
+  "leadId": 1,
+  "companyId": 1,
+  "contactId": 1,
+  "title": "Implementasi ERP 2025",
+  "proposalStatusCode": "NOT_SUBMITTED",
+  "elStrategy": "SINGLE_EL",
+  "notes": "Prioritas Q1",
+  "items": [
+    { "serviceCode": "TP_DOC", "description": "Transfer Pricing Doc", "quantity": 1, "estimated_price": 25000000, "currency": "IDR", "payment_terms_txt": "50/50" }
+  ]
+}</pre>
+    </div>
+    <div class="endpoint">
+      <div><span class="method PUT">PUT</span> <code>/api/v1/deals/:id</code> <span class="badge role">BDExecutive</span><span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+      <pre>{
+  "approvedBy": true
+}</pre>
+      <div class="muted">Setujui deal (trigger DB akan mengisi <code>approved_at</code>).</div>
+    </div>
+    <div class="endpoint">
+      <div><span class="method DELETE">DELETE</span> <code>/api/v1/deals/:id</code> <span class="badge role">BDExecutive</span><span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+    </div>
+    <div class="endpoint">
+      <div><span class="method GET">GET</span> <code>/api/v1/deals/:dealId/items</code> • <span class="method POST">POST</span> <code>/api/v1/deals/:dealId/items</code> • <span class="method PUT">PUT</span>/<span class="method DELETE">DELETE</span> <code>/api/v1/deals/:dealId/items/:itemId</code></div>
+    </div>
+  </div>
+
+  <h2>Invoices & Installments</h2>
+  <div class="grid">
+    <div class="endpoint">
+      <div><span class="method GET">GET</span> <code>/api/v1/invoices</code> <span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+    </div>
+    <div class="endpoint">
+      <div><span class="method GET">GET</span> <code>/api/v1/invoices/:id</code> <span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+      <div>Respon menyertakan <code>installments</code>.</div>
+    </div>
+    <div class="endpoint">
+      <div><span class="method POST">POST</span> <code>/api/v1/invoices</code> <span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+      <pre>{
+  "companyId": 1,
+  "issue_date": "2025-11-10",
+  "total_amount": 50000000,
+  "currency": "IDR",
+  "statusCode": "UNPAID",
+  "notes": "Termin 2x",
+  "installments": [
+    { "seq_no": 1, "due_date": "2025-12-10", "amount": 25000000 },
+    { "seq_no": 2, "due_date": "2026-01-10", "amount": 25000000 }
+  ]
+}</pre>
+    </div>
+    <div class="endpoint">
+      <div><span class="method PUT">PUT</span> <code>/api/v1/invoices/:id</code> <span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+    </div>
+    <div class="endpoint">
+      <div><span class="method DELETE">DELETE</span> <code>/api/v1/invoices/:id</code> <span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+    </div>
+    <div class="endpoint">
+      <div><span class="method GET">GET</span> <code>/api/v1/invoices/:id/installments</code> • <span class="method POST">POST</span> <code>/api/v1/invoices/:id/installments</code> • <span class="method PUT">PUT</span>/<span class="method DELETE">DELETE</span> <code>/api/v1/invoices/:id/installments/:instId</code></div>
+    </div>
+  </div>
+
+  <h2>Payments</h2>
+  <div class="grid">
+    <div class="endpoint">
+      <div><span class="method GET">GET</span> <code>/api/v1/payments?invoiceId=123</code> <span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+    </div>
+    <div class="endpoint">
+      <div><span class="method POST">POST</span> <code>/api/v1/payments</code> <span class="badge role">Admin</span><span class="badge role">ITSpecialist</span></div>
+      <pre>{
+  "invoice_id": 123,
+  "installment_id": 456,
+  "amount": 25000000,
+  "paid_date": "2025-12-05",
+  "method": "Transfer",
+  "reference": "BNI-12345"
+}</pre>
+      <div class="muted">Trigger DB otomatis memperbarui status termin (UNPAID/PARTIAL/PAID) dan status invoice (UNPAID/PARTIAL/PAID).</div>
+    </div>
+  </div>
+
+  <h2>Panduan Pengujian di Postman</h2>
+  <ol>
+    
+    <li>Login via browser ke <code>/auth/login</code>, lalu cek <code>/me</code>. Salin cookie <code>erp.sid</code> ke Postman.</li>
+    <li>Buat lead via <code>POST /api/v1/leads/public</code>.</li>
+    <li>List leads via <code>GET /api/v1/leads</code> (perlu role sesuai).</li>
+    <li>Claim lead via <code>POST /api/v1/leads/:id/claim</code> (perlu role).</li>
+    <li>Buat deal via <code>POST /api/v1/deals</code> + tambah items jika perlu.</li>
+    <li>Approve deal via <code>PUT /api/v1/deals/:id</code> body <code>{"approvedBy": true}</code>.</li>
+    <li>Buat invoice via <code>POST /api/v1/invoices</code> + installments.</li>
+    <li>Catat pembayaran via <code>POST /api/v1/payments</code> (isi <code>installment_id</code> untuk update termin).</li>
+    <li>Cek status invoice dan progress via <code>GET /api/v1/invoices/:id</code>.</li>
+  </ol>
+
+  <h2>Kebutuhan Role</h2>
+  <table>
+    <thead><tr><th>Area</th><th>Endpoint</th><th>Roles</th></tr></thead>
+    <tbody>
+      <tr><td>Leads Public</td><td><code>POST /api/v1/leads/public</code></td><td>-</td></tr>
+      <tr><td>Leads CRUD</td><td><code>/api/v1/leads</code></td><td>BDContentCreator, BDExecutive, Admin, ITSpecialist</td></tr>
+      <tr><td>Deals</td><td><code>/api/v1/deals</code></td><td>BDExecutive, Admin, ITSpecialist</td></tr>
+      <tr><td>Invoices</td><td><code>/api/v1/invoices</code></td><td>Admin, ITSpecialist</td></tr>
+      <tr><td>Payments</td><td><code>/api/v1/payments</code></td><td>Admin, ITSpecialist</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Catatan</h2>
+  <ul>
+    <li>Trigger di <code>leads</code> mengunci klaim (tidak bisa diubah setelah terisi) dan auto set <code>claimed_at</code>.</li>
+    <li>Trigger di <code>deals</code> mengisi <code>approved_at</code> saat status berubah ke APPROVED.</li>
+    <li>Trigger di <code>payments</code> menyinkronkan status termin dan invoice.</li>
+  </ul>
+</body>
+</html>
+
+

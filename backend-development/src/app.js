@@ -59,15 +59,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan('dev'));
 
-// Health check + cek DB
-app.get('/health', async (req, res, next) => {
-  try {
-    await checkConnection();
-    res.json({ ok: true, db: 'connected' });
-  } catch (e) {
-    next(e);
-  }
-});
+
 
 // Routes
 app.use('/api/v1/users', usersRouter);
