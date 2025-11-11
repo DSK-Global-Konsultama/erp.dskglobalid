@@ -138,7 +138,7 @@ export default function App() {
         return <TicketingPage />;
       case 'reimburse':
         // Use IT-specific reimburse page for IT role, otherwise use general one
-        if (currentUser.role === 'IT') {
+        if (currentUser.role === 'ITSpecialist') {
           return <ITReimbursePage />;
         }
         return <ReimbursePage />;
