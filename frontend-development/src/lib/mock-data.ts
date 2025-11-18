@@ -588,3 +588,146 @@ export const mockInvoices: Invoice[] = [
   },
 ];
 
+// Ticket Types
+export interface TicketResponse {
+  id: string;
+  ticketId: string;
+  message: string;
+  createdBy: string;
+  createdByRole: 'IT' | 'Other';
+  createdDate: string;
+}
+
+export interface Ticket {
+  id: string;
+  title: string;
+  description: string;
+  category: 'Technical Issue' | 'Access Request' | 'Bug Report' | 'Feature Request' | 'Account Issue' | 'Other';
+  priority: 'Low' | 'Medium' | 'High';
+  status: 'Open' | 'In Progress' | 'Resolved' | 'Closed';
+  createdBy: string;
+  createdByRole: 'IT' | 'Other';
+  createdDate: string;
+  assignedTo?: string;
+  updatedDate?: string;
+  resolvedDate?: string;
+  notes?: string;
+  responses: TicketResponse[];
+}
+
+export const itStaff = [
+  'IT Specialist',
+  'IT Support 1',
+  'IT Support 2',
+];
+
+export const mockTickets: Ticket[] = [
+  {
+    id: 'T001',
+    title: 'Error saat login ke sistem',
+    description: 'Saya tidak bisa login dengan akun saya, muncul error "Invalid credentials" padahal password sudah benar.',
+    category: 'Technical Issue',
+    priority: 'High',
+    status: 'Open',
+    createdBy: 'Andi Wijaya',
+    createdByRole: 'Other',
+    createdDate: '2025-10-18',
+    responses: [],
+  },
+  {
+    id: 'T002',
+    title: 'Request fitur baru untuk dashboard',
+    description: 'Bisa ditambahkan filter berdasarkan tanggal untuk reports? Ini akan sangat membantu untuk analisis data.',
+    category: 'Feature Request',
+    priority: 'Medium',
+    status: 'In Progress',
+    createdBy: 'Rina Kusuma',
+    createdByRole: 'Other',
+    createdDate: '2025-10-15',
+    assignedTo: 'IT Specialist',
+    updatedDate: '2025-10-16',
+    responses: [
+      {
+        id: 'TR001',
+        ticketId: 'T002',
+        message: 'Terima kasih atas requestnya. Kami akan review dan implementasikan di update berikutnya.',
+        createdBy: 'IT Specialist',
+        createdByRole: 'IT',
+        createdDate: '2025-10-16',
+      },
+    ],
+  },
+  {
+    id: 'T003',
+    title: 'Request akses ke module Projects',
+    description: 'Saya sebagai PM perlu akses penuh ke module Projects untuk mengelola project yang ditugaskan ke saya.',
+    category: 'Access Request',
+    priority: 'Medium',
+    status: 'Resolved',
+    createdBy: 'Diana Putri',
+    createdByRole: 'Other',
+    createdDate: '2025-10-10',
+    assignedTo: 'IT Specialist',
+    updatedDate: '2025-10-11',
+    resolvedDate: '2025-10-11',
+    responses: [
+      {
+        id: 'TR002',
+        ticketId: 'T003',
+        message: 'Akses sudah diberikan. Silakan logout dan login kembali untuk melihat perubahan.',
+        createdBy: 'IT Specialist',
+        createdByRole: 'IT',
+        createdDate: '2025-10-11',
+      },
+    ],
+  },
+  {
+    id: 'T004',
+    title: 'Bug: Data tidak tersimpan saat submit form',
+    description: 'Ketika saya submit form untuk create lead baru, data tidak tersimpan dan tidak ada error message yang muncul.',
+    category: 'Bug Report',
+    priority: 'High',
+    status: 'In Progress',
+    createdBy: 'Sarah Wijaya',
+    createdByRole: 'Other',
+    createdDate: '2025-10-17',
+    assignedTo: 'IT Specialist',
+    updatedDate: '2025-10-17',
+    responses: [
+      {
+        id: 'TR003',
+        ticketId: 'T004',
+        message: 'Kami sedang investigasi masalah ini. Apakah bisa kirim screenshot atau detail lebih lanjut?',
+        createdBy: 'IT Specialist',
+        createdByRole: 'IT',
+        createdDate: '2025-10-17',
+      },
+    ],
+  },
+  {
+    id: 'T005',
+    title: 'Lupa password akun',
+    description: 'Saya lupa password untuk akun saya. Bisa tolong reset password?',
+    category: 'Account Issue',
+    priority: 'Low',
+    status: 'Closed',
+    createdBy: 'Tommy Budiman',
+    createdByRole: 'Other',
+    createdDate: '2025-10-12',
+    assignedTo: 'IT Specialist',
+    updatedDate: '2025-10-12',
+    resolvedDate: '2025-10-12',
+    notes: 'Password sudah direset dan dikirim ke email user.',
+    responses: [
+      {
+        id: 'TR004',
+        ticketId: 'T005',
+        message: 'Password sudah direset. Silakan cek email Anda untuk password baru.',
+        createdBy: 'IT Specialist',
+        createdByRole: 'IT',
+        createdDate: '2025-10-12',
+      },
+    ],
+  },
+];
+

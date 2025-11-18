@@ -11,19 +11,23 @@ import { LeadsPage } from './routes/bod/pages/LeadsPage';
 import { DealsPage } from './routes/bod/pages/DealsPage';
 import { ProjectsPage } from './routes/bod/pages/ProjectsPage';
 import { InvoicesPage } from './routes/bod/pages/InvoicesPage';
+import { TicketingPage as BODTicketingPage } from './routes/bod/pages/TicketingPage';
 
 // Other role imports
 import { BDContentDashboard } from './routes/bd-content';
+import { TicketingPage as BDContentTicketingPage } from './routes/bd-content/pages/TicketingPage';
 import { BDExecutiveDashboard } from './routes/bd-executive';
+import { TicketingPage as BDExecutiveTicketingPage } from './routes/bd-executive/pages/TicketingPage';
 import { PMDashboard } from './routes/pm';
+import { TicketingPage as PMTicketingPage } from './routes/pm/pages/TicketingPage';
 import { AdminDashboard } from './routes/admin';
-import { ITDashboard } from './routes/it';
+import { TicketingPage as AdminTicketingPage } from './routes/admin/pages/TicketingPage';
 import { UserAccountPage } from './routes/it/pages/UserAccountPage';
 import { ITReimbursePage } from './routes/it/pages/ReimbursePage';
 import { SettingPage } from './routes/it/pages/SettingPage';
+import { TicketingPage as ITTicketingPage } from './routes/it/pages/TicketingPage';
 
-// Ticketing and Reimburse imports
-import { TicketingPage } from './routes/ticketing';
+// Reimburse imports
 import { ReimbursePage } from './routes/reimburse';
 
 // Auth imports
@@ -31,6 +35,13 @@ import { AuthPage } from './routes/auth/AuthPage';
 
 // Staff imports
 import { PendingApprovalPage } from './routes/staff/PendingApprovalPage';
+
+// Helper function to map User role to Header role type
+const mapRoleForHeader = (role: User['role']): 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' => {
+  if (role === 'ITSpecialist') return 'IT';
+  if (role === 'Staff') return 'Admin'; // Fallback for Staff
+  return role as 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin';
+};
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -138,7 +149,21 @@ export default function App() {
 
     switch (activeNav) {
       case 'ticketing':
-        return <TicketingPage />;
+        // Use role-specific ticketing page
+        if (currentUser.role === 'ITSpecialist') {
+          return <ITTicketingPage />;
+        } else if (currentUser.role === 'BOD') {
+          return <BODTicketingPage />;
+        } else if (currentUser.role === 'BD-Content') {
+          return <BDContentTicketingPage />;
+        } else if (currentUser.role === 'BD-Executive') {
+          return <BDExecutiveTicketingPage />;
+        } else if (currentUser.role === 'PM') {
+          return <PMTicketingPage />;
+        } else if (currentUser.role === 'Admin') {
+          return <AdminTicketingPage />;
+        }
+        return null;
       case 'reimburse':
         // Use IT-specific reimburse page for IT role, otherwise use general one
         if (currentUser.role === 'ITSpecialist') {
@@ -159,8 +184,6 @@ export default function App() {
               return <ProjectsPage />;
             case 'invoices':
               return <InvoicesPage />;
-            case 'ticketing':
-              return <ITDashboard />;
             case 'user-account':
               return <UserAccountPage />;
             case 'settings':
@@ -233,7 +256,7 @@ export default function App() {
         <div className="flex flex-col">
           {/* Header */}
           <Header 
-            role={currentUser.role} 
+            role={mapRoleForHeader(currentUser.role)} 
             userName={currentUser.name}
             activeNav="dashboard"
           />
@@ -264,7 +287,7 @@ export default function App() {
         <div className="flex-1 transition-all duration-300 overflow-hidden flex flex-col bg-white h-full relative z-10">
           {/* Header */}
           <Header 
-            role={currentUser.role} 
+            role={mapRoleForHeader(currentUser.role)} 
             userName={currentUser.name}
             activeNav={activeNav}
           />
