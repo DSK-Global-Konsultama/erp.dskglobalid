@@ -22,13 +22,15 @@ import { PMDashboard } from './routes/pm';
 import { TicketingPage as PMTicketingPage } from './routes/pm/pages/TicketingPage';
 import { AdminDashboard } from './routes/admin';
 import { TicketingPage as AdminTicketingPage } from './routes/admin/pages/TicketingPage';
+import { ReimbursePage as AdminReimbursePage } from './routes/admin/pages/ReimbursePage';
 import { UserManagementPage } from './routes/it/pages/UserManagementPage';
 import { ITReimbursePage } from './routes/it/pages/ReimbursePage';
 import { SettingPage } from './routes/it/pages/SettingPage';
 import { TicketingPage as ITTicketingPage } from './routes/it/pages/TicketingPage';
-
-// Reimburse imports
-import { ReimbursePage } from './routes/reimburse';
+import { ReimbursePage as BODReimbursePage } from './routes/bod/pages/ReimbursePage';
+import { ReimbursePage as BDContentReimbursePage } from './routes/bd-content/pages/ReimbursePage';
+import { ReimbursePage as BDExecutiveReimbursePage } from './routes/bd-executive/pages/ReimbursePage';
+import { ReimbursePage as PMReimbursePage } from './routes/pm/pages/ReimbursePage';
 
 // Auth imports
 import { AuthPage } from './routes/auth/AuthPage';
@@ -165,11 +167,21 @@ export default function App() {
         }
         return null;
       case 'reimburse':
-        // Use IT-specific reimburse page for IT role, otherwise use general one
-        if (currentUser.role === 'ITSpecialist') {
+        // Use role-specific reimburse page
+        if (currentUser.role === 'Admin') {
+          return <AdminReimbursePage />;
+        } else if (currentUser.role === 'ITSpecialist') {
           return <ITReimbursePage />;
+        } else if (currentUser.role === 'BOD') {
+          return <BODReimbursePage />;
+        } else if (currentUser.role === 'BD-Content') {
+          return <BDContentReimbursePage />;
+        } else if (currentUser.role === 'BD-Executive') {
+          return <BDExecutiveReimbursePage />;
+        } else if (currentUser.role === 'PM') {
+          return <PMReimbursePage />;
         }
-        return <ReimbursePage />;
+        return null;
       default:
         // Role-specific content
         if (currentUser.role === 'ITSpecialist') {

@@ -47,14 +47,14 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         } else if (activeNav === 'ticketing') {
           return 'IT Ticketing';
         } else if (activeNav === 'reimburse') {
-          return 'Reimburse';
+          return 'My Reimbursements';
         }
         return 'Dashboard BOD';
       case 'BD-Content':
         if (activeNav === 'ticketing') {
           return 'IT Ticketing';
         } else if (activeNav === 'reimburse') {
-          return 'Reimburse';
+          return 'My Reimbursements';
         }
         return 'Input Leads';
       case 'BD-Executive':
@@ -65,21 +65,21 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         } else if (activeNav === 'ticketing') {
           return 'IT Ticketing';
         } else if (activeNav === 'reimburse') {
-          return 'Reimburse';
+          return 'My Reimbursements';
         }
         return 'Available Leads';
       case 'PM':
         if (activeNav === 'ticketing') {
           return 'IT Ticketing';
         } else if (activeNav === 'reimburse') {
-          return 'Reimburse';
+          return 'My Reimbursements';
         }
         return `PM Dashboard - ${userName || 'Project Manager'}`;
       case 'Admin':
         if (activeNav === 'ticketing') {
           return 'IT Ticketing';
         } else if (activeNav === 'reimburse') {
-          return 'Reimburse';
+          return 'Reimbursement Dashboard';
         }
         return 'Admin Dashboard';
       case 'IT':
@@ -97,7 +97,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         } else if (activeNav === 'ticketing') {
           return 'IT Ticketing';
         } else if (activeNav === 'reimburse') {
-          return 'Reimburse Management';
+          return 'My Reimbursements';
         } else if (activeNav === 'user-account') {
           return 'User Management';
         } else if (activeNav === 'settings') {
@@ -127,14 +127,14 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         } else if (activeNav === 'ticketing') {
           return 'Request bantuan atau fitur baru dari tim IT';
         } else if (activeNav === 'reimburse') {
-          return 'Request pengembalian biaya operasional';
+          return 'Submit dan lacak reimbursement pengeluaran kantor';
         }
         return '';
       case 'BD-Content':
         if (activeNav === 'ticketing') {
           return 'Request bantuan atau fitur baru dari tim IT';
         } else if (activeNav === 'reimburse') {
-          return 'Request pengembalian biaya operasional';
+          return 'Submit dan lacak reimbursement pengeluaran kantor';
         }
         return 'Input lead baru dari berbagai sumber';
       case 'BD-Executive':
@@ -145,21 +145,21 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         } else if (activeNav === 'ticketing') {
           return 'Request bantuan atau fitur baru dari tim IT';
         } else if (activeNav === 'reimburse') {
-          return 'Request pengembalian biaya operasional';
+          return 'Submit dan lacak reimbursement pengeluaran kantor';
         }
         return '';
       case 'PM':
         if (activeNav === 'ticketing') {
           return 'Request bantuan atau fitur baru dari tim IT';
         } else if (activeNav === 'reimburse') {
-          return 'Request pengembalian biaya operasional';
+          return 'Submit dan lacak reimbursement pengeluaran kantor';
         }
         return 'Projects yang di-assign ke saya';
       case 'Admin':
         if (activeNav === 'ticketing') {
           return 'Request bantuan atau fitur baru dari tim IT';
         } else if (activeNav === 'reimburse') {
-          return 'Request pengembalian biaya operasional';
+          return 'Kelola dan approve reimbursement dari semua staff';
         }
         return 'Monitor semua pembayaran dari awal sampai akhir';
       case 'IT':
@@ -177,7 +177,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         } else if (activeNav === 'ticketing') {
           return 'Kelola semua ticket yang masuk dari user';
         } else if (activeNav === 'reimburse') {
-          return 'Review dan approve/reject pengajuan reimburse';
+          return 'Submit dan lacak reimbursement pengeluaran kantor';
         } else if (activeNav === 'user-account') {
           return 'Kelola user accounts dan role assignments';
         } else if (activeNav === 'settings') {

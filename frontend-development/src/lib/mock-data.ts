@@ -827,3 +827,78 @@ export const mockTickets: Ticket[] = [
   },
 ];
 
+// Reimbursement Types
+export interface Reimbursement {
+  id: string;
+  title: string;
+  description: string;
+  category: 'Transport' | 'Meals' | 'Office Supplies' | 'Client Meeting' | 'Equipment' | 'Training' | 'Other';
+  amount: number;
+  requestDate: string;
+  expenseDate: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  submittedBy: string;
+  submittedByRole: string;
+  notes?: string;
+  receiptUrl?: string;
+  approvedDate?: string;
+  rejectedReason?: string;
+  approvedBy?: string;
+}
+
+export const mockReimbursements: Reimbursement[] = [
+  {
+    id: 'R001',
+    title: 'Bensin untuk meeting client',
+    description: 'Bensin untuk perjalanan ke meeting dengan client PT Maju Jaya',
+    category: 'Transport',
+    amount: 50000,
+    requestDate: '2025-10-16',
+    expenseDate: '2025-10-15',
+    status: 'Pending',
+    submittedBy: 'Andi Wijaya',
+    submittedByRole: 'BD Executive',
+  },
+  {
+    id: 'R002',
+    title: 'Makan siang dengan client',
+    description: 'Makan siang dengan client saat presentasi proposal',
+    category: 'Meals',
+    amount: 150000,
+    requestDate: '2025-10-11',
+    expenseDate: '2025-10-10',
+    status: 'Approved',
+    submittedBy: 'Rina Kusuma',
+    submittedByRole: 'BD Executive',
+    approvedDate: '2025-10-12',
+    approvedBy: 'Admin',
+  },
+  {
+    id: 'R003',
+    title: 'Pembelian peralatan kantor',
+    description: 'Pembelian mouse dan keyboard untuk tim',
+    category: 'Office Supplies',
+    amount: 500000,
+    requestDate: '2025-10-19',
+    expenseDate: '2025-10-18',
+    status: 'Pending',
+    submittedBy: 'Diana Putri',
+    submittedByRole: 'PM',
+  },
+  {
+    id: 'R004',
+    title: 'Training course online',
+    description: 'Pembelian course online untuk skill development',
+    category: 'Training',
+    amount: 750000,
+    requestDate: '2025-10-20',
+    expenseDate: '2025-10-19',
+    status: 'Rejected',
+    submittedBy: 'Sarah Wijaya',
+    submittedByRole: 'BD Content',
+    rejectedReason: 'Training tidak sesuai dengan kebutuhan tim',
+    approvedDate: '2025-10-21',
+    approvedBy: 'Admin',
+  },
+];
+

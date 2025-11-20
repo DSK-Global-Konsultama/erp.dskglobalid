@@ -1,7 +1,7 @@
 import { ReimbursementManagement } from '../../../../features/reimburse/components/ReimbursementManagement';
 import { authService } from '../../../../services/authService';
 
-export function ITReimbursePage() {
+export function ReimbursePage() {
   const currentUser = authService.getCurrentUser();
   const userRole = currentUser?.role === 'Admin' ? 'Admin' : 'Other';
   const userName = currentUser?.name || 'User';
@@ -24,3 +24,4 @@ export function ITReimbursePage() {
     />
   );
 }
+
