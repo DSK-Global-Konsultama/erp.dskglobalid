@@ -97,7 +97,7 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
           { id: 'invoices', label: 'Invoices', icon: FileText, path: 'invoices' },
           { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
           { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
-          { id: 'user-account', label: 'User Account', icon: Users, path: 'user-account' },
+          { id: 'user-account', label: 'User Management', icon: Users, path: 'user-account' },
           { id: 'settings', label: 'Settings', icon: Settings, path: 'settings' },
         ];
       case 'Staff':

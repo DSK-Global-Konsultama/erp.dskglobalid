@@ -22,7 +22,7 @@ import { PMDashboard } from './routes/pm';
 import { TicketingPage as PMTicketingPage } from './routes/pm/pages/TicketingPage';
 import { AdminDashboard } from './routes/admin';
 import { TicketingPage as AdminTicketingPage } from './routes/admin/pages/TicketingPage';
-import { UserAccountPage } from './routes/it/pages/UserAccountPage';
+import { UserManagementPage } from './routes/it/pages/UserManagementPage';
 import { ITReimbursePage } from './routes/it/pages/ReimbursePage';
 import { SettingPage } from './routes/it/pages/SettingPage';
 import { TicketingPage as ITTicketingPage } from './routes/it/pages/TicketingPage';
@@ -185,7 +185,7 @@ export default function App() {
             case 'invoices':
               return <InvoicesPage />;
             case 'user-account':
-              return <UserAccountPage />;
+              return <UserManagementPage />;
             case 'settings':
               return <SettingPage />;
             default:

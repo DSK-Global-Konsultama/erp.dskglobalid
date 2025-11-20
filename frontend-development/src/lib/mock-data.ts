@@ -621,6 +621,102 @@ export const itStaff = [
   'IT Support 2',
 ];
 
+// User Management Types
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role?: 'Super Admin' | 'BOD' | 'BD Content Creator' | 'BD Executive' | 'PM' | 'Consultant' | 'Admin' | 'IT';
+  createdDate: string;
+  lastLogin?: string;
+}
+
+export const mockUsers: User[] = [
+  {
+    id: 'U001',
+    name: 'Director',
+    email: 'bod@dskglobal.com',
+    role: 'BOD',
+    createdDate: '2025-01-01',
+    lastLogin: '2025-10-20',
+  },
+  {
+    id: 'U002',
+    name: 'Admin',
+    email: 'admin@dskglobal.com',
+    role: 'Admin',
+    createdDate: '2025-01-01',
+    lastLogin: '2025-10-20',
+  },
+  {
+    id: 'U003',
+    name: 'Sarah Wijaya',
+    email: 'sarah@dskglobal.com',
+    role: 'BD Content Creator',
+    createdDate: '2025-01-05',
+    lastLogin: '2025-10-19',
+  },
+  {
+    id: 'U004',
+    name: 'Tommy Budiman',
+    email: 'tommy@dskglobal.com',
+    role: 'BD Content Creator',
+    createdDate: '2025-01-05',
+    lastLogin: '2025-10-18',
+  },
+  {
+    id: 'U005',
+    name: 'Andi Wijaya',
+    email: 'andi@dskglobal.com',
+    role: 'BD Executive',
+    createdDate: '2025-01-10',
+    lastLogin: '2025-10-20',
+  },
+  {
+    id: 'U006',
+    name: 'Rina Kusuma',
+    email: 'rina@dskglobal.com',
+    role: 'BD Executive',
+    createdDate: '2025-01-10',
+    lastLogin: '2025-10-19',
+  },
+  {
+    id: 'U009',
+    name: 'Diana Putri',
+    email: 'diana@dskglobal.com',
+    role: 'PM',
+    createdDate: '2025-01-15',
+    lastLogin: '2025-10-20',
+  },
+  {
+    id: 'U013',
+    name: 'IT Specialist',
+    email: 'it@dskglobal.com',
+    role: 'IT',
+    createdDate: '2025-01-15',
+    lastLogin: '2025-10-20',
+  },
+  // Users without role (pending assignment)
+  {
+    id: 'U014',
+    name: 'Budi Santoso',
+    email: 'budi@dskglobal.com',
+    createdDate: '2025-10-20',
+  },
+  {
+    id: 'U015',
+    name: 'Siti Rahayu',
+    email: 'siti@dskglobal.com',
+    createdDate: '2025-10-21',
+  },
+  {
+    id: 'U016',
+    name: 'Ahmad Fauzi',
+    email: 'ahmad@dskglobal.com',
+    createdDate: '2025-10-22',
+  },
+];
+
 export const mockTickets: Ticket[] = [
   {
     id: 'T001',

@@ -1,7 +1,7 @@
 import { Bell } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
-type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist' | 'Staff';
+type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'ITSpecialist' | 'Staff';
 
 interface HeaderProps {
   role: UserRole;
@@ -82,6 +82,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
           return 'Reimburse';
         }
         return 'Admin Dashboard';
+      case 'IT':
       case 'ITSpecialist':
         if (activeNav === 'dashboard') {
           return 'Dashboard IT';
@@ -98,7 +99,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         } else if (activeNav === 'reimburse') {
           return 'Reimburse Management';
         } else if (activeNav === 'user-account') {
-          return 'User Account Management';
+          return 'User Management';
         } else if (activeNav === 'settings') {
           return 'System Settings';
         }
@@ -161,6 +162,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
           return 'Request pengembalian biaya operasional';
         }
         return 'Monitor semua pembayaran dari awal sampai akhir';
+      case 'IT':
       case 'ITSpecialist':
         if (activeNav === 'dashboard') {
           return 'Monitoring Business Development & Project Management';
@@ -177,7 +179,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         } else if (activeNav === 'reimburse') {
           return 'Review dan approve/reject pengajuan reimburse';
         } else if (activeNav === 'user-account') {
-          return 'Kelola akun user dan atur role-nya';
+          return 'Kelola user accounts dan role assignments';
         } else if (activeNav === 'settings') {
           return 'Pengaturan sistem dan konfigurasi';
         }
@@ -191,6 +193,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
 
   const getRoleName = () => {
     switch (role) {
+      case 'IT':
       case 'ITSpecialist':
         return 'IT SPECIALIST';
       case 'BD-Content':
