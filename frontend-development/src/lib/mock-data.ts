@@ -69,6 +69,7 @@ export interface Project {
   startDate?: string;
   completionDate?: string;
   pmNotified: boolean;
+  progressPercentage?: number; // Progress percentage (0-100) yang diisi oleh PM
 }
 
 export interface PaymentTerm {
@@ -383,6 +384,7 @@ export const mockProjects: Project[] = [
     dueDate: '2025-11-30',
     startDate: '2025-10-11',
     pmNotified: true,
+    progressPercentage: 75,
   },
   {
     id: 'P002',
@@ -395,9 +397,10 @@ export const mockProjects: Project[] = [
     assignedPM: 'Eko Prasetyo',
     assignedConsultant: 'Citra Dewi',
     status: 'in-progress',
-    dueDate: '2025-12-20',
+    dueDate: '2025-11-30',
     startDate: '2025-10-11',
     pmNotified: true,
+    progressPercentage: 45,
   },
   {
     id: 'P003',
@@ -411,6 +414,7 @@ export const mockProjects: Project[] = [
     status: 'waiting-first-payment',
     dueDate: '2026-02-15',
     pmNotified: true,
+    progressPercentage: 0,
   },
   {
     id: 'P004',
@@ -426,6 +430,7 @@ export const mockProjects: Project[] = [
     dueDate: '2026-04-08',
     startDate: '2025-10-16',
     pmNotified: true,
+    progressPercentage: 30,
   },
   {
     id: 'P005',
@@ -438,6 +443,7 @@ export const mockProjects: Project[] = [
     status: 'waiting-pm',
     dueDate: '2026-03-15',
     pmNotified: false,
+    progressPercentage: 0,
   },
   {
     id: 'P006',
@@ -450,6 +456,7 @@ export const mockProjects: Project[] = [
     status: 'waiting-pm',
     dueDate: '2026-05-20',
     pmNotified: false,
+    progressPercentage: 0,
   },
   {
     id: 'P007',
@@ -462,6 +469,21 @@ export const mockProjects: Project[] = [
     status: 'waiting-pm',
     dueDate: '2026-06-10',
     pmNotified: false,
+    progressPercentage: 0,
+  },
+  {
+    id: 'P008',
+    dealId: 'D004',
+    serviceId: 'S008',
+    elId: 'EL008',
+    projectName: 'CRM System - PT Maju Jaya',
+    serviceName: 'CRM System',
+    clientName: 'Budi Santoso - PT Maju Jaya',
+    assignedPM: 'Diana Putri',
+    status: 'waiting-first-payment',
+    dueDate: '2026-03-20',
+    pmNotified: true,
+    progressPercentage: 0,
   },
 ];
 

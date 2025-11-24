@@ -5,6 +5,7 @@ import { Badge } from '../../../../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../../../components/ui/dialog';
 import { Label } from '../../../../components/ui/label';
+import { Input } from '../../../../components/ui/input';
 import { mockInvoices } from '../../../../lib/mock-data';
 import { Clock, CheckCircle, Users } from 'lucide-react';
 import type { Project } from '../../../../lib/mock-data';
@@ -144,6 +145,77 @@ export function ProjectsTable({ myProjects, consultants, onUpdateProjects }: Pro
     toast.success('Project selesai! Trigger ke Admin untuk tagih final payment.');
   };
 
+  const handleProgressChange = (id: string, value: string) => {
+    // Allow empty string for typing
+    if (value === '') {
+      const updatedProjects = myProjects.map(p => {
+        if (p.id === id) {
+          return {
+            ...p,
+            progressPercentage: undefined,
+          };
+        }
+        return p;
+      });
+      onUpdateProjects(updatedProjects);
+      return;
+    }
+
+    const progressValue = parseInt(value);
+    if (isNaN(progressValue)) {
+      return;
+    }
+
+    // Validate range
+    if (progressValue < 0 || progressValue > 100) {
+      return; // Don't update if out of range, but allow typing
+    }
+
+    const updatedProjects = myProjects.map(p => {
+      if (p.id === id) {
+        return {
+          ...p,
+          progressPercentage: progressValue,
+        };
+      }
+      return p;
+    });
+    
+    onUpdateProjects(updatedProjects);
+  };
+
+  const handleProgressBlur = (id: string, value: string) => {
+    const progressValue = parseInt(value) || 0;
+    if (progressValue < 0) {
+      toast.error('Progress tidak boleh kurang dari 0%');
+      const updatedProjects = myProjects.map(p => {
+        if (p.id === id) {
+          return {
+            ...p,
+            progressPercentage: 0,
+          };
+        }
+        return p;
+      });
+      onUpdateProjects(updatedProjects);
+      return;
+    }
+    if (progressValue > 100) {
+      toast.error('Progress tidak boleh lebih dari 100%');
+      const updatedProjects = myProjects.map(p => {
+        if (p.id === id) {
+          return {
+            ...p,
+            progressPercentage: 100,
+          };
+        }
+        return p;
+      });
+      onUpdateProjects(updatedProjects);
+      return;
+    }
+  };
+
   return (
     <>
       <Card>
@@ -160,6 +232,7 @@ export function ProjectsTable({ myProjects, consultants, onUpdateProjects }: Pro
                   <TableHead>Client</TableHead>
                   <TableHead>Consultant</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Progress</TableHead>
                   <TableHead>Payment 50%</TableHead>
                   <TableHead>Due Date</TableHead>
                   <TableHead>Sisa Waktu</TableHead>
@@ -167,7 +240,17 @@ export function ProjectsTable({ myProjects, consultants, onUpdateProjects }: Pro
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {myProjects.map(project => {
+                {myProjects.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8">
+                      <div className="flex flex-col items-center justify-center text-gray-500">
+                        <p className="text-sm font-medium">Belum ada data project</p>
+                        <p className="text-xs mt-1">Tidak ada project yang di-assign ke Anda</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  myProjects.map(project => {
                   const daysUntilDue = getDaysUntilDue(project.dueDate);
                   const isUrgent = daysUntilDue <= 7 && project.status === 'in-progress';
                   const isOverdue = daysUntilDue < 0 && project.status === 'in-progress';
@@ -194,6 +277,26 @@ export function ProjectsTable({ myProjects, consultants, onUpdateProjects }: Pro
                         )}
                       </TableCell>
                       <TableCell>{getStatusBadge(project.status)}</TableCell>
+                      <TableCell>
+                        {project.status === 'in-progress' ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={project.progressPercentage ?? 0}
+                              onChange={(e) => handleProgressChange(project.id, e.target.value)}
+                              onBlur={(e) => handleProgressBlur(project.id, e.target.value)}
+                              className="w-20 h-8 text-sm"
+                            />
+                            <span className="text-sm text-gray-500">%</span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-400">
+                            {project.progressPercentage !== undefined ? `${project.progressPercentage}%` : '0%'}
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {project.status === 'waiting-first-payment' ? (
                           firstPaymentStatus === 'paid' ? (
@@ -265,7 +368,8 @@ export function ProjectsTable({ myProjects, consultants, onUpdateProjects }: Pro
                       </TableCell>
                     </TableRow>
                   );
-                })}
+                  })
+                )}
               </TableBody>
             </Table>
           </div>
