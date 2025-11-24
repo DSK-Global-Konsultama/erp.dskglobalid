@@ -105,7 +105,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         }
         return 'Dashboard IT';
       case 'Staff':
-        return 'Menunggu Persetujuan';
+        return 'Pending Approval';
       default:
         return 'Dashboard';
     }
@@ -185,7 +185,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         }
         return '';
       case 'Staff':
-        return 'Akun Anda sedang menunggu persetujuan dari administrator';
+        return 'Sedang menunggu persetujuan dari administrator';
       default:
         return '';
     }

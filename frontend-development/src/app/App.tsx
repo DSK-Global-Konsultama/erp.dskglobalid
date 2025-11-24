@@ -39,9 +39,9 @@ import { AuthPage } from './routes/auth/AuthPage';
 import { PendingApprovalPage } from './routes/staff/PendingApprovalPage';
 
 // Helper function to map User role to Header role type
-const mapRoleForHeader = (role: User['role']): 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' => {
+const mapRoleForHeader = (role: User['role']): 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'Staff' => {
   if (role === 'ITSpecialist') return 'IT';
-  if (role === 'Staff') return 'Admin'; // Fallback for Staff
+  if (role === 'Staff') return 'Staff';
   return role as 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin';
 };
 
@@ -245,7 +245,7 @@ export default function App() {
           return <AdminDashboard />;
         } else if (currentUser.role === 'Staff') {
           // Staff role: show pending approval page
-          return <PendingApprovalPage userName={currentUser.name} userEmail={currentUser.email} />;
+          return <PendingApprovalPage userName={currentUser.name} userEmail={currentUser.email} onLogout={handleLogout} />;
         }
         return null;
     }
