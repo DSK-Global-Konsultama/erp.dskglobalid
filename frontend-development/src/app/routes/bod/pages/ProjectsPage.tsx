@@ -138,6 +138,13 @@ export function ProjectsPage() {
     return daysUntilDue <= 15 && daysUntilDue >= 0 && progress < 100;
   });
 
+  // Projects yang sudah overdue
+  const projectsOverdue = projects.filter(p => {
+    if (p.status !== 'in-progress') return false;
+    const daysUntilDue = getDaysUntilDue(p.dueDate);
+    return daysUntilDue < 0;
+  });
+
   return (
     <div className="space-y-6">
       {/* Alert for waiting PM assignment */}
@@ -159,6 +166,17 @@ export function ProjectsPage() {
           <AlertTitle>Waiting First Payment</AlertTitle>
           <AlertDescription>
             Ada {projectsWaitingPayment.length} project menunggu pembayaran 50% sebelum bisa dimulai PM.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Alert for projects overdue */}
+      {projectsOverdue.length > 0 && (
+        <Alert className="border-red-500 bg-red-50">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <AlertTitle className="text-red-900">Peringatan Overdue!</AlertTitle>
+          <AlertDescription className="text-red-800">
+            Ada {projectsOverdue.length} project yang sudah melewati deadline. Segera selesaikan project ini!
           </AlertDescription>
         </Alert>
       )}
@@ -255,13 +273,31 @@ export function ProjectsPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  projects.map(project => {
+                  [...projects].sort((a, b) => {
+                    const daysA = getDaysUntilDue(a.dueDate);
+                    const daysB = getDaysUntilDue(b.dueDate);
+                    return daysA - daysB; // Urutkan dari terdekat hingga paling lama
+                  }).map(project => {
                     const daysUntilDue = getDaysUntilDue(project.dueDate);
                     const isUrgent = daysUntilDue <= 7 && project.status === 'in-progress';
                     const isOverdue = daysUntilDue < 0 && project.status === 'in-progress';
+                    const progress = project.progressPercentage ?? 0;
+                    const isAtRisk = project.status === 'in-progress' && 
+                                     daysUntilDue <= 15 && 
+                                     daysUntilDue >= 0 && 
+                                     progress < 100;
 
                     return (
-                      <TableRow key={project.id} className={isOverdue ? 'bg-red-50' : ''}>
+                      <TableRow 
+                        key={project.id} 
+                        className={
+                          isOverdue 
+                            ? 'bg-red-50' 
+                            : isAtRisk 
+                            ? 'bg-orange-50' 
+                            : ''
+                        }
+                      >
                       <TableCell>{project.id}</TableCell>
                       <TableCell>
                         <div>

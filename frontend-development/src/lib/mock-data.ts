@@ -427,7 +427,7 @@ export const mockProjects: Project[] = [
     assignedPM: 'Diana Putri',
     assignedConsultant: 'Hadi Purnomo',
     status: 'in-progress',
-    dueDate: '2026-04-08',
+    dueDate: '2025-10-08',
     startDate: '2025-10-16',
     pmNotified: true,
     progressPercentage: 30,

@@ -43,9 +43,27 @@ export function PMDashboard({ pmName }: PMDashboardProps) {
     return daysUntilDue <= 15 && daysUntilDue >= 0 && progress < 100;
   });
 
+  // Projects yang sudah overdue
+  const projectsOverdue = myProjects.filter(p => {
+    if (p.status !== 'in-progress') return false;
+    const daysUntilDue = getDaysUntilDue(p.dueDate);
+    return daysUntilDue < 0;
+  });
+
   return (
     <div className="space-y-6">
       <NewAssignmentAlert myProjects={myProjects} />
+
+      {/* Alert for projects overdue */}
+      {projectsOverdue.length > 0 && (
+        <Alert className="border-red-500 bg-red-50">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <AlertTitle className="text-red-900">Peringatan Overdue!</AlertTitle>
+          <AlertDescription className="text-red-800">
+            Ada {projectsOverdue.length} project yang sudah melewati deadline. Segera selesaikan project ini!
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Alert for projects at risk */}
       {projectsAtRisk.length > 0 && (

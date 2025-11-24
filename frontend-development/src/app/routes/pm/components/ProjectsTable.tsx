@@ -250,14 +250,32 @@ export function ProjectsTable({ myProjects, consultants, onUpdateProjects }: Pro
                     </TableCell>
                   </TableRow>
                 ) : (
-                  myProjects.map(project => {
+                  [...myProjects].sort((a, b) => {
+                    const daysA = getDaysUntilDue(a.dueDate);
+                    const daysB = getDaysUntilDue(b.dueDate);
+                    return daysA - daysB; // Urutkan dari terdekat hingga paling lama
+                  }).map(project => {
                   const daysUntilDue = getDaysUntilDue(project.dueDate);
                   const isUrgent = daysUntilDue <= 7 && project.status === 'in-progress';
                   const isOverdue = daysUntilDue < 0 && project.status === 'in-progress';
+                  const progress = project.progressPercentage ?? 0;
+                  const isAtRisk = project.status === 'in-progress' && 
+                                   daysUntilDue <= 15 && 
+                                   daysUntilDue >= 0 && 
+                                   progress < 100;
                   const firstPaymentStatus = getFirstPaymentStatus(project.id);
 
                   return (
-                    <TableRow key={project.id} className={isOverdue ? 'bg-red-50' : ''}>
+                    <TableRow 
+                      key={project.id} 
+                      className={
+                        isOverdue 
+                          ? 'bg-red-50' 
+                          : isAtRisk 
+                          ? 'bg-orange-50' 
+                          : ''
+                      }
+                    >
                       <TableCell>
                         <div>
                           <p className="text-sm font-medium">{project.serviceName}</p>
