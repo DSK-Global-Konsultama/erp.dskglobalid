@@ -632,7 +632,20 @@ export function DealsManagement({ userRole, userName }: DealsManagementProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredDeals.map(deal => {
+                {filteredDeals.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <div className="flex flex-col items-center justify-center text-gray-500">
+                        <p className="text-sm font-medium">Belum ada data deals</p>
+                        <p className="text-xs mt-1">
+                          {userRole === 'BD-Executive' && 'Belum ada deals yang Anda buat'}
+                          {userRole === 'BOD' && 'Belum ada deals di sistem'}
+                        </p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredDeals.map(deal => {
                   const allELsApproved = deal.els.every(el => el.status === 'approved');
                   
                   return (
@@ -695,7 +708,8 @@ export function DealsManagement({ userRole, userName }: DealsManagementProps) {
                       </TableCell>
                     </TableRow>
                   );
-                })}
+                  })
+                )}
               </TableBody>
             </Table>
           </div>

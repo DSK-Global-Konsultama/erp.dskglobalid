@@ -18,8 +18,23 @@ interface LeadsManagementProps {
 }
 
 export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
+  // Helper function untuk filter awal BD Executive
+  const getInitialFilteredLeads = (leadsList: Lead[]) => {
+    if (userRole === 'BD-Executive') {
+      const claimedByUser = leadsList.filter(l => l.claimedBy === userName);
+      const availableLeads = leadsList.filter(l => l.status === 'available');
+      const combined = [...availableLeads, ...claimedByUser];
+      const uniqueIds = new Set(combined.map(l => l.id));
+      return Array.from(uniqueIds).map(id => combined.find(l => l.id === id)!);
+    }
+    if (userRole === 'BD-Content') {
+      return leadsList.filter(l => l.createdBy === userName);
+    }
+    return leadsList;
+  };
+
   const [leads, setLeads] = useState<Lead[]>(mockLeads);
-  const [filteredLeads, setFilteredLeads] = useState<Lead[]>(mockLeads);
+  const [filteredLeads, setFilteredLeads] = useState<Lead[]>(() => getInitialFilteredLeads(mockLeads));
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterSource, setFilterSource] = useState<string>('all');
   const [dateFrom, setDateFrom] = useState<string>('');
@@ -40,7 +55,16 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
 
     // BD Executive hanya lihat available leads atau yang dia claim
     if (userRole === 'BD-Executive') {
-      filtered = filtered.filter(l => l.status === 'available' || l.claimedBy === userName);
+      // Pisahkan leads yang sudah di-claim oleh user dan yang belum di-claim
+      const claimedByUser = filtered.filter(l => l.claimedBy === userName);
+      const availableLeads = filtered.filter(l => l.status === 'available');
+      
+      // Gabungkan leads yang available dan yang sudah di-claim oleh user
+      filtered = [...availableLeads, ...claimedByUser];
+      
+      // Hapus duplikat jika ada (jika lead available dan sudah di-claim oleh user)
+      const uniqueIds = new Set(filtered.map(l => l.id));
+      filtered = Array.from(uniqueIds).map(id => filtered.find(l => l.id === id)!);
     }
 
     // BD Content Creator lihat semua leads yang dia buat
@@ -49,7 +73,18 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
     }
 
     if (filterStatus !== 'all') {
-      filtered = filtered.filter(l => l.status === filterStatus);
+      // Untuk BD Executive, filter status hanya diterapkan pada leads yang available
+      // Leads yang sudah di-claim oleh user tetap ditampilkan
+      if (userRole === 'BD-Executive') {
+        const claimedByUser = filtered.filter(l => l.claimedBy === userName);
+        const otherLeads = filtered.filter(l => l.claimedBy !== userName && l.status === filterStatus);
+        filtered = [...claimedByUser, ...otherLeads];
+        // Hapus duplikat
+        const uniqueIds = new Set(filtered.map(l => l.id));
+        filtered = Array.from(uniqueIds).map(id => filtered.find(l => l.id === id)!);
+      } else {
+        filtered = filtered.filter(l => l.status === filterStatus);
+      }
     }
 
     if (filterSource !== 'all') {
@@ -72,7 +107,17 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
     setFilterSource('all');
     setDateFrom('');
     setDateTo('');
-    setFilteredLeads(leads);
+    
+    // Untuk BD Executive, tetap filter hanya available dan yang sudah di-claim
+    if (userRole === 'BD-Executive') {
+      const claimedByUser = leads.filter(l => l.claimedBy === userName);
+      const availableLeads = leads.filter(l => l.status === 'available');
+      const combined = [...availableLeads, ...claimedByUser];
+      const uniqueIds = new Set(combined.map(l => l.id));
+      setFilteredLeads(Array.from(uniqueIds).map(id => combined.find(l => l.id === id)!));
+    } else {
+      setFilteredLeads(leads);
+    }
   };
 
   const handleAddLead = () => {
@@ -391,7 +436,21 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredLeads.map(lead => (
+                {filteredLeads.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8">
+                      <div className="flex flex-col items-center justify-center text-gray-500">
+                        <p className="text-sm font-medium">Belum ada data leads</p>
+                        <p className="text-xs mt-1">
+                          {userRole === 'BD-Executive' && 'Tidak ada leads yang tersedia atau yang sudah Anda claim'}
+                          {userRole === 'BD-Content' && 'Belum ada leads yang Anda input'}
+                          {userRole === 'BOD' && 'Belum ada leads di sistem'}
+                        </p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredLeads.map(lead => (
                   <TableRow key={lead.id} className={isMissed(lead) ? 'bg-red-50' : ''}>
                     <TableCell>{lead.id}</TableCell>
                     <TableCell>
@@ -476,7 +535,8 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
