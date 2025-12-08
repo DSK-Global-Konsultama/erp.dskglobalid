@@ -35,13 +35,9 @@ import { ReimbursePage as PMReimbursePage } from './routes/pm/pages/ReimbursePag
 // Auth imports
 import { AuthPage } from './routes/auth/AuthPage';
 
-// Staff imports
-import { PendingApprovalPage } from './routes/staff/PendingApprovalPage';
-
 // Helper function to map User role to Header role type
-const mapRoleForHeader = (role: User['role']): 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'Staff' => {
+const mapRoleForHeader = (role: User['role']): 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' => {
   if (role === 'ITSpecialist') return 'IT';
-  if (role === 'Staff') return 'Staff';
   return role as 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin';
 };
 
@@ -243,9 +239,6 @@ export default function App() {
           return <PMDashboard pmName={currentUser.name} />;
         } else if (currentUser.role === 'Admin') {
           return <AdminDashboard />;
-        } else if (currentUser.role === 'Staff') {
-          // Staff role: show pending approval page
-          return <PendingApprovalPage userName={currentUser.name} userEmail={currentUser.email} onLogout={handleLogout} />;
         }
         return null;
     }
@@ -258,30 +251,6 @@ export default function App() {
         <AuthPage onLoginSuccess={handleLogin} />
         <Toaster />
       </>
-    );
-  }
-
-  // For Staff role, don't show sidebar - just show pending approval page with header
-  if (currentUser.role === 'Staff') {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="flex flex-col">
-          {/* Header */}
-          <Header 
-            role={mapRoleForHeader(currentUser.role)} 
-            userName={currentUser.name}
-            activeNav="dashboard"
-          />
-          
-          {/* Main Content */}
-          <main className="flex-1 overflow-y-auto bg-gray-50">
-            <div className="flex flex-col gap-6 p-6">
-              {renderContent()}
-            </div>
-          </main>
-        </div>
-        <Toaster />
-      </div>
     );
   }
 

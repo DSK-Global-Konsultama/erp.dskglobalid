@@ -1,7 +1,7 @@
 import { Bell } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
-type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'ITSpecialist' | 'Staff';
+type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'ITSpecialist';
 
 interface HeaderProps {
   role: UserRole;
@@ -104,8 +104,6 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
           return 'System Settings';
         }
         return 'Dashboard IT';
-      case 'Staff':
-        return 'Pending Approval';
       default:
         return 'Dashboard';
     }
@@ -184,8 +182,6 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
           return 'Pengaturan sistem dan konfigurasi';
         }
         return '';
-      case 'Staff':
-        return 'Sedang menunggu persetujuan dari administrator';
       default:
         return '';
     }
@@ -202,8 +198,6 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         return 'BD EXECUTIVE';
       case 'PM':
         return 'PROJECT MANAGER';
-      case 'Staff':
-        return 'STAFF';
       default:
         return role;
     }

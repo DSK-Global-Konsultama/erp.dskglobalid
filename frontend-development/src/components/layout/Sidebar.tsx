@@ -15,7 +15,7 @@ import {
   Building2
 } from 'lucide-react';
 
-type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist' | 'Staff';
+type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist';
 type NavItem = {
   id: string;
   label: string;
@@ -100,9 +100,6 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
           { id: 'user-account', label: 'User Management', icon: Users, path: 'user-account' },
           { id: 'settings', label: 'Settings', icon: Settings, path: 'settings' },
         ];
-      case 'Staff':
-        // Staff hanya bisa melihat halaman pending approval, tidak ada menu navigasi
-        return [];
       default:
         return [];
     }

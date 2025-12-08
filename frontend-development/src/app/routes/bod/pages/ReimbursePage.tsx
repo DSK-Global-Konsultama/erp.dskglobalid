@@ -13,7 +13,6 @@ export function ReimbursePage() {
     'BD-Executive': 'BD Executive',
     'PM': 'PM',
     'ITSpecialist': 'IT',
-    'Staff': 'Staff',
   };
   const userRoleString = roleMap[currentUser?.role || ''] || currentUser?.role || 'Other';
 
