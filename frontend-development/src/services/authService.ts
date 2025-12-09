@@ -2,7 +2,7 @@ export interface User {
   id: string;
   username: string;
   name: string;
-  role: 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist';
+  role: 'BOD' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist' | 'SuperAdmin';
   email: string;
 }
 
@@ -37,7 +37,7 @@ export const dummyUsers: Array<User & { password: string }> = [
     username: 'sarah',
     password: 'sarah123',
     name: 'Sarah Wijaya',
-    role: 'BD-Content',
+    role: 'BD-MEO',
     email: 'sarah@dskglobal.com',
   },
   {
@@ -45,7 +45,7 @@ export const dummyUsers: Array<User & { password: string }> = [
     username: 'tommy',
     password: 'tommy123',
     name: 'Tommy Budiman',
-    role: 'BD-Content',
+    role: 'BD-MEO',
     email: 'tommy@dskglobal.com',
   },
   // BD Executives
@@ -114,14 +114,14 @@ export const dummyUsers: Array<User & { password: string }> = [
     role: 'PM',
     email: 'gita@dskglobal.com',
   },
-  // IT Account
+  // Super Admin Account
   {
-    id: 'U013',
-    username: 'it',
-    password: 'it123',
-    name: 'IT Specialist',
-    role: 'ITSpecialist',
-    email: 'it@dskglobal.com',
+    id: 'U014',
+    username: 'superadmin',
+    password: 'superadmin123',
+    name: 'Super Admin',
+    role: 'SuperAdmin',
+    email: 'superadmin@dskglobal.com',
   },
 ];
 
@@ -209,12 +209,13 @@ export const authService = {
       const roles: string[] = Array.isArray(beUser.roles) ? beUser.roles : [];
       // Urutan prioritas supaya redirect konsisten
       const priority: Array<User['role']> = [
+        'SuperAdmin',
         'BOD',
         'Admin',
         'ITSpecialist',
         'PM',
         'BD-Executive',
-        'BD-Content'
+        'BD-MEO'
       ];
       // Normalize roles: handle case sensitivity
       const normalized = roles.map(r => {

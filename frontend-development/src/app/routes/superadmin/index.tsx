@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertCircle, Clock, CheckCircle, XCircle, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 
-export interface ITTicket {
+export interface SuperAdminTicket {
   id: string;
   title: string;
   description: string;
@@ -25,7 +25,7 @@ export interface ITTicket {
   resolution?: string;
 }
 
-const mockTickets: ITTicket[] = [
+const mockTickets: SuperAdminTicket[] = [
   {
     id: 'IT-001',
     title: 'Error saat login ke sistem',
@@ -62,10 +62,10 @@ const mockTickets: ITTicket[] = [
   },
 ];
 
-export function ITDashboard() {
-  const [tickets, setTickets] = useState<ITTicket[]>(mockTickets);
+export function SuperAdminDashboard() {
+  const [tickets, setTickets] = useState<SuperAdminTicket[]>(mockTickets);
   const [showForm, setShowForm] = useState(false);
-  const [selectedTicket, setSelectedTicket] = useState<ITTicket | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<SuperAdminTicket | null>(null);
   const [showResolveDialog, setShowResolveDialog] = useState(false);
   const [resolution, setResolution] = useState('');
   const [formData, setFormData] = useState({
@@ -77,7 +77,7 @@ export function ITDashboard() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const newTicket: ITTicket = {
+    const newTicket: SuperAdminTicket = {
       id: `IT-${String(tickets.length + 1).padStart(3, '0')}`,
       ...formData,
       status: 'open',
@@ -438,4 +438,3 @@ export function ITDashboard() {
     </div>
   );
 }
-

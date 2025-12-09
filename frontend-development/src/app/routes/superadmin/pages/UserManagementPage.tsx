@@ -86,6 +86,7 @@ export function UserManagementPage() {
                         <SelectValue placeholder="Pilih Role..." />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="Super Admin">Super Admin</SelectItem>
                         <SelectItem value="BOD">BOD</SelectItem>
                         <SelectItem value="BD Content Creator">BD Content Creator</SelectItem>
                         <SelectItem value="BD Executive">BD Executive</SelectItem>
@@ -167,4 +168,3 @@ export function UserManagementPage() {
     </div>
   );
 }
-

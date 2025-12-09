@@ -13,7 +13,7 @@ import { Plus, Filter, Calendar, AlertTriangle, Hand } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface LeadsManagementProps {
-  userRole: 'BOD' | 'BD-Content' | 'BD-Executive';
+  userRole: 'BOD' | 'BD-MEO' | 'BD-Executive';
   userName: string;
 }
 
@@ -27,7 +27,7 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
       const uniqueIds = new Set(combined.map(l => l.id));
       return Array.from(uniqueIds).map(id => combined.find(l => l.id === id)!);
     }
-    if (userRole === 'BD-Content') {
+    if (userRole === 'BD-MEO') {
       return leadsList.filter(l => l.createdBy === userName);
     }
     return leadsList;
@@ -68,7 +68,7 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
     }
 
     // BD Content Creator lihat semua leads yang dia buat
-    if (userRole === 'BD-Content') {
+    if (userRole === 'BD-MEO') {
       filtered = filtered.filter(l => l.createdBy === userName);
     }
 
@@ -329,11 +329,11 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
               <CardTitle>Daftar Leads ({filteredLeads.length})</CardTitle>
               <CardDescription>
                 {userRole === 'BD-Executive' && `${availableLeads} leads tersedia untuk di-claim`}
-                {userRole === 'BD-Content' && 'Leads yang saya input'}
+                {userRole === 'BD-MEO' && 'Leads yang saya input'}
                 {userRole === 'BOD' && 'Semua leads di sistem'}
               </CardDescription>
             </div>
-            {userRole === 'BD-Content' && (
+            {userRole === 'BD-MEO' && (
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
@@ -443,7 +443,7 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
                         <p className="text-sm font-medium">Belum ada data leads</p>
                         <p className="text-xs mt-1">
                           {userRole === 'BD-Executive' && 'Tidak ada leads yang tersedia atau yang sudah Anda claim'}
-                          {userRole === 'BD-Content' && 'Belum ada leads yang Anda input'}
+                          {userRole === 'BD-MEO' && 'Belum ada leads yang Anda input'}
                           {userRole === 'BOD' && 'Belum ada leads di sistem'}
                         </p>
                       </div>

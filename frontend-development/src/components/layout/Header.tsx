@@ -1,7 +1,7 @@
 import { Bell } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
-type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'ITSpecialist';
+type UserRole = 'BOD' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'ITSpecialist' | 'SuperAdmin';
 
 interface HeaderProps {
   role: UserRole;
@@ -50,7 +50,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
           return 'My Reimbursements';
         }
         return 'Dashboard BOD';
-      case 'BD-Content':
+      case 'BD-MEO':
         if (activeNav === 'ticketing') {
           return 'IT Ticketing';
         } else if (activeNav === 'reimburse') {
@@ -84,8 +84,9 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         return 'Admin Dashboard';
       case 'IT':
       case 'ITSpecialist':
+      case 'SuperAdmin':
         if (activeNav === 'dashboard') {
-          return 'Dashboard IT';
+          return role === 'SuperAdmin' ? 'Dashboard Super Admin' : 'Dashboard IT';
         } else if (activeNav === 'leads') {
           return 'All Leads';
         } else if (activeNav === 'deals') {
@@ -103,7 +104,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         } else if (activeNav === 'settings') {
           return 'System Settings';
         }
-        return 'Dashboard IT';
+        return role === 'SuperAdmin' ? 'Dashboard Super Admin' : 'Dashboard IT';
       default:
         return 'Dashboard';
     }
@@ -128,7 +129,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
           return 'Submit dan lacak reimbursement pengeluaran kantor';
         }
         return '';
-      case 'BD-Content':
+      case 'BD-MEO':
         if (activeNav === 'ticketing') {
           return 'Request bantuan atau fitur baru dari tim IT';
         } else if (activeNav === 'reimburse') {
@@ -162,6 +163,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         return 'Monitor semua pembayaran dari awal sampai akhir';
       case 'IT':
       case 'ITSpecialist':
+      case 'SuperAdmin':
         if (activeNav === 'dashboard') {
           return 'Monitoring Business Development & Project Management';
         } else if (activeNav === 'leads') {
@@ -189,11 +191,13 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
 
   const getRoleName = () => {
     switch (role) {
+      case 'SuperAdmin':
+        return 'SUPER ADMIN';
       case 'IT':
       case 'ITSpecialist':
         return 'IT SPECIALIST';
-      case 'BD-Content':
-        return 'BD CONTENT';
+      case 'BD-MEO':
+        return 'BD MEO';
       case 'BD-Executive':
         return 'BD EXECUTIVE';
       case 'PM':

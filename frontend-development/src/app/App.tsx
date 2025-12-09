@@ -14,8 +14,8 @@ import { InvoicesPage } from './routes/bod/pages/InvoicesPage';
 import { TicketingPage as BODTicketingPage } from './routes/bod/pages/TicketingPage';
 
 // Other role imports
-import { BDContentDashboard } from './routes/bd-content';
-import { TicketingPage as BDContentTicketingPage } from './routes/bd-content/pages/TicketingPage';
+import { BDMEODashboard } from './routes/bd-meo';
+import { TicketingPage as BDMEOTicketingPage } from './routes/bd-meo/pages/TicketingPage';
 import { BDExecutiveDashboard } from './routes/bd-executive';
 import { TicketingPage as BDExecutiveTicketingPage } from './routes/bd-executive/pages/TicketingPage';
 import { PMDashboard } from './routes/pm';
@@ -23,22 +23,24 @@ import { TicketingPage as PMTicketingPage } from './routes/pm/pages/TicketingPag
 import { AdminDashboard } from './routes/admin';
 import { TicketingPage as AdminTicketingPage } from './routes/admin/pages/TicketingPage';
 import { ReimbursePage as AdminReimbursePage } from './routes/admin/pages/ReimbursePage';
-import { UserManagementPage } from './routes/it/pages/UserManagementPage';
-import { ITReimbursePage } from './routes/it/pages/ReimbursePage';
-import { SettingPage } from './routes/it/pages/SettingPage';
-import { TicketingPage as ITTicketingPage } from './routes/it/pages/TicketingPage';
 import { ReimbursePage as BODReimbursePage } from './routes/bod/pages/ReimbursePage';
-import { ReimbursePage as BDContentReimbursePage } from './routes/bd-content/pages/ReimbursePage';
+import { ReimbursePage as BDMEOReimbursePage } from './routes/bd-meo/pages/ReimbursePage';
 import { ReimbursePage as BDExecutiveReimbursePage } from './routes/bd-executive/pages/ReimbursePage';
 import { ReimbursePage as PMReimbursePage } from './routes/pm/pages/ReimbursePage';
+// SuperAdmin imports
+import { UserManagementPage as SuperAdminUserManagementPage } from './routes/superadmin/pages/UserManagementPage';
+import { SuperAdminReimbursePage } from './routes/superadmin/pages/ReimbursePage';
+import { SettingPage as SuperAdminSettingPage } from './routes/superadmin/pages/SettingPage';
+import { TicketingPage as SuperAdminTicketingPage } from './routes/superadmin/pages/TicketingPage';
 
 // Auth imports
 import { AuthPage } from './routes/auth/AuthPage';
 
 // Helper function to map User role to Header role type
-const mapRoleForHeader = (role: User['role']): 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' => {
+const mapRoleForHeader = (role: User['role']): 'BOD' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'SuperAdmin' => {
   if (role === 'ITSpecialist') return 'IT';
-  return role as 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin';
+  if (role === 'SuperAdmin') return 'SuperAdmin';
+  return role as 'BOD' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin';
 };
 
 export default function App() {
@@ -52,7 +54,7 @@ export default function App() {
     if (user) {
       setCurrentUser(user);
       // Set default active nav based on role
-      if (user.role === 'BD-Content' || user.role === 'BD-Executive') {
+      if (user.role === 'BD-MEO' || user.role === 'BD-Executive') {
         setActiveNav('leads');
       } else {
         setActiveNav('dashboard');
@@ -115,7 +117,7 @@ export default function App() {
   const handleLogin = (user: User) => {
     setCurrentUser(user);
     // Set default active nav based on role
-    if (user.role === 'BD-Content' || user.role === 'BD-Executive') {
+    if (user.role === 'BD-MEO' || user.role === 'BD-Executive') {
       setActiveNav('leads');
       setBdExecutiveTab('leads');
     } else {
@@ -149,11 +151,13 @@ export default function App() {
       case 'ticketing':
         // Use role-specific ticketing page
         if (currentUser.role === 'ITSpecialist') {
-          return <ITTicketingPage />;
+          return <SuperAdminTicketingPage />;
+        } else if (currentUser.role === 'SuperAdmin') {
+          return <SuperAdminTicketingPage />;
         } else if (currentUser.role === 'BOD') {
           return <BODTicketingPage />;
-        } else if (currentUser.role === 'BD-Content') {
-          return <BDContentTicketingPage />;
+        } else if (currentUser.role === 'BD-MEO') {
+          return <BDMEOTicketingPage />;
         } else if (currentUser.role === 'BD-Executive') {
           return <BDExecutiveTicketingPage />;
         } else if (currentUser.role === 'PM') {
@@ -167,11 +171,13 @@ export default function App() {
         if (currentUser.role === 'Admin') {
           return <AdminReimbursePage />;
         } else if (currentUser.role === 'ITSpecialist') {
-          return <ITReimbursePage />;
+          return <SuperAdminReimbursePage />;
+        } else if (currentUser.role === 'SuperAdmin') {
+          return <SuperAdminReimbursePage />;
         } else if (currentUser.role === 'BOD') {
           return <BODReimbursePage />;
-        } else if (currentUser.role === 'BD-Content') {
-          return <BDContentReimbursePage />;
+        } else if (currentUser.role === 'BD-MEO') {
+          return <BDMEOReimbursePage />;
         } else if (currentUser.role === 'BD-Executive') {
           return <BDExecutiveReimbursePage />;
         } else if (currentUser.role === 'PM') {
@@ -180,7 +186,7 @@ export default function App() {
         return null;
       default:
         // Role-specific content
-        if (currentUser.role === 'ITSpecialist') {
+        if (currentUser.role === 'SuperAdmin') {
           switch (activeNav) {
             case 'dashboard':
               return <BODDashboard />;
@@ -193,9 +199,28 @@ export default function App() {
             case 'invoices':
               return <InvoicesPage />;
             case 'user-account':
-              return <UserManagementPage />;
+              return <SuperAdminUserManagementPage />;
             case 'settings':
-              return <SettingPage />;
+              return <SuperAdminSettingPage />;
+            default:
+              return <BODDashboard />;
+          }
+        } else if (currentUser.role === 'ITSpecialist') {
+          switch (activeNav) {
+            case 'dashboard':
+              return <BODDashboard />;
+            case 'leads':
+              return <LeadsPage />;
+            case 'deals':
+              return <DealsPage />;
+            case 'projects':
+              return <ProjectsPage />;
+            case 'invoices':
+              return <InvoicesPage />;
+            case 'user-account':
+              return <SuperAdminUserManagementPage />;
+            case 'settings':
+              return <SuperAdminSettingPage />;
             default:
               return <BODDashboard />;
           }
@@ -214,8 +239,8 @@ export default function App() {
             default:
               return <BODDashboard />;
           }
-        } else if (currentUser.role === 'BD-Content') {
-          return <BDContentDashboard userName={currentUser.name} />;
+        } else if (currentUser.role === 'BD-MEO') {
+          return <BDMEODashboard userName={currentUser.name} />;
         } else if (currentUser.role === 'BD-Executive') {
           // Only show BD Executive content if on leads or deals, otherwise show dashboard
           if (activeNav === 'leads' || activeNav === 'deals') {

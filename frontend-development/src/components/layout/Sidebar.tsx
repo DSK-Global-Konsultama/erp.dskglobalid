@@ -15,7 +15,7 @@ import {
   Building2
 } from 'lucide-react';
 
-type UserRole = 'BOD' | 'BD-Content' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist';
+type UserRole = 'BOD' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist' | 'SuperAdmin';
 type NavItem = {
   id: string;
   label: string;
@@ -36,7 +36,7 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
   // Set default activeNav based on role
   const getDefaultActiveNav = () => {
     switch (role) {
-      case 'BD-Content':
+      case 'BD-MEO':
       case 'BD-Executive':
         return 'leads';
       default:
@@ -61,7 +61,7 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
           { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
           { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
         ];
-      case 'BD-Content':
+      case 'BD-MEO':
         return [
           { id: 'leads', label: 'My Leads', icon: Users, path: 'dashboard' },
           { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
@@ -89,6 +89,18 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
           { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
         ];
       case 'ITSpecialist':
+        return [
+          { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
+          { id: 'leads', label: 'Leads', icon: Users, path: 'leads' },
+          { id: 'deals', label: 'Deals', icon: HandshakeIcon, path: 'deals' },
+          { id: 'projects', label: 'Projects', icon: FolderKanban, path: 'projects' },
+          { id: 'invoices', label: 'Invoices', icon: FileText, path: 'invoices' },
+          { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
+          { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
+          { id: 'user-account', label: 'User Management', icon: Users, path: 'user-account' },
+          { id: 'settings', label: 'Settings', icon: Settings, path: 'settings' },
+        ];
+      case 'SuperAdmin':
         return [
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
           { id: 'leads', label: 'Leads', icon: Users, path: 'leads' },

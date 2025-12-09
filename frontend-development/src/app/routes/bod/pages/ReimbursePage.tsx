@@ -9,7 +9,7 @@ export function ReimbursePage() {
   // Map role untuk submittedByRole
   const roleMap: Record<string, string> = {
     'BOD': 'BOD',
-    'BD-Content': 'BD Content',
+    'BD-MEO': 'BD MEO',
     'BD-Executive': 'BD Executive',
     'PM': 'PM',
     'ITSpecialist': 'IT',
