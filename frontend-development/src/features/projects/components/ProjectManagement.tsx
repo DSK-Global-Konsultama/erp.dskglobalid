@@ -1,13 +1,84 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table';
 import { Badge } from '../../../components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '../../../components/ui/alert';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
+import { Label } from '../../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
-import { mockProjects, projectManagers } from '../../../lib/mock-data';
+import { mockProjects, projectManagers, type Project } from '../../../lib/mock-data';
+import { Clock, CheckCircle, AlertCircle, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
-import { FolderKanban, UserCheck, Calendar } from 'lucide-react';
+import type { UserRole } from '../../../services/authService';
+import { canAssignPM, getCOOManageableServices, isCEO, isCOO } from '../../../utils/rolePermissions';
 
-export function ProjectManagement() {
-  const [projects, setProjects] = useState(mockProjects);
+interface ProjectManagementProps {
+  userRole?: UserRole;
+}
+
+export function ProjectManagement({ userRole }: ProjectManagementProps) {
+  const [projects, setProjects] = useState<Project[]>(mockProjects);
+  const [isAssignPMOpen, setIsAssignPMOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedPM, setSelectedPM] = useState('');
+
+  const manageableServices = getCOOManageableServices(userRole);
+  const isCEOUser = isCEO(userRole);
+  const isCOOUser = isCOO(userRole);
+
+  // Filter projects for COO (only show manageable projects)
+  const displayProjects = isCOOUser 
+    ? projects.filter(p => canAssignPM(userRole, p.serviceName) || p.assignedPM)
+    : projects;
+
+  const handleAssignPM = () => {
+    if (!selectedProject || !selectedPM) return;
+
+    // Check permission
+    if (!canAssignPM(userRole, selectedProject.serviceName)) {
+      if (isCEOUser) {
+        toast.error('Anda tidak memiliki wewenang untuk assign PM pada layanan ini. CEO hanya bisa assign PM untuk WEB DEV.');
+      } else {
+        toast.error(`Anda tidak memiliki wewenang untuk assign PM pada layanan ini. COO ${userRole} hanya bisa assign PM untuk: ${manageableServices.join(', ')}`);
+      }
+      return;
+    }
+
+    const updatedProjects = projects.map(p => {
+      if (p.id === selectedProject.id) {
+        return {
+          ...p,
+          assignedPM: selectedPM,
+          status: 'waiting-first-payment' as const,
+          pmNotified: true,
+        };
+      }
+      return p;
+    });
+    
+    setProjects(updatedProjects);
+    setIsAssignPMOpen(false);
+    setSelectedProject(null);
+    setSelectedPM('');
+    toast.success(`PM ${selectedPM} berhasil di-assign! Project menunggu pembayaran 50%.`);
+  };
+
+  const completeProject = (id: string) => {
+    const updatedProjects = projects.map(p => {
+      if (p.id === id) {
+        return {
+          ...p,
+          status: 'completed' as const,
+          completionDate: new Date().toISOString().split('T')[0],
+        };
+      }
+      return p;
+    });
+    
+    setProjects(updatedProjects);
+    toast.success('Project selesai! Admin harus menagih payment berikutnya.');
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
@@ -17,145 +88,392 @@ export function ProjectManagement() {
     });
   };
 
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      'waiting-pm': 'outline',
-      'waiting-first-payment': 'secondary',
-      'in-progress': 'default',
-      'waiting-final-payment': 'secondary',
-      completed: 'default',
+  const getDaysUntilDue = (dueDate: string) => {
+    return Math.floor(
+      (new Date(dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+    );
+  };
+
+  const getStatusBadge = (status: Project['status']) => {
+    const config: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; className: string; icon: any; label: string }> = {
+      'waiting-assignment': {
+        variant: 'outline' as const,
+        className: 'bg-gray-50 text-gray-700 border-gray-200',
+        icon: UserPlus,
+        label: 'Waiting Assignment',
+      },
+      'waiting-pm': {
+        variant: 'outline' as const,
+        className: 'bg-gray-50 text-gray-700 border-gray-200',
+        icon: UserPlus,
+        label: 'Waiting PM Assignment',
+      },
+      'waiting-el': {
+        variant: 'outline' as const,
+        className: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+        icon: AlertCircle,
+        label: 'Waiting EL Approval',
+      },
+      'waiting-first-payment': {
+        variant: 'outline' as const,
+        className: 'bg-orange-50 text-orange-700 border-orange-200',
+        icon: AlertCircle,
+        label: 'Waiting Payment 50%',
+      },
+      'in-progress': {
+        variant: 'outline' as const,
+        className: 'bg-blue-50 text-blue-700 border-blue-200',
+        icon: Clock,
+        label: 'In Progress',
+      },
+      'waiting-final-payment': {
+        variant: 'outline' as const,
+        className: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+        icon: AlertCircle,
+        label: 'Waiting Final Payment',
+      },
+      'completed': {
+        variant: 'outline' as const,
+        className: 'bg-green-50 text-green-700 border-green-200',
+        icon: CheckCircle,
+        label: 'Completed',
+      },
     };
-    return <Badge variant={variants[status] || 'default'}>{status.replace('-', ' ').toUpperCase()}</Badge>;
+
+    const { variant, className, icon: Icon, label } = config[status] || config['waiting-assignment'];
+    return (
+      <Badge variant={variant} className={className}>
+        <Icon className="w-3 h-3 mr-1" />
+        {label}
+      </Badge>
+    );
   };
 
-  const handleAssignPM = (projectId: string, pmName: string) => {
-    setProjects(prev => prev.map(p => 
-      p.id === projectId ? { ...p, assignedPM: pmName, status: 'waiting-first-payment' as const } : p
-    ));
-    toast.success('Project Manager assigned successfully');
+  const projectsWaitingPM = projects.filter(p => p.status === 'waiting-assignment' || p.status === 'waiting-pm');
+  const projectsWaitingPayment = projects.filter(p => p.status === 'waiting-first-payment');
+  const projectsInProgress = projects.filter(p => p.status === 'in-progress');
+  const projectsWaitingFinal = projects.filter(p => p.status === 'waiting-final-payment');
+  
+  // Projects dengan deadline dekat tapi progress masih rendah
+  const projectsAtRisk = projects.filter(p => {
+    if (p.status !== 'in-progress') return false;
+    const daysUntilDue = getDaysUntilDue(p.dueDate);
+    const progress = p.progressPercentage ?? 0;
+    // Deadline <= 15 hari tapi progress < 100%
+    return daysUntilDue <= 15 && daysUntilDue >= 0 && progress < 100;
+  });
+
+  // Projects yang sudah overdue
+  const projectsOverdue = projects.filter(p => {
+    if (p.status !== 'in-progress') return false;
+    const daysUntilDue = getDaysUntilDue(p.dueDate);
+    return daysUntilDue < 0;
+  });
+
+  const getAlertTitle = () => {
+    if (isCEOUser) return 'Perhatian CEO!';
+    return 'Perhatian COO!';
   };
 
-  const waitingPM = projects.filter(p => p.status === 'waiting-pm');
-  const assignedProjects = projects.filter(p => p.status !== 'waiting-pm');
+  const getAlertDescription = () => {
+    if (isCEOUser) {
+      return `Ada ${projectsWaitingPM.length} project yang belum di-assign PM. CEO hanya bisa assign PM untuk layanan WEB DEV.`;
+    }
+    return `Ada ${projectsWaitingPM.length} project yang belum di-assign PM. COO ${userRole} hanya bisa assign PM untuk layanan: ${manageableServices.join(', ')}.`;
+  };
+
+  const getCardDescription = () => {
+    if (isCEOUser) {
+      return 'CEO hanya bisa assign PM untuk layanan WEB DEV';
+    }
+    return `COO ${userRole} hanya bisa assign PM untuk layanan: ${manageableServices.join(', ')}`;
+  };
+
+  const getDialogDescription = () => {
+    if (isCEOUser) {
+      return `CEO memilih PM untuk project: ${selectedProject?.serviceName}`;
+    }
+    return `COO ${userRole} memilih PM untuk project: ${selectedProject?.serviceName}`;
+  };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">Project Management</h2>
-        <p className="text-gray-500">Assign PM and track project progress</p>
+      {/* Alert for waiting PM assignment */}
+      {projectsWaitingPM.length > 0 && (
+        <Alert>
+          <UserPlus className="h-4 w-4" />
+          <AlertTitle>{getAlertTitle()}</AlertTitle>
+          <AlertDescription>
+            {getAlertDescription()}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Alert for waiting payment */}
+      {projectsWaitingPayment.length > 0 && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Waiting First Payment</AlertTitle>
+          <AlertDescription>
+            Ada {projectsWaitingPayment.length} project menunggu pembayaran 50% sebelum bisa dimulai PM.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Alert for projects overdue */}
+      {projectsOverdue.length > 0 && (
+        <Alert className="border-red-500 bg-red-50">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <AlertTitle className="text-red-900">Peringatan Overdue!</AlertTitle>
+          <AlertDescription className="text-red-800">
+            Ada {projectsOverdue.length} project yang sudah melewati deadline. Segera selesaikan project ini!
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Alert for projects at risk */}
+      {projectsAtRisk.length > 0 && (
+        <Alert className="border-orange-500 bg-orange-50">
+          <AlertCircle className="h-4 w-4 text-orange-600" />
+          <AlertTitle className="text-orange-900">Peringatan Deadline!</AlertTitle>
+          <AlertDescription className="text-orange-800">
+            Ada {projectsAtRisk.length} project yang sudah dekat deadline namun progress masih di bawah 100%.
+            Perlu perhatian khusus untuk menyelesaikan project tepat waktu.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm">Waiting PM</CardTitle>
+            <UserPlus className="h-4 w-4 text-gray-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-semibold">{projectsWaitingPM.length}</div>
+            <p className="text-xs text-gray-500 mt-1">Belum assign PM</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm">Waiting Payment</CardTitle>
+            <AlertCircle className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-semibold text-orange-600">{projectsWaitingPayment.length}</div>
+            <p className="text-xs text-gray-500 mt-1">Belum bisa dimulai</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm">In Progress</CardTitle>
+            <Clock className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-semibold text-blue-600">{projectsInProgress.length}</div>
+            <p className="text-xs text-gray-500 mt-1">Sedang dikerjakan</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm">Waiting Final</CardTitle>
+            <AlertCircle className="h-4 w-4 text-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-semibold text-yellow-600">{projectsWaitingFinal.length}</div>
+            <p className="text-xs text-gray-500 mt-1">Selesai, tagih final</p>
+          </CardContent>
+        </Card>
       </div>
 
-      {waitingPM.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">Waiting for PM Assignment</CardTitle>
-            <CardDescription>Total: {waitingPM.length} projects</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {waitingPM.map(project => (
-                <Card key={project.id} className="bg-gray-50">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-base">{project.projectName}</CardTitle>
-                        <CardDescription>{project.clientName}</CardDescription>
+      {/* Projects Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Daftar Projects ({displayProjects.length})</CardTitle>
+          <CardDescription>
+            {getCardDescription()}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Project Name</TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead>PM</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Progress</TableHead>
+                  <TableHead>Due Date</TableHead>
+                  <TableHead>Sisa Waktu</TableHead>
+                  <TableHead>Aksi</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {displayProjects.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8">
+                      <div className="flex flex-col items-center justify-center text-gray-500">
+                        <p className="text-sm font-medium">Belum ada data project</p>
+                        <p className="text-xs mt-1">Tidak ada project di sistem</p>
                       </div>
-                      {getStatusBadge(project.status)}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <FolderKanban className="w-4 h-4 text-gray-400" />
-                      <p className="text-sm text-gray-700">Service: {project.serviceName}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-gray-400" />
-                      <p className="text-sm text-gray-700">Due Date: {formatDate(project.dueDate)}</p>
-                    </div>
-                    <div className="flex items-center gap-3 pt-2 border-t">
-                      <p className="text-sm font-medium text-gray-700">Assign PM:</p>
-                      <Select 
-                        value={project.assignedPM || ''} 
-                        onValueChange={(value) => handleAssignPM(project.id, value)}
-                      >
-                        <SelectTrigger className="w-48">
-                          <SelectValue placeholder="Pilih PM" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {projectManagers.map(pm => (
-                            <SelectItem key={pm} value={pm}>{pm}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  [...displayProjects].sort((a, b) => {
+                    const daysA = getDaysUntilDue(a.dueDate);
+                    const daysB = getDaysUntilDue(b.dueDate);
+                    return daysA - daysB; // Urutkan dari terdekat hingga paling lama
+                  }).map(project => {
+                    const daysUntilDue = getDaysUntilDue(project.dueDate);
+                    const isUrgent = daysUntilDue <= 7 && project.status === 'in-progress';
+                    const isOverdue = daysUntilDue < 0 && project.status === 'in-progress';
+                    const progress = project.progressPercentage ?? 0;
+                    const isAtRisk = project.status === 'in-progress' && 
+                                     daysUntilDue <= 15 && 
+                                     daysUntilDue >= 0 && 
+                                     progress < 100;
+                    const canAssign = canAssignPM(userRole, project.serviceName);
 
-      {assignedProjects.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">Assigned Projects</CardTitle>
-            <CardDescription>Total: {assignedProjects.length} projects</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {assignedProjects.map(project => (
-                <div key={project.id} className="flex items-start justify-between border-b pb-4 last:border-0">
-                  <div className="flex-1">
-                    <div className="flex items-start gap-3">
-                      <FolderKanban className="w-5 h-5 text-gray-400 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{project.projectName}</p>
-                        <p className="text-xs text-gray-500">{project.clientName}</p>
-                        <p className="text-xs text-gray-400 mt-1">Service: {project.serviceName}</p>
-                        <div className="flex gap-3 mt-1 text-xs text-gray-400">
-                          <span className="flex items-center gap-1">
-                            <UserCheck className="w-3 h-3" />
-                            PM: {project.assignedPM || 'Belum assign'}
-                          </span>
-                          {project.assignedConsultant && (
-                            <span className="flex items-center gap-1">
-                              <UserCheck className="w-3 h-3" />
-                              Consultant: {project.assignedConsultant}
-                            </span>
+                    return (
+                      <TableRow 
+                        key={project.id} 
+                        className={
+                          isOverdue 
+                            ? 'bg-red-50' 
+                            : isAtRisk 
+                            ? 'bg-orange-50' 
+                            : ''
+                        }
+                      >
+                      <TableCell>{project.id}</TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="text-sm font-medium">{project.serviceName}</p>
+                          <p className="text-xs text-gray-500">Deal: {project.dealId}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-sm">{project.clientName}</p>
+                      </TableCell>
+                      <TableCell>
+                        {project.assignedPM ? (
+                          <span className="text-sm">{project.assignedPM}</span>
+                        ) : (
+                          <Badge variant="outline" className="bg-orange-50 text-orange-700">
+                            Belum Assign
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(project.status)}</TableCell>
+                      <TableCell>
+                        <span className="text-sm text-gray-900">
+                          {project.progressPercentage ?? 0}%
+                        </span>
+                      </TableCell>
+                      <TableCell>{formatDate(project.dueDate)}</TableCell>
+                      <TableCell>
+                        {project.status === 'completed' ? (
+                          <span className="text-sm text-gray-500">-</span>
+                        ) : isOverdue ? (
+                          <Badge variant="destructive">Overdue {Math.abs(daysUntilDue)} hari</Badge>
+                        ) : isUrgent ? (
+                          <Badge variant="destructive">{daysUntilDue} hari lagi</Badge>
+                        ) : (
+                          <span className="text-sm">{daysUntilDue} hari lagi</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-2">
+                          {/* Assign PM button */}
+                          {(project.status === 'waiting-assignment' || project.status === 'waiting-pm') && !project.assignedPM && canAssign && (
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setSelectedProject(project);
+                                setIsAssignPMOpen(true);
+                              }}
+                            >
+                              <UserPlus className="w-3 h-3 mr-1" />
+                              Assign PM
+                            </Button>
                           )}
-                          {project.progressPercentage !== undefined && (
-                            <span className="flex items-center gap-1 font-semibold text-blue-600">
-                              Progress: {project.progressPercentage}%
-                            </span>
+
+                          {/* Start project when payment received */}
+                          {project.status === 'waiting-first-payment' && (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              Tunggu Payment
+                            </Badge>
+                          )}
+
+                          {/* Complete project */}
+                          {project.status === 'in-progress' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => completeProject(project.id)}
+                            >
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Selesai
+                            </Button>
+                          )}
+
+                          {/* Completed - reminder for payment */}
+                          {project.status === 'completed' && (
+                            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                              Tagih Payment
+                            </Badge>
                           )}
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    {getStatusBadge(project.status)}
-                    {project.progressPercentage !== undefined && (
-                      <div className="mt-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-md">
-                        <div className="text-lg font-bold text-blue-700">
-                          {project.progressPercentage}%
-                        </div>
-                        <div className="text-xs text-blue-600">Progress</div>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
-                      <Calendar className="w-3 h-3" />
-                      Due: {formatDate(project.dueDate)}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                      </TableCell>
+                    </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Assign PM Dialog */}
+      <Dialog open={isAssignPMOpen} onOpenChange={setIsAssignPMOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Assign Project Manager</DialogTitle>
+            <DialogDescription>
+              {getDialogDescription()}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Project Manager</Label>
+              <Select value={selectedPM} onValueChange={setSelectedPM}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih PM" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projectManagers.map(pm => (
+                    <SelectItem key={pm} value={pm}>{pm}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAssignPMOpen(false)}>
+              Batal
+            </Button>
+            <Button onClick={handleAssignPM}>Assign PM</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
-
