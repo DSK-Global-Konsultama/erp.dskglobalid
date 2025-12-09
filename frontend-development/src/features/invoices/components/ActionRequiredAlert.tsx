@@ -1,6 +1,6 @@
-import { Alert, AlertDescription, AlertTitle } from '../../../../components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '../../../components/ui/alert';
 import { Bell } from 'lucide-react';
-import type { Project } from '../../../../lib/mock-data';
+import type { Project } from '../../../lib/mock-data';
 
 interface ActionRequiredAlertProps {
   completedProjects: Project[];
