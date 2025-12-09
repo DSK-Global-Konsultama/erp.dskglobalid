@@ -12,15 +12,47 @@ import { toast } from 'sonner';
 import type { UserRole } from '../../../services/authService';
 
 interface InvoiceManagementProps {
-  canApprove: boolean;
+  canApprove?: boolean;
   userRole?: UserRole;
+  // Mode: 'invoice' untuk CEO/COO, 'payment' untuk Admin
+  mode?: 'invoice' | 'payment';
+  // Tampilkan statistics cards
+  showStatistics?: boolean;
+  // Custom title dan description
+  title?: string;
+  description?: string;
+  // Invoices dari props (untuk controlled component)
+  invoices?: Invoice[];
+  onUpdateInvoices?: (updatedInvoices: Invoice[]) => void;
+  // Filter status (untuk controlled component)
+  filterStatus?: string;
+  onFilterChange?: (status: string) => void;
 }
 
-export function InvoiceManagement({ canApprove, userRole }: InvoiceManagementProps) {
-  const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+export function InvoiceManagement({ 
+  canApprove = false, 
+  userRole,
+  mode = 'invoice',
+  showStatistics = true,
+  title,
+  description,
+  invoices: externalInvoices,
+  onUpdateInvoices,
+  filterStatus: externalFilterStatus,
+  onFilterChange
+}: InvoiceManagementProps) {
+  const [internalInvoices, setInternalInvoices] = useState<Invoice[]>(mockInvoices);
+  const [internalFilterStatus, setInternalFilterStatus] = useState<string>('all');
   const [isViewDetailOpen, setIsViewDetailOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+
+  // Use external invoices if provided, otherwise use internal state
+  const invoices = externalInvoices || internalInvoices;
+  const setInvoices = onUpdateInvoices || setInternalInvoices;
+  
+  // Use external filter status if provided, otherwise use internal state
+  const filterStatus = externalFilterStatus !== undefined ? externalFilterStatus : internalFilterStatus;
+  const setFilterStatus = onFilterChange || setInternalFilterStatus;
 
   const filteredInvoices = invoices.filter(invoice => {
     if (filterStatus === 'all') return true;
@@ -28,7 +60,9 @@ export function InvoiceManagement({ canApprove, userRole }: InvoiceManagementPro
   });
 
   const markTermAsPaid = (invoiceId: string, termId: string) => {
-    if (!canApprove) {
+    // Untuk mode 'payment' (Admin), tidak perlu permission check
+    // Untuk mode 'invoice' (CEO/COO), perlu permission check
+    if (mode === 'invoice' && !canApprove) {
       toast.error('Anda tidak memiliki wewenang untuk approve invoice. Hanya CEO yang bisa approve.');
       return;
     }
@@ -53,7 +87,7 @@ export function InvoiceManagement({ canApprove, userRole }: InvoiceManagementPro
     });
     
     setInvoices(updatedInvoices);
-    toast.success('Payment term berhasil ditandai sebagai dibayar!');
+    toast.success(mode === 'payment' ? 'Payment berhasil dikonfirmasi!' : 'Payment term berhasil ditandai sebagai dibayar!');
   };
 
   const formatCurrency = (amount: number) => {
@@ -131,7 +165,16 @@ export function InvoiceManagement({ canApprove, userRole }: InvoiceManagementPro
     return 'Dalam Proses';
   };
 
+  const getTitle = () => {
+    if (title) return title;
+    return mode === 'payment' ? `Daftar Payment (${filteredInvoices.length})` : `Daftar Invoice (${filteredInvoices.length})`;
+  };
+
   const getDescription = () => {
+    if (description) return description;
+    if (mode === 'payment') {
+      return 'Monitor dan konfirmasi pembayaran dari client';
+    }
     if (canApprove) {
       return 'CEO dapat approve invoice yang dikirim admin';
     }
@@ -140,48 +183,50 @@ export function InvoiceManagement({ canApprove, userRole }: InvoiceManagementPro
 
   return (
     <div className="space-y-6">
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Pending Payments</CardTitle>
-            <Clock className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{totalPending}</div>
-            <p className="text-xs text-gray-500 mt-1">{formatCurrency(amountPending)}</p>
-          </CardContent>
-        </Card>
+      {/* Statistics - hanya tampil jika showStatistics = true */}
+      {showStatistics && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm">Pending Payments</CardTitle>
+              <Clock className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-semibold">{totalPending}</div>
+              <p className="text-xs text-gray-500 mt-1">{formatCurrency(amountPending)}</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Overdue Payments</CardTitle>
-            <AlertCircle className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold text-red-600">{totalOverdue}</div>
-            <p className="text-xs text-gray-500 mt-1">{formatCurrency(amountOverdue)}</p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm">Overdue Payments</CardTitle>
+              <AlertCircle className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-semibold text-red-600">{totalOverdue}</div>
+              <p className="text-xs text-gray-500 mt-1">{formatCurrency(amountOverdue)}</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm">Paid</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold text-green-600">{totalPaid}</div>
-            <p className="text-xs text-gray-500 mt-1">{formatCurrency(amountPaid)}</p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm">Paid</CardTitle>
+              <CheckCircle className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-semibold text-green-600">{totalPaid}</div>
+              <p className="text-xs text-gray-500 mt-1">{formatCurrency(amountPaid)}</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Invoices Table */}
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
-              <CardTitle>Daftar Invoice ({filteredInvoices.length})</CardTitle>
+              <CardTitle>{getTitle()}</CardTitle>
               <CardDescription>
                 {getDescription()}
               </CardDescription>
@@ -206,10 +251,10 @@ export function InvoiceManagement({ canApprove, userRole }: InvoiceManagementPro
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Invoice ID</TableHead>
+                  <TableHead>{mode === 'payment' ? 'Invoice' : 'Invoice ID'}</TableHead>
                   <TableHead>Client</TableHead>
-                  <TableHead>Total Amount</TableHead>
-                  <TableHead>Payment Terms</TableHead>
+                  <TableHead>{mode === 'payment' ? 'Total' : 'Total Amount'}</TableHead>
+                  <TableHead>Terms</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Progress</TableHead>
                   <TableHead>Aksi</TableHead>
@@ -226,10 +271,25 @@ export function InvoiceManagement({ canApprove, userRole }: InvoiceManagementPro
 
                   return (
                     <TableRow key={invoice.id}>
-                      <TableCell>{invoice.id}</TableCell>
                       <TableCell>
-                        <p className="text-sm">{invoice.clientName}</p>
-                        <p className="text-xs text-gray-500">Project: {invoice.projectId}</p>
+                        {mode === 'payment' ? (
+                          <div>
+                            <p className="text-sm">{invoice.id}</p>
+                            <p className="text-xs text-gray-500">Project: {invoice.projectId}</p>
+                          </div>
+                        ) : (
+                          invoice.id
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {mode === 'payment' ? (
+                          <p className="text-sm">{invoice.clientName}</p>
+                        ) : (
+                          <>
+                            <p className="text-sm">{invoice.clientName}</p>
+                            <p className="text-xs text-gray-500">Project: {invoice.projectId}</p>
+                          </>
+                        )}
                       </TableCell>
                       <TableCell>{formatCurrency(invoice.totalAmount)}</TableCell>
                       <TableCell>
@@ -247,7 +307,7 @@ export function InvoiceManagement({ canApprove, userRole }: InvoiceManagementPro
                       <TableCell>
                         <div>
                           <div className="text-sm mb-1">
-                            {paidTerms}/{totalTerms} termin dibayar
+                            {paidTerms}/{totalTerms} {mode === 'payment' ? 'termin' : 'termin dibayar'}
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
@@ -256,7 +316,7 @@ export function InvoiceManagement({ canApprove, userRole }: InvoiceManagementPro
                             />
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
-                            {progressPercentage.toFixed(0)}% terbayar
+                            {progressPercentage.toFixed(0)}%{mode === 'invoice' && ' terbayar'}
                           </div>
                         </div>
                       </TableCell>
@@ -286,7 +346,7 @@ export function InvoiceManagement({ canApprove, userRole }: InvoiceManagementPro
       <Dialog open={isViewDetailOpen} onOpenChange={setIsViewDetailOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Detail Invoice: {selectedInvoice?.id}</DialogTitle>
+            <DialogTitle>Detail {mode === 'payment' ? 'Payment' : 'Invoice'}: {selectedInvoice?.id}</DialogTitle>
             <DialogDescription>{selectedInvoice?.clientName}</DialogDescription>
           </DialogHeader>
           {selectedInvoice && (
@@ -333,14 +393,15 @@ export function InvoiceManagement({ canApprove, userRole }: InvoiceManagementPro
                         </div>
                       </div>
 
-                      {term.status !== 'paid' && canApprove && (
+                      {term.status !== 'paid' && (
                         <Button
                           size="sm"
                           className="mt-3"
                           onClick={() => markTermAsPaid(selectedInvoice.id, term.id)}
+                          disabled={mode === 'invoice' && !canApprove}
                         >
                           <CheckCircle className="w-3 h-3 mr-1" />
-                          Approve & Tandai Dibayar
+                          {mode === 'payment' ? 'Konfirmasi Pembayaran' : 'Approve & Tandai Dibayar'}
                         </Button>
                       )}
                     </div>

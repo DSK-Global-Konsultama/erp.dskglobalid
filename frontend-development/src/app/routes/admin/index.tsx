@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { mockInvoices, mockProjects, type Invoice, type Project } from '../../../lib/mock-data';
-import { ActionRequiredAlert } from './components/ActionRequiredAlert';
-import { AdminStats } from './components/AdminStats';
-import { PaymentsTable } from './components/PaymentsTable';
+import { ActionRequiredAlert } from '../../../features/invoices/components/ActionRequiredAlert';
+import { AdminStats } from '../../../features/invoices/components/AdminStats';
+import { InvoiceManagement } from '../../../features/invoices/components/InvoiceManagement';
 
 export function AdminDashboard() {
   const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
@@ -36,11 +36,6 @@ export function AdminDashboard() {
       return updatedProjects;
     });
   }, [invoices]);
-
-  const filteredInvoices = invoices.filter(invoice => {
-    if (filterStatus === 'all') return true;
-    return invoice.paymentTerms.some(term => term.status === filterStatus);
-  });
 
   // Statistics calculations
   const allTerms = invoices.flatMap(inv => inv.paymentTerms);
@@ -77,11 +72,13 @@ export function AdminDashboard() {
         completedProjectsCount={completedProjects.length}
       />
 
-      <PaymentsTable
-        invoices={filteredInvoices}
+      <InvoiceManagement
+        mode="payment"
+        showStatistics={false}
+        invoices={invoices}
+        onUpdateInvoices={setInvoices}
         filterStatus={filterStatus}
         onFilterChange={setFilterStatus}
-        onUpdateInvoices={setInvoices}
       />
     </div>
   );
