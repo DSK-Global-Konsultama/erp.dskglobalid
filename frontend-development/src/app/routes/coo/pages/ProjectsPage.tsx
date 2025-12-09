@@ -10,15 +10,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { mockProjects, projectManagers, type Project } from '../../../../lib/mock-data';
 import { Clock, CheckCircle, AlertCircle, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
+import { authService } from '../../../../services/authService';
+import { canAssignPM, getCOOManageableServices } from '../../../../utils/rolePermissions';
 
 export function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>(mockProjects);
   const [isAssignPMOpen, setIsAssignPMOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [selectedPM, setSelectedPM] = useState('');
+  const currentUser = authService.getCurrentUser();
+  const manageableServices = getCOOManageableServices(currentUser?.role);
 
   const handleAssignPM = () => {
     if (!selectedProject || !selectedPM) return;
+
+    // Check permission
+    if (!canAssignPM(currentUser?.role, selectedProject.serviceName)) {
+      toast.error(`Anda tidak memiliki wewenang untuk assign PM pada layanan ini. COO ${currentUser?.role} hanya bisa assign PM untuk: ${manageableServices.join(', ')}`);
+      return;
+    }
 
     const updatedProjects = projects.map(p => {
       if (p.id === selectedProject.id) {
@@ -145,16 +155,21 @@ export function ProjectsPage() {
     return daysUntilDue < 0;
   });
 
+  // Filter projects that COO can manage
+  const manageableProjects = projects.filter(p => 
+    canAssignPM(currentUser?.role, p.serviceName) || p.assignedPM
+  );
+
   return (
     <div className="space-y-6">
       {/* Alert for waiting PM assignment */}
       {projectsWaitingPM.length > 0 && (
         <Alert>
           <UserPlus className="h-4 w-4" />
-          <AlertTitle>Perhatian BOD!</AlertTitle>
+          <AlertTitle>Perhatian COO!</AlertTitle>
           <AlertDescription>
             Ada {projectsWaitingPM.length} project yang belum di-assign PM.
-            Setiap layanan dari deal = 1 project terpisah yang perlu PM-nya masing-masing.
+            COO {currentUser?.role} hanya bisa assign PM untuk layanan: {manageableServices.join(', ')}.
           </AlertDescription>
         </Alert>
       )}
@@ -243,11 +258,13 @@ export function ProjectsPage() {
       {/* Projects Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Daftar Projects ({projects.length})</CardTitle>
-          <CardDescription>Setiap layanan = 1 project dengan PM & Consultant masing-masing</CardDescription>
+          <CardTitle>Daftar Projects ({manageableProjects.length})</CardTitle>
+          <CardDescription>
+            COO {currentUser?.role} hanya bisa assign PM untuk layanan: {manageableServices.join(', ')}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -263,7 +280,7 @@ export function ProjectsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {projects.length === 0 ? (
+                {manageableProjects.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8">
                       <div className="flex flex-col items-center justify-center text-gray-500">
@@ -273,7 +290,7 @@ export function ProjectsPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  [...projects].sort((a, b) => {
+                  [...manageableProjects].sort((a, b) => {
                     const daysA = getDaysUntilDue(a.dueDate);
                     const daysB = getDaysUntilDue(b.dueDate);
                     return daysA - daysB; // Urutkan dari terdekat hingga paling lama
@@ -286,6 +303,7 @@ export function ProjectsPage() {
                                      daysUntilDue <= 15 && 
                                      daysUntilDue >= 0 && 
                                      progress < 100;
+                    const canAssign = canAssignPM(currentUser?.role, project.serviceName);
 
                     return (
                       <TableRow 
@@ -337,8 +355,8 @@ export function ProjectsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-2">
-                          {/* BOD: Assign PM */}
-                          {(project.status === 'waiting-assignment' || project.status === 'waiting-pm') && !project.assignedPM && (
+                          {/* COO: Assign PM based on service */}
+                          {(project.status === 'waiting-assignment' || project.status === 'waiting-pm') && !project.assignedPM && canAssign && (
                             <Button
                               size="sm"
                               onClick={() => {
@@ -394,7 +412,7 @@ export function ProjectsPage() {
           <DialogHeader>
             <DialogTitle>Assign Project Manager</DialogTitle>
             <DialogDescription>
-              BOD memilih PM untuk project: {selectedProject?.serviceName}
+              COO {currentUser?.role} memilih PM untuk project: {selectedProject?.serviceName}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -424,3 +442,4 @@ export function ProjectsPage() {
     </div>
   );
 }
+

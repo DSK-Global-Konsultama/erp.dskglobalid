@@ -8,42 +8,19 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '../../../../components/ui/label';
 import { mockInvoices, type Invoice, type PaymentTerm } from '../../../../lib/mock-data';
 import { AlertCircle, CheckCircle, Clock, Eye } from 'lucide-react';
-import { toast } from 'sonner';
+import { authService } from '../../../../services/authService';
 
 export function InvoicesPage() {
-  const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
+  const [invoices] = useState<Invoice[]>(mockInvoices);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [isViewDetailOpen, setIsViewDetailOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const currentUser = authService.getCurrentUser();
 
   const filteredInvoices = invoices.filter(invoice => {
     if (filterStatus === 'all') return true;
     return invoice.paymentTerms.some(term => term.status === filterStatus);
   });
-
-  const markTermAsPaid = (invoiceId: string, termId: string) => {
-    const updatedInvoices = invoices.map(inv => {
-      if (inv.id === invoiceId) {
-        return {
-          ...inv,
-          paymentTerms: inv.paymentTerms.map(term => {
-            if (term.id === termId) {
-              return {
-                ...term,
-                status: 'paid' as const,
-                paidDate: new Date().toISOString().split('T')[0],
-              };
-            }
-            return term;
-          }),
-        };
-      }
-      return inv;
-    });
-    
-    setInvoices(updatedInvoices);
-    toast.success('Payment term berhasil ditandai sebagai dibayar!');
-  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -165,7 +142,7 @@ export function InvoicesPage() {
             <div>
               <CardTitle>Daftar Invoice ({filteredInvoices.length})</CardTitle>
               <CardDescription>
-                Payment schedule flexible sesuai kesepakatan dengan client
+                COO {currentUser?.role} hanya dapat melihat invoice (tidak bisa approve)
               </CardDescription>
             </div>
             <div className="w-48">
@@ -264,7 +241,7 @@ export function InvoicesPage() {
         </CardContent>
       </Card>
 
-      {/* View Detail Dialog */}
+      {/* View Detail Dialog - Read Only */}
       <Dialog open={isViewDetailOpen} onOpenChange={setIsViewDetailOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
@@ -314,17 +291,6 @@ export function InvoicesPage() {
                           <span>{formatDate(term.paidDate)}</span>
                         </div>
                       </div>
-
-                      {term.status !== 'paid' && (
-                        <Button
-                          size="sm"
-                          className="mt-3"
-                          onClick={() => markTermAsPaid(selectedInvoice.id, term.id)}
-                        >
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Tandai Dibayar
-                        </Button>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -364,3 +330,4 @@ export function InvoicesPage() {
     </div>
   );
 }
+

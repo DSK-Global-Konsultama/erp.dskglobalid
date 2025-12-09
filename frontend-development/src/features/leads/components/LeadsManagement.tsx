@@ -13,7 +13,7 @@ import { Plus, Filter, Calendar, AlertTriangle, Hand } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface LeadsManagementProps {
-  userRole: 'BOD' | 'BD-MEO' | 'BD-Executive';
+  userRole: 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Executive';
   userName: string;
 }
 
@@ -30,6 +30,7 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
     if (userRole === 'BD-MEO') {
       return leadsList.filter(l => l.createdBy === userName);
     }
+    // CEO and COO see all leads
     return leadsList;
   };
 
@@ -330,7 +331,7 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
               <CardDescription>
                 {userRole === 'BD-Executive' && `${availableLeads} leads tersedia untuk di-claim`}
                 {userRole === 'BD-MEO' && 'Leads yang saya input'}
-                {userRole === 'BOD' && 'Semua leads di sistem'}
+                {(userRole === 'CEO' || userRole?.startsWith('COO-')) && 'Semua leads di sistem'}
               </CardDescription>
             </div>
             {userRole === 'BD-MEO' && (
@@ -444,7 +445,7 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
                         <p className="text-xs mt-1">
                           {userRole === 'BD-Executive' && 'Tidak ada leads yang tersedia atau yang sudah Anda claim'}
                           {userRole === 'BD-MEO' && 'Belum ada leads yang Anda input'}
-                          {userRole === 'BOD' && 'Belum ada leads di sistem'}
+                          {(userRole === 'CEO' || userRole?.startsWith('COO-')) && 'Belum ada leads di sistem'}
                         </p>
                       </div>
                     </TableCell>
@@ -498,7 +499,7 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
                     <TableCell>
                       <div className="flex flex-col gap-2">
                         {/* BD Executive: Claim button */}
-                        {userRole === 'BD-Executive' && lead.status === 'available' && (
+                          {(userRole === 'BD-Executive' || userRole === 'CEO' || userRole?.startsWith('COO-')) && lead.status === 'available' && (
                           <Button
                             size="sm"
                             onClick={() => handleClaimLead(lead.id)}
@@ -526,8 +527,8 @@ export function LeadsManagement({ userRole, userName }: LeadsManagementProps) {
                           </Select>
                         )}
 
-                        {/* BOD: View only */}
-                        {userRole === 'BOD' && lead.status === 'deal' && (
+                        {/* CEO/COO: View only */}
+                        {(userRole === 'CEO' || userRole?.startsWith('COO-')) && lead.status === 'deal' && (
                           <Badge variant="outline">
                             Converted
                           </Badge>

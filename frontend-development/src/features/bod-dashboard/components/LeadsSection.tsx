@@ -1,6 +1,6 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Badge } from '../../../../components/ui/badge';
-import { mockLeads } from '../../../../lib/mock-data';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
+import { mockLeads } from '../../../lib/mock-data';
 
 export function LeadsSection() {
   const formatDate = (dateString: string) => {

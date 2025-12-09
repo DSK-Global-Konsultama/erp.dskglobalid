@@ -1,6 +1,6 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Badge } from '../../../../components/ui/badge';
-import { mockProjects } from '../../../../lib/mock-data';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
+import { mockProjects } from '../../../lib/mock-data';
 
 export function ProjectsSection() {
   const formatDate = (dateString: string) => {
@@ -34,7 +34,7 @@ export function ProjectsSection() {
               return (
                 <div key={project.id} className="flex items-start justify-between border-b pb-3 last:border-0">
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{project.projectName}</p>
+                    <p className="text-sm font-medium">{project.serviceName}</p>
                     <p className="text-xs text-gray-500">{project.clientName}</p>
                     <p className="text-xs text-gray-400 mt-1">PM: {project.assignedPM || 'Belum assign'}</p>
                   </div>

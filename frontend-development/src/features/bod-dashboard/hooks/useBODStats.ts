@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import type { Lead, Deal, Project, Invoice } from '../../../../lib/mock-data';
-import { mockLeads, mockDeals, mockProjects, mockInvoices } from '../../../../lib/mock-data';
+import type { Lead, Deal, Project, Invoice } from '../../../lib/mock-data';
+import { mockLeads, mockDeals, mockProjects, mockInvoices } from '../../../lib/mock-data';
 
 export function useBODStats() {
   const [stats, setStats] = useState({

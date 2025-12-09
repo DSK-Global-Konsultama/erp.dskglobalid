@@ -1,7 +1,7 @@
 import { Bell } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
-type UserRole = 'BOD' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'ITSpecialist' | 'SuperAdmin';
+type UserRole = 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'ITSpecialist' | 'SuperAdmin';
 
 interface HeaderProps {
   role: UserRole;
@@ -32,24 +32,31 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
   }, [showNotifications]);
 
   const getDashboardTitle = () => {
+    // CEO and COO share the same titles
+    const getCEOCootitle = () => {
+      if (activeNav === 'dashboard') {
+        return role === 'CEO' ? 'Dashboard CEO' : `Dashboard ${role}`;
+      } else if (activeNav === 'leads') {
+        return 'All Leads';
+      } else if (activeNav === 'deals') {
+        return 'All Deals';
+      } else if (activeNav === 'projects') {
+        return 'Project Management';
+      } else if (activeNav === 'invoices') {
+        return 'Invoice Management';
+      } else if (activeNav === 'ticketing') {
+        return 'IT Ticketing';
+      } else if (activeNav === 'reimburse') {
+        return 'My Reimbursements';
+      }
+      return role === 'CEO' ? 'Dashboard CEO' : `Dashboard ${role}`;
+    };
+
     switch (role) {
-      case 'BOD':
-        if (activeNav === 'dashboard') {
-          return 'Dashboard BOD';
-        } else if (activeNav === 'leads') {
-          return 'All Leads';
-        } else if (activeNav === 'deals') {
-          return 'All Deals';
-        } else if (activeNav === 'projects') {
-          return 'Project Management';
-        } else if (activeNav === 'invoices') {
-          return 'Invoice Management';
-        } else if (activeNav === 'ticketing') {
-          return 'IT Ticketing';
-        } else if (activeNav === 'reimburse') {
-          return 'My Reimbursements';
-        }
-        return 'Dashboard BOD';
+      case 'CEO':
+      case 'COO-Tax-Audit':
+      case 'COO-Legal-TP-SR':
+        return getCEOCootitle();
       case 'BD-MEO':
         if (activeNav === 'ticketing') {
           return 'IT Ticketing';
@@ -111,24 +118,35 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
   };
 
   const getDashboardSubtitle = () => {
+    // CEO and COO share the same subtitles
+    const getCEOCooSubtitle = () => {
+      if (activeNav === 'dashboard') {
+        return 'Monitoring Business Development & Project Management';
+      } else if (activeNav === 'leads') {
+        return 'Monitor semua leads dari berbagai sumber';
+      } else if (activeNav === 'deals') {
+        return 'Monitor semua deals';
+      } else if (activeNav === 'projects') {
+        return role === 'CEO' 
+          ? 'CEO assign PM untuk WEB DEV, COO assign PM sesuai layanan'
+          : `${role} assign PM untuk layanan yang ditanggung jawabi`;
+      } else if (activeNav === 'invoices') {
+        return role === 'CEO'
+          ? 'CEO dapat approve invoice yang dikirim admin'
+          : 'COO hanya dapat melihat invoice (tidak bisa approve)';
+      } else if (activeNav === 'ticketing') {
+        return 'Request bantuan atau fitur baru dari tim IT';
+      } else if (activeNav === 'reimburse') {
+        return 'Submit dan lacak reimbursement pengeluaran kantor';
+      }
+      return '';
+    };
+
     switch (role) {
-      case 'BOD':
-        if (activeNav === 'dashboard') {
-          return 'Monitoring Business Development & Project Management';
-        } else if (activeNav === 'leads') {
-          return 'Monitor semua leads dari berbagai sumber';
-        } else if (activeNav === 'deals') {
-          return 'Monitor semua deals';
-        } else if (activeNav === 'projects') {
-          return 'BOD assign PM, PM assign Consultant untuk setiap project';
-        } else if (activeNav === 'invoices') {
-          return 'Kelola payment schedule yang flexible (50-50%, 50-35-15%, dll)';
-        } else if (activeNav === 'ticketing') {
-          return 'Request bantuan atau fitur baru dari tim IT';
-        } else if (activeNav === 'reimburse') {
-          return 'Submit dan lacak reimbursement pengeluaran kantor';
-        }
-        return '';
+      case 'CEO':
+      case 'COO-Tax-Audit':
+      case 'COO-Legal-TP-SR':
+        return getCEOCooSubtitle();
       case 'BD-MEO':
         if (activeNav === 'ticketing') {
           return 'Request bantuan atau fitur baru dari tim IT';
@@ -171,7 +189,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         } else if (activeNav === 'deals') {
           return 'Monitor semua deals';
         } else if (activeNav === 'projects') {
-          return 'BOD assign PM, PM assign Consultant untuk setiap project';
+          return 'CEO/COO assign PM, PM assign Consultant untuk setiap project';
         } else if (activeNav === 'invoices') {
           return 'Kelola payment schedule yang flexible (50-50%, 50-35-15%, dll)';
         } else if (activeNav === 'ticketing') {
@@ -191,6 +209,12 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
 
   const getRoleName = () => {
     switch (role) {
+      case 'CEO':
+        return 'CEO';
+      case 'COO-Tax-Audit':
+        return 'COO TAX AUDIT';
+      case 'COO-Legal-TP-SR':
+        return 'COO LEGAL TP SR';
       case 'SuperAdmin':
         return 'SUPER ADMIN';
       case 'IT':

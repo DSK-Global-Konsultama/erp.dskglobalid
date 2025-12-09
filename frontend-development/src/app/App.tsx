@@ -5,13 +5,24 @@ import { Sidebar } from '../components/layout/Sidebar';
 import { Header } from '../components/layout/Header';
 import { authService, type User } from '../services/authService';
 
-// BOD imports
-import { BODDashboard } from './routes/bod';
-import { LeadsPage } from './routes/bod/pages/LeadsPage';
-import { DealsPage } from './routes/bod/pages/DealsPage';
-import { ProjectsPage } from './routes/bod/pages/ProjectsPage';
-import { InvoicesPage } from './routes/bod/pages/InvoicesPage';
-import { TicketingPage as BODTicketingPage } from './routes/bod/pages/TicketingPage';
+// CEO imports
+import { CEODashboard } from './routes/ceo';
+import { LeadsPage as CEOLeadsPage } from './routes/ceo/pages/LeadsPage';
+import { DealsPage as CEODealsPage } from './routes/ceo/pages/DealsPage';
+import { ProjectsPage as CEOProjectsPage } from './routes/ceo/pages/ProjectsPage';
+import { InvoicesPage as CEOInvoicesPage } from './routes/ceo/pages/InvoicesPage';
+import { TicketingPage as CEOTicketingPage } from './routes/ceo/pages/TicketingPage';
+import { ReimbursePage as CEOReimbursePage } from './routes/ceo/pages/ReimbursePage';
+
+// COO imports
+import { COODashboard } from './routes/coo';
+import { LeadsPage as COOLeadsPage } from './routes/coo/pages/LeadsPage';
+import { DealsPage as COODealsPage } from './routes/coo/pages/DealsPage';
+import { ProjectsPage as COOProjectsPage } from './routes/coo/pages/ProjectsPage';
+import { InvoicesPage as COOInvoicesPage } from './routes/coo/pages/InvoicesPage';
+import { TicketingPage as COOTicketingPage } from './routes/coo/pages/TicketingPage';
+import { ReimbursePage as COOReimbursePage } from './routes/coo/pages/ReimbursePage';
+
 
 // Other role imports
 import { BDMEODashboard } from './routes/bd-meo';
@@ -23,7 +34,6 @@ import { TicketingPage as PMTicketingPage } from './routes/pm/pages/TicketingPag
 import { AdminDashboard } from './routes/admin';
 import { TicketingPage as AdminTicketingPage } from './routes/admin/pages/TicketingPage';
 import { ReimbursePage as AdminReimbursePage } from './routes/admin/pages/ReimbursePage';
-import { ReimbursePage as BODReimbursePage } from './routes/bod/pages/ReimbursePage';
 import { ReimbursePage as BDMEOReimbursePage } from './routes/bd-meo/pages/ReimbursePage';
 import { ReimbursePage as BDExecutiveReimbursePage } from './routes/bd-executive/pages/ReimbursePage';
 import { ReimbursePage as PMReimbursePage } from './routes/pm/pages/ReimbursePage';
@@ -37,10 +47,12 @@ import { TicketingPage as SuperAdminTicketingPage } from './routes/superadmin/pa
 import { AuthPage } from './routes/auth/AuthPage';
 
 // Helper function to map User role to Header role type
-const mapRoleForHeader = (role: User['role']): 'BOD' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'SuperAdmin' => {
+const mapRoleForHeader = (role: User['role']): 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'SuperAdmin' => {
   if (role === 'ITSpecialist') return 'IT';
   if (role === 'SuperAdmin') return 'SuperAdmin';
-  return role as 'BOD' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin';
+  if (role === 'COO-Tax-Audit' || role === 'COO-Legal-TP-SR') return role;
+  if (role === 'CEO') return 'CEO';
+  return role as 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin';
 };
 
 export default function App() {
@@ -154,8 +166,10 @@ export default function App() {
           return <SuperAdminTicketingPage />;
         } else if (currentUser.role === 'SuperAdmin') {
           return <SuperAdminTicketingPage />;
-        } else if (currentUser.role === 'BOD') {
-          return <BODTicketingPage />;
+        } else if (currentUser.role === 'CEO') {
+          return <CEOTicketingPage />;
+        } else if (currentUser.role?.startsWith('COO-')) {
+          return <COOTicketingPage />;
         } else if (currentUser.role === 'BD-MEO') {
           return <BDMEOTicketingPage />;
         } else if (currentUser.role === 'BD-Executive') {
@@ -174,8 +188,10 @@ export default function App() {
           return <SuperAdminReimbursePage />;
         } else if (currentUser.role === 'SuperAdmin') {
           return <SuperAdminReimbursePage />;
-        } else if (currentUser.role === 'BOD') {
-          return <BODReimbursePage />;
+        } else if (currentUser.role === 'CEO') {
+          return <CEOReimbursePage />;
+        } else if (currentUser.role?.startsWith('COO-')) {
+          return <COOReimbursePage />;
         } else if (currentUser.role === 'BD-MEO') {
           return <BDMEOReimbursePage />;
         } else if (currentUser.role === 'BD-Executive') {
@@ -208,36 +224,51 @@ export default function App() {
         } else if (currentUser.role === 'ITSpecialist') {
           switch (activeNav) {
             case 'dashboard':
-              return <BODDashboard />;
+              return <CEODashboard />;
             case 'leads':
-              return <LeadsPage />;
+              return <CEOLeadsPage />;
             case 'deals':
-              return <DealsPage />;
+              return <CEODealsPage />;
             case 'projects':
-              return <ProjectsPage />;
+              return <CEOProjectsPage />;
             case 'invoices':
-              return <InvoicesPage />;
+              return <CEOInvoicesPage />;
             case 'user-account':
               return <SuperAdminUserManagementPage />;
             case 'settings':
               return <SuperAdminSettingPage />;
             default:
-              return <BODDashboard />;
+              return <CEODashboard />;
           }
-        } else if (currentUser.role === 'BOD') {
+        } else if (currentUser.role === 'CEO') {
           switch (activeNav) {
             case 'dashboard':
-              return <BODDashboard />;
+              return <CEODashboard />;
             case 'leads':
-              return <LeadsPage />;
+              return <CEOLeadsPage />;
             case 'deals':
-              return <DealsPage />;
+              return <CEODealsPage />;
             case 'projects':
-              return <ProjectsPage />;
+              return <CEOProjectsPage />;
             case 'invoices':
-              return <InvoicesPage />;
+              return <CEOInvoicesPage />;
             default:
-              return <BODDashboard />;
+              return <CEODashboard />;
+          }
+        } else if (currentUser.role?.startsWith('COO-')) {
+          switch (activeNav) {
+            case 'dashboard':
+              return <COODashboard />;
+            case 'leads':
+              return <COOLeadsPage />;
+            case 'deals':
+              return <COODealsPage />;
+            case 'projects':
+              return <COOProjectsPage />;
+            case 'invoices':
+              return <COOInvoicesPage />;
+            default:
+              return <COODashboard />;
           }
         } else if (currentUser.role === 'BD-MEO') {
           return <BDMEODashboard userName={currentUser.name} />;

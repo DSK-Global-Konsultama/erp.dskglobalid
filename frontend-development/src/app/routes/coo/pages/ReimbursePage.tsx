@@ -1,11 +1,12 @@
 import { ReimbursementManagement } from '../../../../features/reimburse/components/ReimbursementManagement';
 import { authService } from '../../../../services/authService';
 
-export function SuperAdminReimbursePage() {
+export function ReimbursePage() {
   const currentUser = authService.getCurrentUser();
   const userRole = currentUser?.role === 'Admin' ? 'Admin' : 'Other';
   const userName = currentUser?.name || 'User';
   
+  // Map role untuk submittedByRole
   const roleMap: Record<string, string> = {
     'CEO': 'CEO',
     'COO-Tax-Audit': 'COO Tax Audit',
@@ -14,7 +15,6 @@ export function SuperAdminReimbursePage() {
     'BD-Executive': 'BD Executive',
     'PM': 'PM',
     'ITSpecialist': 'IT',
-    'SuperAdmin': 'Super Admin',
   };
   const userRoleString = roleMap[currentUser?.role || ''] || currentUser?.role || 'Other';
 
@@ -26,3 +26,4 @@ export function SuperAdminReimbursePage() {
     />
   );
 }
+

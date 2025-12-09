@@ -29,7 +29,7 @@ export function UserManagementPage() {
     switch (role) {
       case 'Super Admin':
         return 'destructive' as const;
-      case 'BOD':
+      case 'CEO':
         return 'default' as const;
       case 'IT':
         return 'secondary' as const;
@@ -87,7 +87,9 @@ export function UserManagementPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Super Admin">Super Admin</SelectItem>
-                        <SelectItem value="BOD">BOD</SelectItem>
+                        <SelectItem value="CEO">CEO</SelectItem>
+                        <SelectItem value="COO-Tax-Audit">COO Tax Audit</SelectItem>
+                        <SelectItem value="COO-Legal-TP-SR">COO Legal TP SR</SelectItem>
                         <SelectItem value="BD Content Creator">BD Content Creator</SelectItem>
                         <SelectItem value="BD Executive">BD Executive</SelectItem>
                         <SelectItem value="PM">PM</SelectItem>
@@ -150,7 +152,9 @@ export function UserManagementPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Super Admin">Super Admin</SelectItem>
-                      <SelectItem value="BOD">BOD</SelectItem>
+                      <SelectItem value="CEO">CEO</SelectItem>
+                      <SelectItem value="COO-Tax-Audit">COO Tax Audit</SelectItem>
+                      <SelectItem value="COO-Legal-TP-SR">COO Legal TP SR</SelectItem>
                       <SelectItem value="BD Content Creator">BD Content Creator</SelectItem>
                       <SelectItem value="BD Executive">BD Executive</SelectItem>
                       <SelectItem value="PM">PM</SelectItem>

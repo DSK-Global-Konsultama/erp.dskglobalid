@@ -14,7 +14,7 @@ import { Plus, FileText, Trash2, CheckCircle, Filter, Calendar } from 'lucide-re
 import { toast } from 'sonner';
 
 interface DealsManagementProps {
-  userRole: 'BOD' | 'BD-Executive';
+  userRole: 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-Executive';
   userName: string;
 }
 
@@ -396,6 +396,7 @@ export function DealsManagement({ userRole, userName }: DealsManagementProps) {
               <CardTitle>Daftar Deals ({filteredDeals.length})</CardTitle>
               <CardDescription>
                 {userRole === 'BD-Executive' && 'BD Executive handle proposal & EL'}
+                {(userRole === 'CEO' || userRole?.startsWith('COO-')) && 'CEO dapat approve proposal & EL, COO hanya melihat'}
               </CardDescription>
             </div>
             {userRole === 'BD-Executive' && (
@@ -639,7 +640,7 @@ export function DealsManagement({ userRole, userName }: DealsManagementProps) {
                         <p className="text-sm font-medium">Belum ada data deals</p>
                         <p className="text-xs mt-1">
                           {userRole === 'BD-Executive' && 'Belum ada deals yang Anda buat'}
-                          {userRole === 'BOD' && 'Belum ada deals di sistem'}
+                          {(userRole === 'CEO' || userRole?.startsWith('COO-')) && 'Belum ada deals di sistem'}
                         </p>
                       </div>
                     </TableCell>

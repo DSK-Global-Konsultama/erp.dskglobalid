@@ -15,7 +15,7 @@ import {
   Building2
 } from 'lucide-react';
 
-type UserRole = 'BOD' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist' | 'SuperAdmin';
+type UserRole = 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist' | 'SuperAdmin';
 type NavItem = {
   id: string;
   label: string;
@@ -50,17 +50,22 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
   const activeNav = externalActiveNav !== undefined ? externalActiveNav : internalActiveNav;
 
   const getNavItems = (): NavItem[] => {
+    // CEO and COO share the same navigation items
+    const ceoCooNavItems = [
+      { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
+      { id: 'leads', label: 'Leads', icon: Users, path: 'leads' },
+      { id: 'deals', label: 'Deals', icon: HandshakeIcon, path: 'deals' },
+      { id: 'projects', label: 'Projects', icon: FolderKanban, path: 'projects' },
+      { id: 'invoices', label: 'Invoices', icon: FileText, path: 'invoices' },
+      { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
+      { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
+    ];
+
     switch (role) {
-      case 'BOD':
-        return [
-          { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
-          { id: 'leads', label: 'Leads', icon: Users, path: 'leads' },
-          { id: 'deals', label: 'Deals', icon: HandshakeIcon, path: 'deals' },
-          { id: 'projects', label: 'Projects', icon: FolderKanban, path: 'projects' },
-          { id: 'invoices', label: 'Invoices', icon: FileText, path: 'invoices' },
-          { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
-          { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
-        ];
+      case 'CEO':
+      case 'COO-Tax-Audit':
+      case 'COO-Legal-TP-SR':
+        return ceoCooNavItems;
       case 'BD-MEO':
         return [
           { id: 'leads', label: 'My Leads', icon: Users, path: 'dashboard' },

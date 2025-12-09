@@ -1,8 +1,10 @@
+export type UserRole = 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist' | 'SuperAdmin';
+
 export interface User {
   id: string;
   username: string;
   name: string;
-  role: 'BOD' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist' | 'SuperAdmin';
+  role: UserRole;
   email: string;
 }
 
@@ -13,14 +15,31 @@ export interface LoginCredentials {
 
 // Dummy users database
 export const dummyUsers: Array<User & { password: string }> = [
-  // BOD Account
+  // CEO Account
   {
     id: 'U001',
-    username: 'bod',
-    password: 'bod123',
-    name: 'Director',
-    role: 'BOD',
-    email: 'bod@dskglobal.com',
+    username: 'ceo',
+    password: 'ceo123',
+    name: 'Galih Gumilang',
+    role: 'CEO',
+    email: 'ceo@dskglobal.com',
+  },
+  // COO Accounts
+  {
+    id: 'U015',
+    username: 'suparna',
+    password: 'coo123',
+    name: 'Suparna Wijaya',
+    role: 'COO-Tax-Audit',
+    email: 'suparna@dskglobal.com',
+  },
+  {
+    id: 'U016',
+    username: 'ferry',
+    password: 'coo123',
+    name: 'Ferry Irawan',
+    role: 'COO-Legal-TP-SR',
+    email: 'ferry@dskglobal.com',
   },
   // Admin Account
   {
@@ -210,7 +229,9 @@ export const authService = {
       // Urutan prioritas supaya redirect konsisten
       const priority: Array<User['role']> = [
         'SuperAdmin',
-        'BOD',
+        'CEO',
+        'COO-Tax-Audit',
+        'COO-Legal-TP-SR',
         'Admin',
         'ITSpecialist',
         'PM',

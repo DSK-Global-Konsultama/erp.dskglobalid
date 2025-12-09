@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Users, TrendingUp, AlertCircle, Clock, DollarSign } from 'lucide-react';
 import { useBODStats } from '../hooks/useBODStats';
 
