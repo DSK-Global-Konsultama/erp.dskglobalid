@@ -11,7 +11,7 @@ import { mockProjects, projectManagers, type Project } from '../../../lib/mock-d
 import { Clock, CheckCircle, AlertCircle, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import type { UserRole } from '../../../services/authService';
-import { canAssignPM, getCOOManageableServices, isCEO, isCOO } from '../../../utils/rolePermissions';
+import { canAssignPM, getCOOManageableServices, isCEO, isCOO, isPM } from '../../../utils/rolePermissions';
 
 interface ProjectManagementProps {
   userRole?: UserRole;
@@ -26,6 +26,7 @@ export function ProjectManagement({ userRole }: ProjectManagementProps) {
   const manageableServices = getCOOManageableServices(userRole);
   const isCEOUser = isCEO(userRole);
   const isCOOUser = isCOO(userRole);
+  const isPMUser = isPM(userRole);
 
   // Filter projects for COO (only show manageable projects)
   const displayProjects = isCOOUser 
@@ -65,19 +66,29 @@ export function ProjectManagement({ userRole }: ProjectManagementProps) {
   };
 
   const completeProject = (id: string) => {
+    const project = projects.find(p => p.id === id);
+    if (!project) return;
+    
+    // Hanya bisa complete jika progress sudah 100%
+    if (project.progressPercentage !== 100) {
+      toast.error('Project hanya bisa diselesaikan jika progress sudah mencapai 100%');
+      return;
+    }
+    
     const updatedProjects = projects.map(p => {
       if (p.id === id) {
         return {
           ...p,
-          status: 'completed' as const,
+          status: 'waiting-final-payment' as const,
           completionDate: new Date().toISOString().split('T')[0],
+          progressPercentage: 100,
         };
       }
       return p;
     });
     
     setProjects(updatedProjects);
-    toast.success('Project selesai! Admin harus menagih payment berikutnya.');
+    toast.success('Project selesai! Status berubah ke "Waiting Final Payment". Admin akan menagih pembayaran terakhir.');
   };
 
   const formatDate = (dateString: string) => {
@@ -326,9 +337,45 @@ export function ProjectManagement({ userRole }: ProjectManagementProps) {
                   </TableRow>
                 ) : (
                   [...displayProjects].sort((a, b) => {
+                    // Priority 1: Project yang belum di-assign PM (paling atas)
+                    const aWaitingAssignment = (a.status === 'waiting-assignment' || a.status === 'waiting-pm') && !a.assignedPM;
+                    const bWaitingAssignment = (b.status === 'waiting-assignment' || b.status === 'waiting-pm') && !b.assignedPM;
+                    
+                    if (aWaitingAssignment && !bWaitingAssignment) return -1;
+                    if (!aWaitingAssignment && bWaitingAssignment) return 1;
+                    
+                    // Priority 2: Project yang overdue (setelah waiting-assignment)
                     const daysA = getDaysUntilDue(a.dueDate);
                     const daysB = getDaysUntilDue(b.dueDate);
-                    return daysA - daysB; // Urutkan dari terdekat hingga paling lama
+                    const aOverdue = a.status === 'in-progress' && daysA < 0;
+                    const bOverdue = b.status === 'in-progress' && daysB < 0;
+                    
+                    if (aOverdue && !bOverdue) return -1;
+                    if (!aOverdue && bOverdue) return 1;
+                    
+                    // Priority 3: Project yang dekat deadline (0-15 hari) - setelah overdue
+                    const aNearDeadline = a.status === 'in-progress' && daysA >= 0 && daysA <= 15;
+                    const bNearDeadline = b.status === 'in-progress' && daysB >= 0 && daysB <= 15;
+                    
+                    if (aNearDeadline && !bNearDeadline) return -1;
+                    if (!aNearDeadline && bNearDeadline) return 1;
+                    
+                    // Priority 4: Completed (paling bawah)
+                    const aCompleted = a.status === 'completed';
+                    const bCompleted = b.status === 'completed';
+                    
+                    if (aCompleted && !bCompleted) return 1; // aCompleted ke paling bawah
+                    if (!aCompleted && bCompleted) return -1; // bCompleted ke paling bawah
+                    
+                    // Priority 5: Waiting final payment (di atas completed)
+                    const aWaitingFinal = a.status === 'waiting-final-payment';
+                    const bWaitingFinal = b.status === 'waiting-final-payment';
+                    
+                    if (aWaitingFinal && !bWaitingFinal) return 1; // aWaitingFinal ke bawah (tapi di atas completed)
+                    if (!aWaitingFinal && bWaitingFinal) return -1; // bWaitingFinal ke bawah (tapi di atas completed)
+                    
+                    // Priority 6: Urutkan dari deadline terdekat hingga terlama
+                    return daysA - daysB;
                   }).map(project => {
                     const daysUntilDue = getDaysUntilDue(project.dueDate);
                     const isUrgent = daysUntilDue <= 7 && project.status === 'in-progress';
@@ -390,8 +437,8 @@ export function ProjectManagement({ userRole }: ProjectManagementProps) {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-2">
-                          {/* Assign PM button */}
-                          {(project.status === 'waiting-assignment' || project.status === 'waiting-pm') && !project.assignedPM && canAssign && (
+                          {/* CEO/COO: Hanya tombol Assign PM jika ada project waiting-assignment */}
+                          {!isPMUser && (project.status === 'waiting-assignment' || project.status === 'waiting-pm') && !project.assignedPM && canAssign && (
                             <Button
                               size="sm"
                               onClick={() => {
@@ -404,15 +451,15 @@ export function ProjectManagement({ userRole }: ProjectManagementProps) {
                             </Button>
                           )}
 
-                          {/* Start project when payment received */}
-                          {project.status === 'waiting-first-payment' && (
+                          {/* PM: Start project when payment received */}
+                          {isPMUser && project.status === 'waiting-first-payment' && (
                             <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                               Tunggu Payment
                             </Badge>
                           )}
 
-                          {/* Complete project */}
-                          {project.status === 'in-progress' && (
+                          {/* PM: Complete project - hanya muncul jika progress 100% */}
+                          {isPMUser && project.status === 'in-progress' && project.progressPercentage === 100 && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -422,11 +469,25 @@ export function ProjectManagement({ userRole }: ProjectManagementProps) {
                               Selesai
                             </Button>
                           )}
+                          
+                          {/* PM: Info jika progress belum 100% - tombol Selesai tidak muncul */}
+                          {isPMUser && project.status === 'in-progress' && project.progressPercentage !== 100 && (
+                            <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                              Progress: {project.progressPercentage ?? 0}%
+                            </Badge>
+                          )}
 
-                          {/* Completed - reminder for payment */}
-                          {project.status === 'completed' && (
+                          {/* PM: Waiting final payment */}
+                          {isPMUser && project.status === 'waiting-final-payment' && (
                             <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                              Tagih Payment
+                              Menunggu Final Payment
+                            </Badge>
+                          )}
+
+                          {/* PM: Completed */}
+                          {isPMUser && project.status === 'completed' && (
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                              Selesai
                             </Badge>
                           )}
                         </div>

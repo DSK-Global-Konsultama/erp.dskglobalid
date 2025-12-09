@@ -83,6 +83,13 @@ export function canAssignPM(role: UserRole | undefined, serviceName: string): bo
 }
 
 /**
+ * Check if user is PM
+ */
+export function isPM(role: UserRole | undefined): boolean {
+  return role === 'PM';
+}
+
+/**
  * Get services that a COO can manage
  */
 export function getCOOManageableServices(role: UserRole | undefined): string[] {
