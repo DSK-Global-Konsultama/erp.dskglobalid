@@ -37,7 +37,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
       if (activeNav === 'dashboard') {
         return role === 'CEO' ? 'Dashboard CEO' : `Dashboard ${role}`;
       } else if (activeNav === 'leads') {
-        return 'All Leads';
+        return 'Semua Lead';
       } else if (activeNav === 'deals') {
         return 'All Deals';
       } else if (activeNav === 'projects') {
@@ -127,7 +127,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
       if (activeNav === 'dashboard') {
         return 'Monitoring Business Development & Project Management';
       } else if (activeNav === 'leads') {
-        return 'Monitor semua leads dari berbagai sumber';
+        return 'View dan monitor semua leads dalam pipeline';
       } else if (activeNav === 'deals') {
         return 'Monitor semua deals';
       } else if (activeNav === 'projects') {

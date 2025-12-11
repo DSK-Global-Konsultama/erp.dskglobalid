@@ -10,6 +10,7 @@ export interface Lead {
   createdDate: string;
   claimedDate?: string;
   lastFollowUp?: string;
+  lastActivity?: string; // Last activity description (e.g., "Meeting scheduled for 2025-12-15")
   notes: string;
   createdBy: string; // BD Content Creator
 }
@@ -1883,6 +1884,7 @@ export function generateDummyLeadsBDMEO(userName: string): (Lead & { service?: s
       notes: 'Sudah dihubungi, janji meeting minggu depan',
       createdBy: userName,
       service: 'Legal Consulting',
+      lastActivity: 'CEO moved to To Be Meet - 2025-01-12',
     },
     {
       id: 'L103',
@@ -1896,6 +1898,7 @@ export function generateDummyLeadsBDMEO(userName: string): (Lead & { service?: s
       notes: 'Meeting dijadwalkan tanggal 20 Januari 2025',
       createdBy: userName,
       service: 'Audit Services',
+      lastActivity: 'Meeting scheduled for 2025-01-20',
     },
     {
       id: 'L104',
@@ -1909,6 +1912,7 @@ export function generateDummyLeadsBDMEO(userName: string): (Lead & { service?: s
       notes: 'Setelah meeting, client meminta proposal untuk Financial Advisory',
       createdBy: userName,
       service: 'Financial Advisory',
+      lastActivity: 'Notulensi approved by CEO - 2025-01-10',
     },
     {
       id: 'L105',
@@ -1922,6 +1926,7 @@ export function generateDummyLeadsBDMEO(userName: string): (Lead & { service?: s
       notes: 'Proposal sedang dalam proses review oleh client',
       createdBy: userName,
       service: 'Web Development',
+      lastActivity: 'Proposal sent to client - 2025-02-05',
     },
     {
       id: 'L106',
@@ -1935,6 +1940,7 @@ export function generateDummyLeadsBDMEO(userName: string): (Lead & { service?: s
       notes: 'Deal closed! Client setuju dengan proposal Tax Consulting',
       createdBy: userName,
       service: 'Tax Consulting',
+      lastActivity: 'EL signed - 2025-02-10',
     },
     {
       id: 'L107',
@@ -1948,6 +1954,7 @@ export function generateDummyLeadsBDMEO(userName: string): (Lead & { service?: s
       notes: 'Client minta ditunda karena sedang fokus ke project lain',
       createdBy: userName,
       service: 'Legal Consulting',
+      lastActivity: 'CEO put on hold - budget constraints - 2025-01-15',
     },
     {
       id: 'L108',
@@ -1988,6 +1995,7 @@ export function generateDummyLeadsBDMEO(userName: string): (Lead & { service?: s
       notes: 'Menunggu konfirmasi jadwal meeting',
       createdBy: userName,
       service: 'Legal Consulting',
+      lastActivity: 'CEO moved to To Be Meet - 2025-02-14',
     },
     {
       id: 'L111',
@@ -2001,6 +2009,7 @@ export function generateDummyLeadsBDMEO(userName: string): (Lead & { service?: s
       notes: 'Meeting dijadwalkan awal Maret',
       createdBy: userName,
       service: 'Audit Services',
+      lastActivity: 'Meeting scheduled for 2025-03-05',
     },
     {
       id: 'L112',
@@ -2014,6 +2023,7 @@ export function generateDummyLeadsBDMEO(userName: string): (Lead & { service?: s
       notes: 'Permintaan proposal untuk Financial Advisory',
       createdBy: userName,
       service: 'Financial Advisory',
+      lastActivity: 'Notulensi approved by CEO - 2025-02-25',
     },
     // Maret 2025
     {
@@ -2041,6 +2051,7 @@ export function generateDummyLeadsBDMEO(userName: string): (Lead & { service?: s
       notes: 'Proposal sedang direview',
       createdBy: userName,
       service: 'Web Development',
+      lastActivity: 'Proposal sent to client - 2025-03-15',
     },
     {
       id: 'L115',
@@ -2054,6 +2065,7 @@ export function generateDummyLeadsBDMEO(userName: string): (Lead & { service?: s
       notes: 'Deal closed untuk Legal Consulting',
       createdBy: userName,
       service: 'Legal Consulting',
+      lastActivity: 'EL signed - 2025-03-25',
     },
     {
       id: 'L116',
