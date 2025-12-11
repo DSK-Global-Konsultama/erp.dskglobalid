@@ -63,7 +63,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         } else if (activeNav === 'reimburse') {
           return 'My Reimbursements';
         }
-        return 'Input Leads';
+        return 'My Leads';
       case 'BD-Executive':
         if (activeNav === 'leads') {
           return 'Available Leads';
@@ -153,7 +153,7 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         } else if (activeNav === 'reimburse') {
           return 'Submit dan lacak reimbursement pengeluaran kantor';
         }
-        return 'Input lead baru dari berbagai sumber';
+        return 'Kelola semua leads yang Anda buat';
       case 'BD-Executive':
         if (activeNav === 'leads') {
           return 'Claim leads untuk di-follow up sampai deal';
