@@ -39,66 +39,63 @@ export function useAuthForm(onLoginSuccess: (user: any) => void) {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    setTimeout(() => {
+    try {
       if (isLogin) {
-        // Login
-        const user = authService.login(
-          { username: formData.username, password: formData.password }, 
+        // Login ke backend
+        const user = await authService.login(
+          { username: formData.username, password: formData.password },
           rememberMe
         );
-        
-        if (user) {
-          const duration = rememberMe ? '7 days' : '30 minutes';
-          toast.success(`Selamat datang, ${user.name}! Session: ${duration}`);
-          onLoginSuccess(user);
-        } else {
-          toast.error('Username atau password salah!');
-        }
-      } else {
-        // Register
-        if (!agreePrivacy || !agreeTerms) {
-          toast.error('Anda harus menyetujui Kebijakan Privasi dan Syarat & Ketentuan');
-          setIsLoading(false);
-          return;
-        }
 
-        if (registerFormData.password.length < 8) {
-          toast.error('Password minimal 8 karakter');
-          setIsLoading(false);
-          return;
-        }
+        const duration = rememberMe ? '7 hari' : '30 menit';
+        toast.success(`Selamat datang, ${user.name}! Session: ${duration}`);
+        onLoginSuccess(user);
+        return;
+      }
 
-        // Check if username or email already exists
-        if (pendingUsersService.checkExists(registerFormData.user_name, registerFormData.email)) {
-          toast.error('Username atau email sudah terdaftar!');
-          setIsLoading(false);
-          return;
-        }
-        
-        // Add to pending users (will be assigned role by IT)
-        const fullName = `${registerFormData.first_name} ${registerFormData.last_name}`.trim();
-        pendingUsersService.addPendingUser({
-          username: registerFormData.user_name,
-          firstName: registerFormData.first_name,
-          lastName: registerFormData.last_name,
-          name: fullName,
-          email: registerFormData.email,
-          password: registerFormData.password, // In real app, this should be hashed
-        });
-        
-        toast.success('Registrasi berhasil! Akun Anda sedang menunggu approval dari IT untuk assign role.');
-        setIsLogin(true);
-        setRegisterFormData({ first_name: '', last_name: '', user_name: '', email: '', password: '' });
-        setAgreePrivacy(false);
-        setAgreeTerms(false);
+      // Register (masih dummy/pending list)
+      if (!agreePrivacy || !agreeTerms) {
+        toast.error('Anda harus menyetujui Kebijakan Privasi dan Syarat & Ketentuan');
+        return;
+      }
+
+      if (registerFormData.password.length < 8) {
+        toast.error('Password minimal 8 karakter');
+        return;
+      }
+
+      // Check if username or email already exists
+      if (pendingUsersService.checkExists(registerFormData.user_name, registerFormData.email)) {
+        toast.error('Username atau email sudah terdaftar!');
+        return;
       }
       
+      // Add to pending users (will be assigned role by IT)
+      const fullName = `${registerFormData.first_name} ${registerFormData.last_name}`.trim();
+      pendingUsersService.addPendingUser({
+        username: registerFormData.user_name,
+        firstName: registerFormData.first_name,
+        lastName: registerFormData.last_name,
+        name: fullName,
+        email: registerFormData.email,
+        password: registerFormData.password, // In real app, this should be hashed
+      });
+      
+      toast.success('Registrasi berhasil! Akun Anda sedang menunggu approval dari IT untuk assign role.');
+      setIsLogin(true);
+      setRegisterFormData({ first_name: '', last_name: '', user_name: '', email: '', password: '' });
+      setAgreePrivacy(false);
+      setAgreeTerms(false);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Terjadi kesalahan saat login';
+      toast.error(message);
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   const toggleAuthMode = () => {

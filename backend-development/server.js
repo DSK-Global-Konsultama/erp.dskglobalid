@@ -1,26 +1,34 @@
 // server.js
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
+const cors = require('cors');
 
 const app = express();
 
 const { authenticate } = require('./middleware/auth.middleware');
 
-app.get('/api/me', authenticate, (req, res) => {
-  res.json({
-    message: 'Profil dari token',
-    user: req.user
-  });
-});
+// CORS: izinkan akses dari FE (Vite dev server)
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    credentials: true
+  })
+);
 
 // middleware untuk baca JSON body
 app.use(express.json());
 
+// serve folder uploads sebagai static
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // routes
 const authRoutes = require('./routes/auth.routes');
-app.use('/auth', authRoutes);
+const userRoutes = require('./routes/user.routes');
 
-// basic health check
+app.use('/auth', authRoutes);
+app.use('/users', userRoutes);
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });

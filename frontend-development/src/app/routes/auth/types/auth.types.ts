@@ -22,14 +22,14 @@ export interface LoginFormProps {
   rememberMe: boolean;
   onFormChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRememberMeChange: (checked: boolean) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.FormEvent) => Promise<void> | void;
 }
 
 export interface RegisterFormProps {
   formData: RegisterFormData;
   isLoading: boolean;
   onFormChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.FormEvent) => Promise<void> | void;
 }
 
 export interface InfoPanelProps {

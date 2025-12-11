@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { Database } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { useAuthForm } from './hooks/useAuthForm';
 import { AuthBackground } from './components/AuthBackground';
@@ -9,6 +8,7 @@ import { RegisterForm } from './components/RegisterForm';
 import type { AuthPageProps } from './types/auth.types';
 import { useEffect } from 'react';
 import { authService } from '../../../services/authService';
+import logo from '../../../assets/logodsk.png';
 
 export function AuthPage({ onLoginSuccess }: AuthPageProps) {
   const {
@@ -98,13 +98,11 @@ export function AuthPage({ onLoginSuccess }: AuthPageProps) {
                         ease: 'easeInOut',
                       }}
                     >
-                      <Database className="w-8 h-8" style={{ color: '#dc2626' }} />
+                      <img src={logo} alt="Logo" className="w-40 h-40 sm:w-48 sm:h-48 md:w-44 md:h-44" />
                     </motion.div>
-                    <h1 className="text-lg sm:text-xl font-bold mb-0.5" style={{ color: '#b91c1c' }}>
-                      DSK Global
-                    </h1>
+                    
                     <p className="text-gray-500 text-[10px] sm:text-xs tracking-wider">
-                      ERP System
+                      Enterprise Resource Planning System
                     </p>
                   </div>
 

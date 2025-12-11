@@ -1,4 +1,13 @@
-export type UserRole = 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist' | 'SuperAdmin';
+export type UserRole =
+  | 'CEO'
+  | 'COO-Tax-Audit'
+  | 'COO-Legal-TP-SR'
+  | 'BD-MEO'
+  | 'BD-Executive'
+  | 'PM'
+  | 'Admin'
+  | 'ITSpecialist'
+  | 'SuperAdmin';
 
 export interface User {
   id: string;
@@ -13,144 +22,54 @@ export interface LoginCredentials {
   password: string;
 }
 
-// Dummy users database
-export const dummyUsers: Array<User & { password: string }> = [
-  // CEO Account
-  {
-    id: 'U001',
-    username: 'ceo',
-    password: 'ceo123',
-    name: 'Galih Gumilang',
-    role: 'CEO',
-    email: 'ceo@dskglobal.com',
-  },
-  // COO Accounts
-  {
-    id: 'U015',
-    username: 'suparna',
-    password: 'coo123',
-    name: 'Suparna Wijaya',
-    role: 'COO-Tax-Audit',
-    email: 'suparna@dskglobal.com',
-  },
-  {
-    id: 'U016',
-    username: 'ferry',
-    password: 'coo123',
-    name: 'Ferry Irawan',
-    role: 'COO-Legal-TP-SR',
-    email: 'ferry@dskglobal.com',
-  },
-  // Admin Account
-  {
-    id: 'U002',
-    username: 'admin',
-    password: 'admin123',
-    name: 'Admin',
-    role: 'Admin',
-    email: 'admin@dskglobal.com',
-  },
-  // BD Content Creators
-  {
-    id: 'U003',
-    username: 'sarah',
-    password: 'sarah123',
-    name: 'Sarah Wijaya',
-    role: 'BD-MEO',
-    email: 'sarah@dskglobal.com',
-  },
-  {
-    id: 'U004',
-    username: 'tommy',
-    password: 'tommy123',
-    name: 'Tommy Budiman',
-    role: 'BD-MEO',
-    email: 'tommy@dskglobal.com',
-  },
-  // BD Executives
-  {
-    id: 'U005',
-    username: 'andi',
-    password: 'andi123',
-    name: 'Andi Wijaya',
-    role: 'BD-Executive',
-    email: 'andi@dskglobal.com',
-  },
-  {
-    id: 'U006',
-    username: 'rina',
-    password: 'rina123',
-    name: 'Rina Kusuma',
-    role: 'BD-Executive',
-    email: 'rina@dskglobal.com',
-  },
-  {
-    id: 'U007',
-    username: 'dedi',
-    password: 'dedi123',
-    name: 'Dedi Supriyanto',
-    role: 'BD-Executive',
-    email: 'dedi@dskglobal.com',
-  },
-  {
-    id: 'U008',
-    username: 'fitri',
-    password: 'fitri123',
-    name: 'Fitri Handayani',
-    role: 'BD-Executive',
-    email: 'fitri@dskglobal.com',
-  },
-  // Project Managers
-  {
-    id: 'U009',
-    username: 'diana',
-    password: 'diana123',
-    name: 'Diana Putri',
-    role: 'PM',
-    email: 'diana@dskglobal.com',
-  },
-  {
-    id: 'U010',
-    username: 'eko',
-    password: 'eko123',
-    name: 'Eko Prasetyo',
-    role: 'PM',
-    email: 'eko@dskglobal.com',
-  },
-  {
-    id: 'U011',
-    username: 'farhan',
-    password: 'farhan123',
-    name: 'Farhan Rahman',
-    role: 'PM',
-    email: 'farhan@dskglobal.com',
-  },
-  {
-    id: 'U012',
-    username: 'gita',
-    password: 'gita123',
-    name: 'Gita Sari',
-    role: 'PM',
-    email: 'gita@dskglobal.com',
-  },
-  // Super Admin Account
-  {
-    id: 'U014',
-    username: 'superadmin',
-    password: 'superadmin123',
-    name: 'Super Admin',
-    role: 'SuperAdmin',
-    email: 'superadmin@dskglobal.com',
-  },
-];
+type BackendRoleCode =
+  | 'CEO'
+  | 'COO'
+  | 'PM'
+  | 'ADMIN'
+  | 'SUPERADMIN'
+  | 'IT'
+  | 'IT_SPECIALIST'
+  | 'BD_EXECUTIVE'
+  | 'BD-EXECUTIVE'
+  | 'BD EXECUTIVE'
+  | 'BD_MEO'
+  | 'BD-MEO'
+  | 'BD MEO';
+
+type BackendDepartment = {
+  code?: string;
+  name?: string;
+};
+
+type BackendUser = {
+  id?: number | string;
+  full_name?: string;
+  email?: string;
+  username?: string;
+  profile_image_path?: string | null;
+  role?: {
+    code?: BackendRoleCode | string;
+    name?: string;
+  };
+  departments?: BackendDepartment[];
+};
+
+type BackendLoginResponse = {
+  message?: string;
+  token: string;
+  user: BackendUser;
+};
 
 const SESSION_KEY = 'erp_user_session';
 const SESSION_EXPIRY_KEY = 'erp_session_expiry';
+const TOKEN_KEY = 'erp_auth_token';
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
 const REMEMBER_ME_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
 interface SessionData {
   user: User;
+  token?: string;
   timestamp: number;
   rememberMe: boolean;
 }
@@ -162,47 +81,125 @@ const getApiBase = (): string => {
   return base.replace(/\/+$/, '');
 };
 
+const mapRoleCodeToUserRole = (
+  roleCode: BackendRoleCode | string | undefined,
+  departments: BackendDepartment[] = []
+): UserRole => {
+  const normalized = (roleCode || '').toUpperCase();
+
+  if (normalized === 'CEO') return 'CEO';
+  if (normalized === 'SUPERADMIN') return 'SuperAdmin';
+  if (normalized === 'ADMIN') return 'Admin';
+  if (normalized === 'PM') return 'PM';
+  if (normalized === 'IT' || normalized === 'IT_SPECIALIST' || normalized === 'IT SPECIALIST')
+    return 'ITSpecialist';
+  if (
+    normalized === 'BD_EXECUTIVE' ||
+    normalized === 'BD-EXECUTIVE' ||
+    normalized === 'BD EXECUTIVE'
+  ) {
+    return 'BD-Executive';
+  }
+  if (normalized === 'BD_MEO' || normalized === 'BD-MEO' || normalized === 'BD MEO') {
+    return 'BD-MEO';
+  }
+  if (normalized === 'COO') {
+    const deptCodes = departments.map((d) => (d.code || '').toUpperCase());
+    const legalLike = ['LEGAL', 'TPDOC', 'SUSREP', 'TP', 'SR', 'TP-SR'];
+    const isLegalSide = deptCodes.some((code) => legalLike.includes(code));
+    return isLegalSide ? 'COO-Legal-TP-SR' : 'COO-Tax-Audit';
+  }
+  // Default fallback so UI still works even if new role appears
+  return 'Admin';
+};
+
+const mapBackendUserToFrontend = (beUser: BackendUser): User => {
+  const role = mapRoleCodeToUserRole(beUser.role?.code, beUser.departments);
+  const fullName = beUser.full_name || beUser.username || beUser.email || '';
+  return {
+    id: String(beUser.id ?? ''),
+    username: beUser.username || beUser.email || '',
+    name: fullName,
+    role,
+    email: beUser.email || ''
+  };
+};
+
 export const authService = {
-  // Login function with remember me support
-  login: (credentials: LoginCredentials, rememberMe: boolean = false): User | null => {
-    const user = dummyUsers.find(
-      (u) => u.username === credentials.username && u.password === credentials.password
-    );
+  // Login function with remember me support (calls backend API)
+  login: async (credentials: LoginCredentials, rememberMe: boolean = false): Promise<User> => {
+    const base = getApiBase();
 
-    if (user) {
-      const { password, ...userWithoutPassword } = user;
-      const sessionData: SessionData = {
-        user: userWithoutPassword,
-        timestamp: Date.now(),
-        rememberMe
-      };
-
-      // Always use localStorage for session sharing across tabs
-      localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-      
-      // Set expiry time based on remember me
-      const expiryTime = Date.now() + (rememberMe ? REMEMBER_ME_DURATION : SESSION_TIMEOUT);
-      localStorage.setItem(SESSION_EXPIRY_KEY, expiryTime.toString());
-      
-      return userWithoutPassword;
+    let response: Response;
+    try {
+      response = await fetch(`${base}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          identifier: credentials.username,
+          password: credentials.password
+        })
+      });
+    } catch (err) {
+      console.error('[authService.login] Network error', err);
+      throw new Error('Tidak dapat terhubung ke server. Periksa koneksi Anda.');
     }
 
-    return null;
+    let payload: BackendLoginResponse | null = null;
+    try {
+      payload = (await response.json()) as BackendLoginResponse;
+    } catch (err) {
+      console.error('[authService.login] Failed to parse response', err);
+    }
+
+    if (!response.ok) {
+      const message = payload?.message || 'Username atau password salah';
+      throw new Error(message);
+    }
+
+    if (!payload?.token || !payload?.user) {
+      throw new Error('Respon login tidak lengkap dari server');
+    }
+
+    const user = mapBackendUserToFrontend(payload.user);
+
+    const sessionData: SessionData = {
+      user,
+      token: payload.token,
+      timestamp: Date.now(),
+      rememberMe
+    };
+
+    // Always use localStorage for session sharing across tabs
+    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+    localStorage.setItem(TOKEN_KEY, payload.token);
+
+    // Set expiry time based on remember me
+    const expiryTime = Date.now() + (rememberMe ? REMEMBER_ME_DURATION : SESSION_TIMEOUT);
+    localStorage.setItem(SESSION_EXPIRY_KEY, expiryTime.toString());
+
+    return user;
   },
 
   // Logout function - clear localStorage and broadcast to other tabs
   logout: (): void => {
+    const oldValue = localStorage.getItem(SESSION_KEY);
     localStorage.removeItem(SESSION_KEY);
     localStorage.removeItem(SESSION_EXPIRY_KEY);
-    
+    localStorage.removeItem(TOKEN_KEY);
+
     // Broadcast logout event to other tabs
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: SESSION_KEY,
-      oldValue: localStorage.getItem(SESSION_KEY),
-      newValue: null,
-      url: window.location.href,
-      storageArea: localStorage
-    }));
+    window.dispatchEvent(
+      new StorageEvent('storage', {
+        key: SESSION_KEY,
+        oldValue,
+        newValue: null,
+        url: window.location.href,
+        storageArea: localStorage
+      })
+    );
   },
 
   // Start Microsoft login by redirecting to backend
@@ -239,17 +236,17 @@ export const authService = {
         'BD-MEO'
       ];
       // Normalize roles: handle case sensitivity
-      const normalized = roles.map(r => {
+      const normalized = roles.map((r) => {
         const roleStr = String(r).trim();
         return roleStr;
       });
-      
-      let primaryRole = priority.find(p => normalized.includes(p)) as User['role'] | undefined;
+
+      let primaryRole = priority.find((p) => normalized.includes(p)) as User['role'] | undefined;
       if (!primaryRole) {
         // Jika role dari DB tidak ada di priority list, gunakan role pertama yang ada
         const firstRole = normalized[0];
         // Cek apakah firstRole adalah valid role (case-insensitive)
-        const matchedRole = priority.find(p => p.toLowerCase() === firstRole?.toLowerCase());
+        const matchedRole = priority.find((p) => p.toLowerCase() === firstRole?.toLowerCase());
         primaryRole = (matchedRole || 'Admin') as User['role'];
       }
 
@@ -283,7 +280,7 @@ export const authService = {
     if (sessionData && expiryTime) {
       try {
         const expiry = parseInt(expiryTime);
-        
+
         // Check if session expired
         if (Date.now() > expiry) {
           // Session expired, clear it
@@ -291,24 +288,31 @@ export const authService = {
           return null;
         }
 
-        const data: SessionData = JSON.parse(sessionData);
-        
+        const data: SessionData | Record<string, any> = JSON.parse(sessionData);
+        const user: User | undefined = (data as SessionData).user || (data as any).user;
+
+        if (!user) {
+          authService.logout();
+          return null;
+        }
+
         // Update timestamp for activity tracking
-        data.timestamp = Date.now();
+        (data as SessionData).timestamp = Date.now();
         localStorage.setItem(SESSION_KEY, JSON.stringify(data));
-        
+
         // Extend expiry on activity (if not expired yet)
-        const newExpiryTime = Date.now() + (data.rememberMe ? REMEMBER_ME_DURATION : SESSION_TIMEOUT);
+        const newExpiryTime =
+          Date.now() + ((data as SessionData).rememberMe ? REMEMBER_ME_DURATION : SESSION_TIMEOUT);
         localStorage.setItem(SESSION_EXPIRY_KEY, newExpiryTime.toString());
-        
-        return data.user;
+
+        return user;
       } catch {
         // If parsing fails, clear session
         authService.logout();
         return null;
       }
     }
-    
+
     return null;
   },
 
@@ -335,7 +339,7 @@ export const authService = {
         const data: SessionData = JSON.parse(sessionData);
         const expiry = parseInt(expiryTime);
         const expiresIn = expiry - Date.now();
-        
+
         if (expiresIn > 0) {
           return { isRemembered: data.rememberMe, expiresIn };
         }
@@ -343,10 +347,7 @@ export const authService = {
         return null;
       }
     }
-    
+
     return null;
   }
 };
-
-
-

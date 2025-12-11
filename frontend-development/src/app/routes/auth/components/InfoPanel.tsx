@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { Database } from 'lucide-react';
 import type { InfoPanelProps } from '../types/auth.types';
+import logo from '../../../../assets/logodsk.png';
 
 export function InfoPanel({ isLogin }: InfoPanelProps) {
   return (
@@ -9,7 +9,7 @@ export function InfoPanel({ isLogin }: InfoPanelProps) {
       transition={{ 
         layout: { duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96] }
       }}
-      className="relative overflow-hidden hidden md:block"
+      className="relative overflow-hidden hidden md:flex items-center justify-center w-full h-full"
       style={{ 
         backgroundColor: '#1e1e1e',
         order: isLogin ? 2 : 1,
@@ -45,7 +45,7 @@ export function InfoPanel({ isLogin }: InfoPanelProps) {
               ease: 'easeInOut',
             }}
           >
-            <Database className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12" style={{ color: '#dc2626' }} />
+            <img src={logo} alt="Logo" className="w-60 h-60 sm:w-72 sm:h-72 md:w-84 md:h-84" />
           </motion.div>
 
         </motion.div>

@@ -100,6 +100,7 @@ exports.login = async (req, res) => {
          u.email,
          u.username,
          u.password_hash,
+         u.profile_image_path,
          u.is_active,
          r.code AS role_code,
          r.name AS role_name
@@ -146,6 +147,7 @@ exports.login = async (req, res) => {
         full_name: user.full_name,
         email: user.email,
         username: user.username,
+        profile_image_path: user.profile_image_path,
         role: {
           code: user.role_code,
           name: user.role_name

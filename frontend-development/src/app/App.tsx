@@ -43,6 +43,9 @@ import { SuperAdminReimbursePage } from './routes/superadmin/pages/ReimbursePage
 import { SettingPage as SuperAdminSettingPage } from './routes/superadmin/pages/SettingPage';
 import { TicketingPage as SuperAdminTicketingPage } from './routes/superadmin/pages/TicketingPage';
 
+// Shared dashboard for BOD/CEO/COO exports
+import { BODDashboard } from '../features/bod-dashboard';
+
 // Auth imports
 import { AuthPage } from './routes/auth/AuthPage';
 
@@ -207,15 +210,15 @@ export default function App() {
             case 'dashboard':
               return <BODDashboard />;
             case 'leads':
-              return <LeadsPage />;
+              return <CEOLeadsPage />;
             case 'deals':
-              return <DealsPage />;
+              return <CEODealsPage />;
             case 'projects':
-              return <ProjectsPage />;
+              return <CEOProjectsPage />;
             case 'invoices':
-              return <InvoicesPage />;
+              return <CEOInvoicesPage />;
             case 'user-account':
-              return <SuperAdminUserManagementPage />;
+              return <  SuperAdminUserManagementPage />;
             case 'settings':
               return <SuperAdminSettingPage />;
             default:
