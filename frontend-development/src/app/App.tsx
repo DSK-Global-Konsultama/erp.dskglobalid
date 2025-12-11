@@ -8,6 +8,7 @@ import { authService, type User } from '../services/authService';
 // CEO imports
 import { CEODashboard } from './routes/ceo';
 import { LeadsPage as CEOLeadsPage } from './routes/ceo/pages/LeadsPage';
+import { InboxPage as CEOInboxPage } from './routes/ceo/pages/InboxPage';
 import { DealsPage as CEODealsPage } from './routes/ceo/pages/DealsPage';
 import { ProjectsPage as CEOProjectsPage } from './routes/ceo/pages/ProjectsPage';
 import { InvoicesPage as CEOInvoicesPage } from './routes/ceo/pages/InvoicesPage';
@@ -252,6 +253,8 @@ export default function App() {
           switch (activeNav) {
             case 'dashboard':
               return <CEODashboard />;
+            case 'inbox':
+              return <CEOInboxPage />;
             case 'leads':
               return <CEOLeadsPage />;
             case 'deals':
@@ -283,7 +286,7 @@ export default function App() {
             case 'dashboard':
               return <BDMEODashboardPage userName={currentUser.name} />;
             case 'leads':
-              return <BDMEODashboard userName={currentUser.name} />;
+          return <BDMEODashboard userName={currentUser.name} />;
             default:
               return <BDMEODashboardPage userName={currentUser.name} />;
           }

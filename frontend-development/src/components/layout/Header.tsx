@@ -36,6 +36,8 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
     const getCEOCootitle = () => {
       if (activeNav === 'dashboard') {
         return role === 'CEO' ? 'Dashboard CEO' : `Dashboard ${role}`;
+      } else if (activeNav === 'inbox') {
+        return 'Kotak Masuk Lead';
       } else if (activeNav === 'leads') {
         return 'Semua Lead';
       } else if (activeNav === 'deals') {
@@ -126,6 +128,8 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
     const getCEOCooSubtitle = () => {
       if (activeNav === 'dashboard') {
         return 'Monitoring Business Development & Project Management';
+      } else if (activeNav === 'inbox') {
+        return 'Review dan process lead baru dari MEO';
       } else if (activeNav === 'leads') {
         return 'View dan monitor semua leads dalam pipeline';
       } else if (activeNav === 'deals') {
