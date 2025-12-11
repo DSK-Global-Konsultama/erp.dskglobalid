@@ -7,120 +7,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { StatusChip } from '../../../features/leads/components/StatusChip';
 import { AddLeadModal } from '../../../features/leads/components/AddLeadModal';
-import { mockLeads, type Lead, leadSources } from '../../../lib/mock-data';
+import { mockLeads, type Lead, leadSources, generateDummyLeadsBDMEO } from '../../../lib/mock-data';
 import { toast } from 'sonner';
 
 interface BDMEOProps {
   userName: string;
 }
-
-// Function to generate dummy leads for BD-MEO
-const generateDummyLeads = (userName: string): (Lead & { service?: string })[] => [
-  {
-    id: 'L101',
-    clientName: 'Budi Santoso',
-    company: 'PT Maju Jaya Abadi',
-    email: 'budi@majujaya.com',
-    phone: '081234567890',
-    source: 'Website',
-    status: 'NEW' as any,
-    createdDate: '2025-01-15',
-    notes: 'Lead baru dari website, tertarik dengan Tax Consulting',
-    createdBy: userName,
-    service: 'Tax Consulting',
-  },
-  {
-    id: 'L102',
-    clientName: 'Siti Rahayu',
-    company: 'CV Berkah Sentosa',
-    email: 'siti@berkahsentosa.com',
-    phone: '082345678901',
-    source: 'LinkedIn',
-    status: 'TO_BE_MEET' as any,
-    createdDate: '2025-01-10',
-    notes: 'Sudah dihubungi, janji meeting minggu depan',
-    createdBy: userName,
-    service: 'Legal Consulting',
-  },
-  {
-    id: 'L103',
-    clientName: 'Ahmad Fauzi',
-    company: 'PT Teknologi Nusantara',
-    email: 'ahmad@teknusantara.com',
-    phone: '083456789012',
-    source: 'Referral',
-    status: 'MEETING_SCHEDULED' as any,
-    createdDate: '2025-01-08',
-    notes: 'Meeting dijadwalkan tanggal 20 Januari 2025',
-    createdBy: userName,
-    service: 'Audit Services',
-  },
-  {
-    id: 'L104',
-    clientName: 'Dewi Lestari',
-    company: 'PT Global Mandiri',
-    email: 'dewi@globalmandiri.com',
-    phone: '084567890123',
-    source: 'Facebook',
-    status: 'NEED_PROPOSAL' as any,
-    createdDate: '2025-01-05',
-    notes: 'Setelah meeting, client meminta proposal untuk Financial Advisory',
-    createdBy: userName,
-    service: 'Financial Advisory',
-  },
-  {
-    id: 'L105',
-    clientName: 'Rudi Hartono',
-    company: 'PT Cahaya Abadi',
-    email: 'rudi@cahayaabadi.com',
-    phone: '085678901234',
-    source: 'Instagram',
-    status: 'IN_PROPOSAL' as any,
-    createdDate: '2024-12-28',
-    notes: 'Proposal sedang dalam proses review oleh client',
-    createdBy: userName,
-    service: 'Web Development',
-  },
-  {
-    id: 'L106',
-    clientName: 'Linda Wijayanti',
-    company: 'CV Surya Gemilang',
-    email: 'linda@suryagemilang.com',
-    phone: '086789012345',
-    source: 'Cold Call',
-    status: 'DEAL_WON' as any,
-    createdDate: '2024-12-20',
-    notes: 'Deal closed! Client setuju dengan proposal Tax Consulting',
-    createdBy: userName,
-    service: 'Tax Consulting',
-  },
-  {
-    id: 'L107',
-    clientName: 'Bambang Suryadi',
-    company: 'PT Sejahtera Makmur',
-    email: 'bambang@sejahteramakmur.com',
-    phone: '087890123456',
-    source: 'Event',
-    status: 'ON_HOLD' as any,
-    createdDate: '2025-01-12',
-    notes: 'Client minta ditunda karena sedang fokus ke project lain',
-    createdBy: userName,
-    service: 'Legal Consulting',
-  },
-  {
-    id: 'L108',
-    clientName: 'Sari Indrawati',
-    company: 'PT Indah Permai',
-    email: 'sari@indahpermai.com',
-    phone: '088901234567',
-    source: 'Website',
-    status: 'DROP' as any,
-    createdDate: '2024-12-15',
-    notes: 'Client tidak tertarik setelah meeting, budget tidak mencukupi',
-    createdBy: userName,
-    service: 'Audit Services',
-  },
-];
 
 export function BDMEODashboard({ userName }: BDMEOProps) {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -128,7 +20,7 @@ export function BDMEODashboard({ userName }: BDMEOProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSource, setFilterSource] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [leads, setLeads] = useState<Lead[]>([...generateDummyLeads(userName), ...mockLeads]);
+  const [leads, setLeads] = useState<Lead[]>([...generateDummyLeadsBDMEO(userName), ...mockLeads]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 

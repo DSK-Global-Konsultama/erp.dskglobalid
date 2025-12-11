@@ -26,6 +26,7 @@ import { ReimbursePage as COOReimbursePage } from './routes/coo/pages/ReimburseP
 
 // Other role imports
 import { BDMEODashboard } from './routes/bd-meo';
+import { DashboardPage as BDMEODashboardPage } from './routes/bd-meo/pages/DashboardPage';
 import { TicketingPage as BDMEOTicketingPage } from './routes/bd-meo/pages/TicketingPage';
 import { BDExecutiveDashboard } from './routes/bd-executive';
 import { TicketingPage as BDExecutiveTicketingPage } from './routes/bd-executive/pages/TicketingPage';
@@ -69,8 +70,10 @@ export default function App() {
     if (user) {
       setCurrentUser(user);
       // Set default active nav based on role
-      if (user.role === 'BD-MEO' || user.role === 'BD-Executive') {
+      if (user.role === 'BD-Executive') {
         setActiveNav('leads');
+      } else if (user.role === 'BD-MEO') {
+        setActiveNav('dashboard');
       } else {
         setActiveNav('dashboard');
       }
@@ -132,9 +135,11 @@ export default function App() {
   const handleLogin = (user: User) => {
     setCurrentUser(user);
     // Set default active nav based on role
-    if (user.role === 'BD-MEO' || user.role === 'BD-Executive') {
+    if (user.role === 'BD-Executive') {
       setActiveNav('leads');
       setBdExecutiveTab('leads');
+    } else if (user.role === 'BD-MEO') {
+      setActiveNav('dashboard');
     } else {
       setActiveNav('dashboard');
     }
@@ -274,7 +279,14 @@ export default function App() {
               return <COODashboard />;
           }
         } else if (currentUser.role === 'BD-MEO') {
-          return <BDMEODashboard userName={currentUser.name} />;
+          switch (activeNav) {
+            case 'dashboard':
+              return <BDMEODashboardPage userName={currentUser.name} />;
+            case 'leads':
+              return <BDMEODashboard userName={currentUser.name} />;
+            default:
+              return <BDMEODashboardPage userName={currentUser.name} />;
+          }
         } else if (currentUser.role === 'BD-Executive') {
           // Only show BD Executive content if on leads or deals, otherwise show dashboard
           if (activeNav === 'leads' || activeNav === 'deals') {

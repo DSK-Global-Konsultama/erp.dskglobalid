@@ -58,12 +58,16 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
       case 'COO-Legal-TP-SR':
         return getCEOCootitle();
       case 'BD-MEO':
-        if (activeNav === 'ticketing') {
+        if (activeNav === 'dashboard') {
+          return 'Dashboard MEO';
+        } else if (activeNav === 'leads') {
+          return 'My Leads';
+        } else if (activeNav === 'ticketing') {
           return 'IT Ticketing';
         } else if (activeNav === 'reimburse') {
           return 'My Reimbursements';
         }
-        return 'My Leads';
+        return 'Dashboard MEO';
       case 'BD-Executive':
         if (activeNav === 'leads') {
           return 'Available Leads';
@@ -148,12 +152,16 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
       case 'COO-Legal-TP-SR':
         return getCEOCooSubtitle();
       case 'BD-MEO':
-        if (activeNav === 'ticketing') {
+        if (activeNav === 'dashboard') {
+          return 'Ringkasan leads yang Anda kelola';
+        } else if (activeNav === 'leads') {
+          return 'Kelola semua leads yang Anda buat';
+        } else if (activeNav === 'ticketing') {
           return 'Request bantuan atau fitur baru dari tim IT';
         } else if (activeNav === 'reimburse') {
           return 'Submit dan lacak reimbursement pengeluaran kantor';
         }
-        return 'Kelola semua leads yang Anda buat';
+        return 'Ringkasan leads yang Anda kelola';
       case 'BD-Executive':
         if (activeNav === 'leads') {
           return 'Claim leads untuk di-follow up sampai deal';

@@ -36,9 +36,10 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
   // Set default activeNav based on role
   const getDefaultActiveNav = () => {
     switch (role) {
-      case 'BD-MEO':
       case 'BD-Executive':
         return 'leads';
+      case 'BD-MEO':
+        return 'dashboard';
       default:
         return 'dashboard';
     }
@@ -68,7 +69,8 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
         return ceoCooNavItems;
       case 'BD-MEO':
         return [
-          { id: 'leads', label: 'My Leads', icon: Users, path: 'dashboard' },
+          { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
+          { id: 'leads', label: 'My Leads', icon: Users, path: 'leads' },
           { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
           { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
         ];
