@@ -22,22 +22,21 @@ export function LeadsList({ userName, mode, title }: LeadsListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSource, setFilterSource] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  // Use same data source for both MEO and CEO - always use 'Sarah Wijaya' to ensure consistency
+  const defaultLeads = generateDummyLeadsBDMEO('Sarah Wijaya');
+  
   const [leads, setLeads] = useState<Lead[]>(() => {
     if (mode === 'edit') {
-      return [...generateDummyLeadsBDMEO(userName), ...mockLeads];
+      return [...defaultLeads, ...mockLeads];
     } else {
-      // For view mode (CEO/COO), use same data as BD-MEO sees
-      const bdMeoUserName = userName || 'Sarah Wijaya';
-      return generateDummyLeadsBDMEO(bdMeoUserName);
+      return defaultLeads;
     }
   });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // For edit mode, filter by createdBy. For view mode, show all leads
-  const myLeads = mode === 'edit' 
-    ? leads.filter(lead => lead.createdBy === userName)
-    : leads;
+  // For both modes, show all leads (no filtering by createdBy to ensure data consistency)
+  const myLeads = leads;
 
   const filteredLeads = myLeads.filter(lead => {
     const matchesSearch = 
