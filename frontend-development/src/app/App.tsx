@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Toaster } from '../components/ui/sonner';
 import { toast } from 'sonner';
 import { Sidebar } from '../components/layout/Sidebar';
@@ -64,6 +64,8 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeNav, setActiveNav] = useState('dashboard');
   const [bdExecutiveTab, setBdExecutiveTab] = useState('leads');
+  const [leadDetail, setLeadDetail] = useState<{ clientName: string; status: string } | null>(null);
+  const resetDetailRef = useRef<(() => void) | null>(null);
 
   // Check for existing session on mount
   useEffect(() => {
@@ -153,6 +155,14 @@ export default function App() {
   };
 
   const handleNavChange = (path: string) => {
+    // If clicking on deals/leads while in detail view, reset detail first
+    if (currentUser?.role === 'BD-Executive' && (path === 'leads' || path === 'deals') && leadDetail) {
+      setLeadDetail(null);
+      // Trigger reset in LeadTrackerPage
+      if (resetDetailRef.current) {
+        resetDetailRef.current();
+      }
+    }
     setActiveNav(path);
     // Sync tab state for BD-Executive when clicking sidebar
     if (currentUser?.role === 'BD-Executive' && (path === 'leads' || path === 'deals')) {
@@ -298,6 +308,16 @@ export default function App() {
                 userName={currentUser.name} 
                 activeTab={bdExecutiveTab}
                 onTabChange={handleBdExecutiveTabChange}
+                onLeadDetailChange={setLeadDetail}
+                onBackFromDetail={() => {
+                  setLeadDetail(null);
+                  if (resetDetailRef.current) {
+                    resetDetailRef.current();
+                  }
+                }}
+                onResetDetail={(resetFn) => {
+                  resetDetailRef.current = resetFn;
+                }}
               />
             );
           }
@@ -307,6 +327,16 @@ export default function App() {
               userName={currentUser.name} 
               activeTab="leads"
               onTabChange={handleBdExecutiveTabChange}
+              onLeadDetailChange={setLeadDetail}
+              onBackFromDetail={() => {
+                setLeadDetail(null);
+                if (resetDetailRef.current) {
+                  resetDetailRef.current();
+                }
+              }}
+              onResetDetail={(resetFn) => {
+                resetDetailRef.current = resetFn;
+              }}
             />
           );
         } else if (currentUser.role === 'PM') {
@@ -345,6 +375,16 @@ export default function App() {
             role={mapRoleForHeader(currentUser.role)} 
             userName={currentUser.name}
             activeNav={activeNav}
+            leadDetail={leadDetail ? {
+              ...leadDetail,
+              onBack: () => {
+                setLeadDetail(null);
+                // Reset detail in LeadTrackerPage
+                if (resetDetailRef.current) {
+                  resetDetailRef.current();
+                }
+              }
+            } : undefined}
           />
           
           {/* Main Content */}

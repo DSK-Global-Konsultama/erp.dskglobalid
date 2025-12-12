@@ -93,6 +93,68 @@ export interface Invoice {
   createdDate: string;
 }
 
+export interface Meeting {
+  id: string;
+  leadId: string;
+  dateTime: string;
+  location: string;
+  status: 'SCHEDULED' | 'DONE' | 'CANCELLED';
+  notes?: string;
+}
+
+export interface Notulensi {
+  id: string;
+  leadId: string;
+  meetingId: string;
+  clientName: string;
+  meetingInfo: {
+    date: string;
+    time: string;
+    location: string;
+  };
+  participants: {
+    internal: string[];
+    client: string[];
+  };
+  objectives: string;
+  discussionSummary: {
+    background: string;
+    issuesDiscussed: string;
+    clientInfo: string;
+    firmInfo: string;
+    risks: string;
+  };
+  agreements: Array<{
+    item: string;
+    details: string;
+  }>;
+  actionItems: Array<{
+    action: string;
+    pic: string;
+    deadline: string;
+  }>;
+  nextSteps: string;
+  notes: string;
+  status: 'DRAFT' | 'WAITING_CEO_APPROVAL' | 'APPROVED' | 'REJECTED';
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface Proposal {
+  id: string;
+  leadId: string;
+  service: string;
+  proposalFee: number;
+  agreeFee?: number;
+  paymentType: string;
+  hasSubcon: boolean;
+  sentAt?: string;
+  elStatus?: 'DRAFT' | 'SENT' | 'SIGNED' | 'REJECTED';
+  elSignedDate?: string;
+  status: 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+}
+
 // Master data
 export const bdContentCreators = [
   'Sarah Wijaya',

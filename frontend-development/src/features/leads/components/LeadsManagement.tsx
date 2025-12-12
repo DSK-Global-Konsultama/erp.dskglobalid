@@ -14,9 +14,10 @@ interface LeadsManagementProps {
   userName: string;
   mode: 'edit' | 'view' | 'tracker'; // 'edit' for BD-MEO, 'view' for CEO/COO, 'tracker' for BD-Executive
   title?: string; // Custom title, defaults based on mode
+  onLeadClick?: (leadId: string) => void; // Callback when lead is clicked (for tracker mode)
 }
 
-export function LeadsManagement({ userName, mode, title }: LeadsManagementProps) {
+export function LeadsManagement({ userName, mode, title, onLeadClick }: LeadsManagementProps) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -307,7 +308,11 @@ export function LeadsManagement({ userName, mode, title }: LeadsManagementProps)
                   </TableRow>
                 ) : (
                   paginatedLeads.map((lead) => (
-                    <TableRow key={lead.id} className="hover:bg-gray-50">
+                    <TableRow 
+                      key={lead.id} 
+                      className={`hover:bg-gray-50 ${mode === 'tracker' && onLeadClick ? 'cursor-pointer' : ''}`}
+                      onClick={mode === 'tracker' && onLeadClick ? () => onLeadClick(lead.id) : undefined}
+                    >
                       {mode === 'tracker' ? (
                         <>
                           <TableCell className="font-medium">{lead.company}</TableCell>
