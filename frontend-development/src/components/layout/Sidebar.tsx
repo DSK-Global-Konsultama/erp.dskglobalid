@@ -90,8 +90,7 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
         ];
       case 'BD-Executive':
         return [
-          { id: 'leads', label: 'Available Leads', icon: Users, path: 'dashboard' },
-          { id: 'deals', label: 'My Deals', icon: HandshakeIcon, path: 'dashboard' },
+          { id: 'deals', label: 'Lead Tracker', icon: HandshakeIcon, path: 'dashboard' },
           { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
           { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
         ];

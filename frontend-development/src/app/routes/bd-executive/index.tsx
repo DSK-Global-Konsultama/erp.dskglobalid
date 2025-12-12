@@ -1,5 +1,4 @@
-import { AvailableLeadsPage } from './pages/AvailableLeadsPage';
-import { MyDealsPage } from './pages/MyDealsPage';
+import { LeadTrackerPage } from './pages/LeadTrackerPage';
 
 interface BDExecutiveProps {
   userName: string;
@@ -8,14 +7,14 @@ interface BDExecutiveProps {
 }
 
 export function BDExecutiveDashboard({ userName, activeTab: externalActiveTab }: BDExecutiveProps) {
-  const activeTab = externalActiveTab || 'leads';
+  const activeTab = externalActiveTab || 'deals';
 
-  // Render content directly based on activeTab without tabs
+  // Render Lead Tracker (previously My Deals)
   if (activeTab === 'deals') {
-    return <MyDealsPage userName={userName} />;
+    return <LeadTrackerPage userName={userName} />;
   }
 
-  // Default to leads
-  return <AvailableLeadsPage userName={userName} />;
+  // Default to Lead Tracker
+  return <LeadTrackerPage userName={userName} />;
 }
 

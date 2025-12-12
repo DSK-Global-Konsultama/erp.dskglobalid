@@ -1,6 +1,6 @@
-import { LeadsList } from '../../../../features/leads/components/LeadsList';
+import { LeadsManagement } from '../../../../features/leads/components/LeadsManagement';
 
 export function LeadsPage() {
-  return <LeadsList userName="Sarah Wijaya" mode="view" title="Semua Lead" />;
+  return <LeadsManagement userName="Sarah Wijaya" mode="view" title="Semua Lead" />;
 }
 

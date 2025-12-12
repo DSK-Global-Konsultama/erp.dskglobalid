@@ -71,16 +71,14 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
         }
         return 'Dashboard MEO';
       case 'BD-Executive':
-        if (activeNav === 'leads') {
-          return 'Available Leads';
-        } else if (activeNav === 'deals') {
-          return 'My Deals';
+        if (activeNav === 'deals') {
+          return 'Lead Tracker';
         } else if (activeNav === 'ticketing') {
           return 'IT Ticketing';
         } else if (activeNav === 'reimburse') {
           return 'My Reimbursements';
         }
-        return 'Available Leads';
+        return 'Lead Tracker';
       case 'PM':
         if (activeNav === 'ticketing') {
           return 'IT Ticketing';
