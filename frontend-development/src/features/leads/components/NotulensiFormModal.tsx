@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Dialog, DialogContent } from '../../../components/ui/dialog';
+import { Input } from '../../../components/ui/input';
+import { Textarea } from '../../../components/ui/textarea';
+import { Button } from '../../../components/ui/button';
 import type { Meeting, Notulensi, Lead } from '../../../lib/mock-data';
 
 interface NotulensiFormModalProps {
@@ -8,6 +12,7 @@ interface NotulensiFormModalProps {
   meetingId: string;
   meetings: Meeting[];
   leads: Lead[];
+  open: boolean;
   onClose: () => void;
   onAddNotulensi: (notulensi: Notulensi) => void;
 }
@@ -17,6 +22,7 @@ export function NotulensiFormModal({
   meetingId, 
   meetings, 
   leads,
+  open,
   onClose,
   onAddNotulensi 
 }: NotulensiFormModalProps) {
@@ -196,11 +202,11 @@ export function NotulensiFormModal({
   const time = dateTimeParts[1] || '10:00';
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
           <div>
-            <h2>Notulensi Meeting</h2>
+            <h2 className="text-lg font-semibold">Notulensi Meeting</h2>
             <p className="text-sm text-gray-600 mt-1">{lead.clientName}</p>
           </div>
           <button
@@ -210,7 +216,7 @@ export function NotulensiFormModal({
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="p-6 space-y-6">
+        <div className="px-6 py-6 space-y-6">
           {/* 1. Meeting Info (Auto-filled) */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="text-sm text-gray-600 mb-3">1. Meeting Info</h3>
@@ -248,11 +254,11 @@ export function NotulensiFormModal({
                 <div className="space-y-2">
                   {formData.internalParticipants.map((participant, idx) => (
                     <div key={idx} className="flex gap-2">
-                      <input
+                      <Input
                         type="text"
                         value={participant}
                         onChange={(e) => updateParticipant('internal', idx, e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1"
                         placeholder="Name (Position)"
                       />
                       {formData.internalParticipants.length > 1 && (
@@ -281,11 +287,11 @@ export function NotulensiFormModal({
                 <div className="space-y-2">
                   {formData.clientParticipants.map((participant, idx) => (
                     <div key={idx} className="flex gap-2">
-                      <input
+                      <Input
                         type="text"
                         value={participant}
                         onChange={(e) => updateParticipant('client', idx, e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1"
                         placeholder="Name (Position)"
                       />
                       {formData.clientParticipants.length > 1 && (
@@ -306,11 +312,11 @@ export function NotulensiFormModal({
           {/* 3. Meeting Objectives */}
           <div>
             <label className="block text-sm text-gray-700 mb-2">3. Meeting Objectives</label>
-            <textarea
+            <Textarea
               value={formData.objectives}
               onChange={(e) => setFormData({ ...formData, objectives: e.target.value })}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full"
               placeholder="Tujuan utama dari meeting ini..."
             />
           </div>
@@ -321,51 +327,51 @@ export function NotulensiFormModal({
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-gray-700 mb-2">Background Summary</label>
-                <textarea
+                <Textarea
                   value={formData.background}
                   onChange={(e) => setFormData({ ...formData, background: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full"
                   placeholder="Latar belakang bisnis klien..."
                 />
               </div>
               <div>
                 <label className="block text-sm text-gray-700 mb-2">Issues Discussed (Client Problems)</label>
-                <textarea
+                <Textarea
                   value={formData.issuesDiscussed}
                   onChange={(e) => setFormData({ ...formData, issuesDiscussed: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full"
                   placeholder="Permasalahan yang dihadapi klien..."
                 />
               </div>
               <div>
                 <label className="block text-sm text-gray-700 mb-2">Information Provided by Client</label>
-                <textarea
+                <Textarea
                   value={formData.clientInfo}
                   onChange={(e) => setFormData({ ...formData, clientInfo: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full"
                   placeholder="Informasi yang diberikan klien..."
                 />
               </div>
               <div>
                 <label className="block text-sm text-gray-700 mb-2">Information Provided by Our Firm</label>
-                <textarea
+                <Textarea
                   value={formData.firmInfo}
                   onChange={(e) => setFormData({ ...formData, firmInfo: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full"
                   placeholder="Penjelasan dan solusi yang ditawarkan..."
                 />
               </div>
               <div>
                 <label className="block text-sm text-gray-700 mb-2">Risks / Concerns</label>
-                <textarea
+                <Textarea
                   value={formData.risks}
                   onChange={(e) => setFormData({ ...formData, risks: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full"
                   placeholder="Risiko atau hal-hal yang perlu diperhatikan..."
                 />
               </div>
@@ -388,20 +394,20 @@ export function NotulensiFormModal({
               {formData.agreements.map((agreement, idx) => (
                 <div key={idx} className="grid grid-cols-2 gap-3 p-3 bg-gray-50 rounded-lg">
                   <div>
-                    <input
+                    <Input
                       type="text"
                       value={agreement.item}
                       onChange={(e) => updateAgreement(idx, 'item', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full"
                       placeholder="Agreement item..."
                     />
                   </div>
                   <div className="flex gap-2">
-                    <input
+                    <Input
                       type="text"
                       value={agreement.details}
                       onChange={(e) => updateAgreement(idx, 'details', e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1"
                       placeholder="Details..."
                     />
                     {formData.agreements.length > 1 && (
@@ -433,26 +439,26 @@ export function NotulensiFormModal({
             <div className="space-y-3">
               {formData.actionItems.map((item, idx) => (
                 <div key={idx} className="grid grid-cols-3 gap-3 p-3 bg-gray-50 rounded-lg">
-                  <input
+                  <Input
                     type="text"
                     value={item.action}
                     onChange={(e) => updateActionItem(idx, 'action', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full"
                     placeholder="Action..."
                   />
-                  <input
+                  <Input
                     type="text"
                     value={item.pic}
                     onChange={(e) => updateActionItem(idx, 'pic', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full"
                     placeholder="PIC..."
                   />
                   <div className="flex gap-2">
-                    <input
+                    <Input
                       type="date"
                       value={item.deadline}
                       onChange={(e) => updateActionItem(idx, 'deadline', e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1"
                     />
                     {formData.actionItems.length > 1 && (
                       <button
@@ -471,11 +477,11 @@ export function NotulensiFormModal({
           {/* 7. Next Steps */}
           <div>
             <label className="block text-sm text-gray-700 mb-2">7. Next Steps</label>
-            <textarea
+            <Textarea
               value={formData.nextSteps}
               onChange={(e) => setFormData({ ...formData, nextSteps: e.target.value })}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full"
               placeholder="Langkah-langkah selanjutnya..."
             />
           </div>
@@ -483,11 +489,11 @@ export function NotulensiFormModal({
           {/* 8. Notes & Follow-Up */}
           <div>
             <label className="block text-sm text-gray-700 mb-2">8. Notes & Follow-Up</label>
-            <textarea
+            <Textarea
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full"
               placeholder="Catatan tambahan dan rencana follow up..."
             />
           </div>
@@ -495,27 +501,30 @@ export function NotulensiFormModal({
 
         {/* Actions */}
         <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex gap-3 justify-end">
-          <button
+          <Button
+            type="button"
+            variant="outline"
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
             onClick={handleSaveDraft}
-            className="px-4 py-2 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors"
+            className="border-blue-300 text-blue-700 hover:bg-blue-50"
           >
             Simpan Draft
-          </button>
-          <button
+          </Button>
+          <Button
+            type="button"
             onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Submit ke CEO
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

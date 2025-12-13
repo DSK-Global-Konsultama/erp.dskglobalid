@@ -96,6 +96,7 @@ export interface Invoice {
 export interface Meeting {
   id: string;
   leadId: string;
+  name?: string;
   dateTime: string;
   location: string;
   status: 'SCHEDULED' | 'DONE' | 'CANCELLED';

@@ -16,6 +16,7 @@ interface LeadTrackerDetailProps {
   notulensi: Notulensi[];
   proposals: Proposal[];
   onAddMeeting: (meeting: Meeting) => void;
+  onUpdateMeeting?: (id: string, updates: Partial<Meeting>) => void;
   onAddNotulensi: (notulensi: Notulensi) => void;
   onUpdateNotulensi: (id: string, updates: Partial<Notulensi>) => void;
   onAddProposal: (proposal: Proposal) => void;
@@ -31,6 +32,7 @@ export function LeadTrackerDetail({
   notulensi,
   proposals,
   onAddMeeting,
+  onUpdateMeeting,
   onAddNotulensi,
   onUpdateNotulensi,
   onAddProposal,
@@ -82,6 +84,7 @@ export function LeadTrackerDetail({
               notulensi={notulensi}
               leads={leads}
               onAddMeeting={onAddMeeting}
+              onUpdateMeeting={onUpdateMeeting}
               onAddNotulensi={onAddNotulensi}
               onUpdateLeadStatus={onUpdateLeadStatus}
             />
