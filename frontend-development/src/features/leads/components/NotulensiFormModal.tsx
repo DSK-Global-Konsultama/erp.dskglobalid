@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { animate } from 'framer-motion';
 import { Dialog, DialogContent } from '../../../components/ui/dialog';
 import { Input } from '../../../components/ui/input';
 import { Textarea } from '../../../components/ui/textarea';
@@ -15,6 +16,8 @@ interface NotulensiFormModalProps {
   open: boolean;
   onClose: () => void;
   onAddNotulensi: (notulensi: Notulensi) => void;
+  editingNotulensi?: Notulensi | null;
+  onUpdateNotulensi?: (id: string, updates: Partial<Notulensi>) => void;
 }
 
 export function NotulensiFormModal({ 
@@ -24,9 +27,13 @@ export function NotulensiFormModal({
   leads,
   open,
   onClose,
-  onAddNotulensi 
+  onAddNotulensi,
+  editingNotulensi,
+  onUpdateNotulensi
 }: NotulensiFormModalProps) {
-  const meeting = meetings.find(m => m.id === meetingId);
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
+  const actualMeetingId = editingNotulensi?.meetingId || meetingId;
+  const meeting = meetings.find(m => m.id === actualMeetingId);
   const lead = leads.find(l => l.id === leadId);
   const [formData, setFormData] = useState({
     internalParticipants: [''],
@@ -42,6 +49,49 @@ export function NotulensiFormModal({
     nextSteps: '',
     notes: ''
   });
+
+  // Update form data when editingNotulensi changes
+  useEffect(() => {
+    if (editingNotulensi) {
+      setFormData({
+        internalParticipants: editingNotulensi.participants.internal.length > 0 
+          ? editingNotulensi.participants.internal 
+          : [''],
+        clientParticipants: editingNotulensi.participants.client.length > 0 
+          ? editingNotulensi.participants.client 
+          : [''],
+        objectives: editingNotulensi.objectives || '',
+        background: editingNotulensi.discussionSummary.background || '',
+        issuesDiscussed: editingNotulensi.discussionSummary.issuesDiscussed || '',
+        clientInfo: editingNotulensi.discussionSummary.clientInfo || '',
+        firmInfo: editingNotulensi.discussionSummary.firmInfo || '',
+        risks: editingNotulensi.discussionSummary.risks || '',
+        agreements: editingNotulensi.agreements.length > 0 
+          ? editingNotulensi.agreements 
+          : [{ item: '', details: '' }],
+        actionItems: editingNotulensi.actionItems.length > 0 
+          ? editingNotulensi.actionItems 
+          : [{ action: '', pic: '', deadline: '' }],
+        nextSteps: editingNotulensi.nextSteps || '',
+        notes: editingNotulensi.notes || ''
+      });
+    } else {
+      setFormData({
+        internalParticipants: [''],
+        clientParticipants: [''],
+        objectives: '',
+        background: '',
+        issuesDiscussed: '',
+        clientInfo: '',
+        firmInfo: '',
+        risks: '',
+        agreements: [{ item: '', details: '' }],
+        actionItems: [{ action: '', pic: '', deadline: '' }],
+        nextSteps: '',
+        notes: ''
+      });
+    }
+  }, [editingNotulensi, open]);
 
   const addParticipant = (type: 'internal' | 'client') => {
     if (type === 'internal') {
@@ -109,6 +159,72 @@ export function NotulensiFormModal({
     setFormData({ ...formData, actionItems: updated });
   };
 
+  // Handle close with animation
+  const handleClose = () => {
+    if (isAnimatingOut) return;
+    
+    const dialogContent = document.querySelector('[data-slot="dialog-content"]') as HTMLElement;
+    if (dialogContent) {
+      setIsAnimatingOut(true);
+      animate(dialogContent, { x: '100%' }, { 
+        duration: 0.8, 
+        ease: 'easeInOut',
+        onComplete: () => {
+          setIsAnimatingOut(false);
+          onClose();
+        }
+      });
+    } else {
+      onClose();
+    }
+  };
+
+  // Handle open animation - use MutationObserver to catch element immediately
+  useEffect(() => {
+    if (!open || isAnimatingOut) return;
+
+    const setupAnimation = () => {
+      const dialogContent = document.querySelector('[data-slot="dialog-content"]') as HTMLElement;
+      if (dialogContent) {
+        // Disable default Radix animations IMMEDIATELY
+        dialogContent.style.cssText = 'animation: none !important; opacity: 1 !important; transform: translateX(100%) !important; transition: none !important;';
+        
+        // Force reflow to ensure initial state is applied
+        void dialogContent.offsetHeight;
+        
+        // Use triple requestAnimationFrame to ensure browser has painted initial state
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              // Now animate to final position
+              animate(dialogContent, { x: 0 }, { duration: 0.8, ease: 'easeInOut' });
+            });
+          });
+        });
+        return true;
+      }
+      return false;
+    };
+
+    // Use MutationObserver to catch element as soon as it appears
+    const observer = new MutationObserver(() => {
+      if (setupAnimation()) {
+        observer.disconnect();
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Also try immediately
+    if (setupAnimation()) {
+      observer.disconnect();
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [open, isAnimatingOut]);
+
   const handleSaveDraft = () => {
     if (!meeting || !lead) return;
     
@@ -116,40 +232,66 @@ export function NotulensiFormModal({
     const date = dateTimeParts[0];
     const time = dateTimeParts[1] || '10:00';
     
-    const newNotulensi: Notulensi = {
-      id: 'n' + Date.now(),
-      leadId,
-      meetingId,
-      clientName: lead.clientName,
-      meetingInfo: {
-        date,
-        time,
-        location: meeting.location
-      },
-      participants: {
-        internal: formData.internalParticipants.filter(p => p.trim() !== ''),
-        client: formData.clientParticipants.filter(p => p.trim() !== '')
-      },
-      objectives: formData.objectives,
-      discussionSummary: {
-        background: formData.background,
-        issuesDiscussed: formData.issuesDiscussed,
-        clientInfo: formData.clientInfo,
-        firmInfo: formData.firmInfo,
-        risks: formData.risks
-      },
-      agreements: formData.agreements.filter(a => a.item.trim() !== '' || a.details.trim() !== ''),
-      actionItems: formData.actionItems.filter(a => a.action.trim() !== ''),
-      nextSteps: formData.nextSteps,
-      notes: formData.notes,
-      status: 'DRAFT',
-      createdBy: 'BD Executive',
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-    
-    onAddNotulensi(newNotulensi);
-    toast.success('Notulensi saved as draft');
-    onClose();
+    if (editingNotulensi && onUpdateNotulensi) {
+      // Update existing notulensi
+      onUpdateNotulensi(editingNotulensi.id, {
+        participants: {
+          internal: formData.internalParticipants.filter(p => p.trim() !== ''),
+          client: formData.clientParticipants.filter(p => p.trim() !== '')
+        },
+        objectives: formData.objectives,
+        discussionSummary: {
+          background: formData.background,
+          issuesDiscussed: formData.issuesDiscussed,
+          clientInfo: formData.clientInfo,
+          firmInfo: formData.firmInfo,
+          risks: formData.risks
+        },
+        agreements: formData.agreements.filter(a => a.item.trim() !== '' || a.details.trim() !== ''),
+        actionItems: formData.actionItems.filter(a => a.action.trim() !== ''),
+        nextSteps: formData.nextSteps,
+        notes: formData.notes,
+        status: 'DRAFT'
+      });
+      toast.success('Notulensi updated and saved as draft');
+      handleClose();
+    } else {
+      // Create new notulensi
+      const newNotulensi: Notulensi = {
+        id: 'n' + Date.now(),
+        leadId,
+        meetingId,
+        clientName: lead.clientName,
+        meetingInfo: {
+          date,
+          time,
+          location: meeting.location
+        },
+        participants: {
+          internal: formData.internalParticipants.filter(p => p.trim() !== ''),
+          client: formData.clientParticipants.filter(p => p.trim() !== '')
+        },
+        objectives: formData.objectives,
+        discussionSummary: {
+          background: formData.background,
+          issuesDiscussed: formData.issuesDiscussed,
+          clientInfo: formData.clientInfo,
+          firmInfo: formData.firmInfo,
+          risks: formData.risks
+        },
+        agreements: formData.agreements.filter(a => a.item.trim() !== '' || a.details.trim() !== ''),
+        actionItems: formData.actionItems.filter(a => a.action.trim() !== ''),
+        nextSteps: formData.nextSteps,
+        notes: formData.notes,
+        status: 'DRAFT',
+        createdBy: 'BD Executive',
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+      
+      onAddNotulensi(newNotulensi);
+      toast.success('Notulensi saved as draft');
+      handleClose();
+    }
   };
 
   const handleSubmit = () => {
@@ -159,40 +301,65 @@ export function NotulensiFormModal({
     const date = dateTimeParts[0];
     const time = dateTimeParts[1] || '10:00';
     
-    const newNotulensi: Notulensi = {
-      id: 'n' + Date.now(),
-      leadId,
-      meetingId,
-      clientName: lead.clientName,
-      meetingInfo: {
-        date,
-        time,
-        location: meeting.location
-      },
-      participants: {
-        internal: formData.internalParticipants.filter(p => p.trim() !== ''),
-        client: formData.clientParticipants.filter(p => p.trim() !== '')
-      },
-      objectives: formData.objectives,
-      discussionSummary: {
-        background: formData.background,
-        issuesDiscussed: formData.issuesDiscussed,
-        clientInfo: formData.clientInfo,
-        firmInfo: formData.firmInfo,
-        risks: formData.risks
-      },
-      agreements: formData.agreements.filter(a => a.item.trim() !== '' || a.details.trim() !== ''),
-      actionItems: formData.actionItems.filter(a => a.action.trim() !== ''),
-      nextSteps: formData.nextSteps,
-      notes: formData.notes,
-      status: 'WAITING_CEO_APPROVAL',
-      createdBy: 'BD Executive',
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-    
-    onAddNotulensi(newNotulensi);
-    toast.success('Notulensi submitted to CEO for approval!');
-    onClose();
+    if (editingNotulensi && onUpdateNotulensi) {
+      // Update existing notulensi and submit for approval
+      onUpdateNotulensi(editingNotulensi.id, {
+        participants: {
+          internal: formData.internalParticipants.filter(p => p.trim() !== ''),
+          client: formData.clientParticipants.filter(p => p.trim() !== '')
+        },
+        objectives: formData.objectives,
+        discussionSummary: {
+          background: formData.background,
+          issuesDiscussed: formData.issuesDiscussed,
+          clientInfo: formData.clientInfo,
+          firmInfo: formData.firmInfo,
+          risks: formData.risks
+        },
+        agreements: formData.agreements.filter(a => a.item.trim() !== '' || a.details.trim() !== ''),
+        actionItems: formData.actionItems.filter(a => a.action.trim() !== ''),
+        nextSteps: formData.nextSteps,
+        notes: formData.notes,
+        status: 'WAITING_CEO_APPROVAL'
+      });
+      toast.success('Notulensi updated and submitted to CEO for approval!');
+    } else {
+      // Create new notulensi and submit for approval
+      const newNotulensi: Notulensi = {
+        id: 'n' + Date.now(),
+        leadId,
+        meetingId,
+        clientName: lead.clientName,
+        meetingInfo: {
+          date,
+          time,
+          location: meeting.location
+        },
+        participants: {
+          internal: formData.internalParticipants.filter(p => p.trim() !== ''),
+          client: formData.clientParticipants.filter(p => p.trim() !== '')
+        },
+        objectives: formData.objectives,
+        discussionSummary: {
+          background: formData.background,
+          issuesDiscussed: formData.issuesDiscussed,
+          clientInfo: formData.clientInfo,
+          firmInfo: formData.firmInfo,
+          risks: formData.risks
+        },
+        agreements: formData.agreements.filter(a => a.item.trim() !== '' || a.details.trim() !== ''),
+        actionItems: formData.actionItems.filter(a => a.action.trim() !== ''),
+        nextSteps: formData.nextSteps,
+        notes: formData.notes,
+        status: 'WAITING_CEO_APPROVAL',
+        createdBy: 'BD Executive',
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+      
+      onAddNotulensi(newNotulensi);
+      toast.success('Notulensi submitted to CEO for approval!');
+    }
+    handleClose();
   };
 
   if (!meeting || !lead) return null;
@@ -202,25 +369,54 @@ export function NotulensiFormModal({
   const time = dateTimeParts[1] || '10:00';
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+    <Dialog open={open || isAnimatingOut} onOpenChange={() => {
+      // Prevent closing from outside clicks/ESC
+      // Buttons call handleClose() directly which will call onClose()
+      // So we ignore onOpenChange to prevent outside/ESC closing
+    }}>
+      <style>{`
+        [data-slot="dialog-overlay"] {
+          pointer-events: none !important;
+          z-index: 9998 !important;
+        }
+        [data-slot="dialog-content"] {
+          pointer-events: auto !important;
+          z-index: 9999 !important;
+        }
+      `}</style>
+      <DialogContent 
+        className="!fixed top-0 right-0 left-auto bottom-0 !translate-x-0 !translate-y-0 min-w-[800px] w-auto max-w-[95vw] h-screen max-h-screen rounded-none border-l border-r-0 border-t-0 border-b-0 shadow-xl p-0 flex flex-col [&>button]:hidden [&]:!animate-none [&]:!opacity-100 z-[9999]"
+        onInteractOutside={(e) => {
+          // Prevent closing when clicking outside (on overlay)
+          e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          // Prevent closing with ESC key
+          e.preventDefault();
+        }}
+      >
+        {/* Header - Paling Atas */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
           <div>
-            <h2 className="text-lg font-semibold">Notulensi Meeting</h2>
-            <p className="text-sm text-gray-600 mt-1">{lead.clientName}</p>
+            <h2 className="text-lg font-semibold">{editingNotulensi ? 'Edit Notulensi Meeting' : 'Notulensi Meeting'}</h2>
+            <p className="text-sm text-gray-600 mt-1">{lead?.clientName || ''}</p>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="px-6 py-6 space-y-6">
+        
+        {/* Form Content - Area Input */}
+        <div className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 pb-6">
+            <div className="space-y-6">
           {/* 1. Meeting Info (Auto-filled) */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="text-sm text-gray-600 mb-3">1. Meeting Info</h3>
-            <div className="grid grid-cols-3 gap-4 text-sm">
+            <div className="grid grid-cols-3 gap-4 text-sm overflow-hidden">
               <div>
                 <p className="text-gray-600">Date</p>
                 <p className="font-medium">{date}</p>
@@ -229,9 +425,9 @@ export function NotulensiFormModal({
                 <p className="text-gray-600">Time</p>
                 <p className="font-medium">{time}</p>
               </div>
-              <div>
+              <div className="min-w-0 overflow-hidden">
                 <p className="text-gray-600">Location</p>
-                <p className="font-medium">{meeting.location}</p>
+                <p className="font-medium truncate" title={meeting.location}>{meeting.location}</p>
               </div>
             </div>
           </div>
@@ -497,31 +693,33 @@ export function NotulensiFormModal({
               placeholder="Catatan tambahan dan rencana follow up..."
             />
           </div>
-        </div>
-
-        {/* Actions */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex gap-3 justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleSaveDraft}
-            className="border-blue-300 text-blue-700 hover:bg-blue-50"
-          >
-            Simpan Draft
-          </Button>
-          <Button
-            type="button"
-            onClick={handleSubmit}
-          >
-            Submit ke CEO
-          </Button>
+            </div>
+          </div>
+          
+          {/* Footer - Tombol di Bawah */}
+          <div className="flex gap-3 justify-end py-4 px-6 border-t border-gray-200 bg-white flex-shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSaveDraft}
+              className="flex items-center gap-2"
+            >
+              Simpan Draft
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSubmit}
+            >
+              Submit ke CEO
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { animate } from 'framer-motion';
 import { Dialog, DialogContent } from '../../../components/ui/dialog';
 import { Input } from '../../../components/ui/input';
+import { Textarea } from '../../../components/ui/textarea';
 import { Button } from '../../../components/ui/button';
 import type { Meeting } from '../../../lib/mock-data';
 import type { LeadStatus } from './LeadTrackerDetail';
@@ -23,7 +24,8 @@ export function ScheduleMeetingModal({ leadId, open, onClose, onAddMeeting, onUp
   const [formData, setFormData] = useState({
     name: '',
     dateTime: '',
-    location: ''
+    location: '',
+    notes: ''
   });
 
   // Update form data when editingMeeting changes
@@ -32,13 +34,15 @@ export function ScheduleMeetingModal({ leadId, open, onClose, onAddMeeting, onUp
       setFormData({
         name: editingMeeting.name || '',
         dateTime: editingMeeting.dateTime,
-        location: editingMeeting.location
+        location: editingMeeting.location,
+        notes: editingMeeting.notes || ''
       });
     } else {
       setFormData({
         name: '',
         dateTime: '',
-        location: ''
+        location: '',
+        notes: ''
       });
     }
   }, [editingMeeting, open]);
@@ -138,7 +142,8 @@ export function ScheduleMeetingModal({ leadId, open, onClose, onAddMeeting, onUp
       onUpdateMeeting(editingMeeting.id, {
         name: formData.name,
         dateTime: formData.dateTime,
-        location: formData.location
+        location: formData.location,
+        notes: formData.notes
       });
       toast.success('Meeting updated successfully!');
     } else {
@@ -149,6 +154,7 @@ export function ScheduleMeetingModal({ leadId, open, onClose, onAddMeeting, onUp
         name: formData.name,
         dateTime: formData.dateTime,
         location: formData.location,
+        notes: formData.notes,
         status: 'SCHEDULED'
       };
       
@@ -176,7 +182,7 @@ export function ScheduleMeetingModal({ leadId, open, onClose, onAddMeeting, onUp
         }
       `}</style>
       <DialogContent 
-        className="!fixed top-0 right-0 left-auto bottom-0 !translate-x-0 !translate-y-0 w-[500px] max-w-[90vw] h-screen max-h-screen rounded-none border-l border-r-0 border-t-0 border-b-0 shadow-xl p-0 flex flex-col [&>button]:hidden [&]:!animate-none [&]:!opacity-100 z-[9999]"
+        className="!fixed top-0 right-0 left-auto bottom-0 !translate-x-0 !translate-y-0 min-w-[600px] w-auto max-w-[95vw] h-screen max-h-screen rounded-none border-l border-r-0 border-t-0 border-b-0 shadow-xl p-0 flex flex-col [&>button]:hidden [&]:!animate-none [&]:!opacity-100 z-[9999]"
         onInteractOutside={(e) => {
           // Prevent closing when clicking outside (on overlay)
           e.preventDefault();
@@ -215,29 +221,42 @@ export function ScheduleMeetingModal({ leadId, open, onClose, onAddMeeting, onUp
                       />
                     </div>
                     <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm text-gray-700 mb-2">
-                          Date & Time <span className="text-red-500">*</span>
-                        </label>
-                        <Input
-                          type="datetime-local"
-                          required
-                          value={formData.dateTime}
-                          onChange={(e) => setFormData({ ...formData, dateTime: e.target.value })}
-                          className="w-full"
-                        />
+                      <div className="flex gap-4">
+                        <div className="flex-shrink-0 w-[280px]">
+                          <label className="block text-sm text-gray-700 mb-2">
+                            Date & Time <span className="text-red-500">*</span>
+                          </label>
+                          <Input
+                            type="datetime-local"
+                            required
+                            value={formData.dateTime}
+                            onChange={(e) => setFormData({ ...formData, dateTime: e.target.value })}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <label className="block text-sm text-gray-700 mb-2">
+                            Location / Link <span className="text-red-500">*</span>
+                          </label>
+                          <Input
+                            type="text"
+                            required
+                            value={formData.location}
+                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                            className="w-full truncate"
+                            placeholder="e.g. Zoom Meeting, Office Meeting Room A"
+                          />
+                        </div>
                       </div>
                       <div>
                         <label className="block text-sm text-gray-700 mb-2">
-                          Location / Link <span className="text-red-500">*</span>
+                          Notes
                         </label>
-                        <Input
-                          type="text"
-                          required
-                          value={formData.location}
-                          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                          className="w-full"
-                          placeholder="e.g. Zoom Meeting, Office Meeting Room A"
+                        <Textarea
+                          value={formData.notes}
+                          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                          className="w-full min-h-[100px]"
+                          placeholder="e.g. Meeting offline, perlu persiapan dokumen, dll."
                         />
                       </div>
                     </div>

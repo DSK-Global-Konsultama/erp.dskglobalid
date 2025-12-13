@@ -17,6 +17,7 @@ interface LeadTrackerDetailProps {
   proposals: Proposal[];
   onAddMeeting: (meeting: Meeting) => void;
   onUpdateMeeting?: (id: string, updates: Partial<Meeting>) => void;
+  onDeleteMeeting?: (id: string) => void;
   onAddNotulensi: (notulensi: Notulensi) => void;
   onUpdateNotulensi: (id: string, updates: Partial<Notulensi>) => void;
   onAddProposal: (proposal: Proposal) => void;
@@ -33,6 +34,7 @@ export function LeadTrackerDetail({
   proposals,
   onAddMeeting,
   onUpdateMeeting,
+  onDeleteMeeting,
   onAddNotulensi,
   onUpdateNotulensi,
   onAddProposal,
@@ -63,7 +65,7 @@ export function LeadTrackerDetail({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-6 py-4 border-b-2 transition-colors ${
+                className={`px-6 py-4 border-b-2 transition-colors cursor-pointer ${
                   activeTab === tab.id
                     ? 'border-black text-black'
                     : 'border-transparent text-gray-600 hover:text-red-600 hover:border-red-600'
@@ -85,7 +87,9 @@ export function LeadTrackerDetail({
               leads={leads}
               onAddMeeting={onAddMeeting}
               onUpdateMeeting={onUpdateMeeting}
+              onDeleteMeeting={onDeleteMeeting}
               onAddNotulensi={onAddNotulensi}
+              onUpdateNotulensi={onUpdateNotulensi}
               onUpdateLeadStatus={onUpdateLeadStatus}
             />
           )}

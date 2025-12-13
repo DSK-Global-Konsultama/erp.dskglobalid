@@ -58,6 +58,10 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
     setMeetings(meetings.map(m => m.id === id ? { ...m, ...updates } : m));
   };
 
+  const handleDeleteMeeting = (id: string) => {
+    setMeetings(meetings.filter(m => m.id !== id));
+  };
+
   const handleAddNotulensi = (newNotulensi: Notulensi) => {
     setNotulensi([...notulensi, newNotulensi]);
   };
@@ -115,6 +119,7 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
         proposals={proposals}
         onAddMeeting={handleAddMeeting}
         onUpdateMeeting={handleUpdateMeeting}
+        onDeleteMeeting={handleDeleteMeeting}
         onAddNotulensi={handleAddNotulensi}
         onUpdateNotulensi={handleUpdateNotulensi}
         onAddProposal={handleAddProposal}

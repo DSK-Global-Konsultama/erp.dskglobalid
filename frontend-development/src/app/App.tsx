@@ -155,12 +155,19 @@ export default function App() {
   };
 
   const handleNavChange = (path: string) => {
-    // If clicking on deals/leads while in detail view, reset detail first
-    if (currentUser?.role === 'BD-Executive' && (path === 'leads' || path === 'deals') && leadDetail) {
-      setLeadDetail(null);
-      // Trigger reset in LeadTrackerPage
-      if (resetDetailRef.current) {
-        resetDetailRef.current();
+    // Reset lead detail when navigating to a different page
+    // Only keep detail if staying on leads/deals page for BD-Executive
+    if (leadDetail) {
+      const isStayingOnLeadsOrDeals = currentUser?.role === 'BD-Executive' && 
+        (path === 'leads' || path === 'deals') && 
+        (activeNav === 'leads' || activeNav === 'deals');
+      
+      if (!isStayingOnLeadsOrDeals) {
+        setLeadDetail(null);
+        // Trigger reset in LeadTrackerPage
+        if (resetDetailRef.current) {
+          resetDetailRef.current();
+        }
       }
     }
     setActiveNav(path);
