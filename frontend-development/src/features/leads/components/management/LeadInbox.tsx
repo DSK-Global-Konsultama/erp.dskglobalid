@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { CheckCircle, Clock, XCircle, Mail, Phone, Calendar, User, Briefcase, TrendingUp, Inbox, Search, Filter } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '../../../components/ui/alert';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
-import { Input } from '../../../components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
-import { Button } from '../../../components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table';
-import { StatusChip } from './StatusChip';
-import { generateDummyLeadsBDMEO, type Lead } from '../../../lib/mock-data';
-import { authService } from '../../../services/authService';
+import { Alert, AlertDescription, AlertTitle } from '../../../../components/ui/alert';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
+import { Input } from '../../../../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
+import { Button } from '../../../../components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../../components/ui/table';
+import { StatusChip } from '../shared/StatusChip';
+import { generateDummyLeadsBDMEO, type Lead } from '../../../../lib/mock-data';
+import { authService } from '../../../../services/authService';
 
 export function LeadInbox() {
   // Check if user is CEO

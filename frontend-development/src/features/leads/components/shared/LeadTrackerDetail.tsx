@@ -1,10 +1,8 @@
 import { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
-import { StatusChip } from './StatusChip';
-import { LeadInfoTab } from './LeadInfoTab';
-import { MeetingNotulensiTab } from './MeetingNotulensiTab';
-import { ProposalTab } from './ProposalTab';
-import type { Lead, Meeting, Notulensi, Proposal } from '../../../lib/mock-data';
+import { LeadInfoTab } from '../tabs/LeadInfoTab';
+import { MeetingNotulensiTab } from '../tabs/MeetingNotulensiTab';
+import { ProposalTab } from '../tabs/ProposalTab';
+import type { Lead, Meeting, Notulensi, Proposal } from '../../../../lib/mock-data';
 
 export type LeadStatus = 'NEW' | 'TO_BE_MEET' | 'MEETING_SCHEDULED' | 'NEED_PROPOSAL' | 'IN_PROPOSAL' | 'DEAL_WON' | 'ON_HOLD' | 'DROP';
 
@@ -27,7 +25,7 @@ interface LeadTrackerDetailProps {
 
 export function LeadTrackerDetail({ 
   leadId, 
-  onBack,
+  onBack: _onBack,
   leads,
   meetings,
   notulensi,
@@ -52,7 +50,7 @@ export function LeadTrackerDetail({
   const tabs = [
     { id: 'info', label: 'Info Lead' },
     { id: 'meeting', label: 'Meeting & Notulensi' },
-    { id: 'proposal', label: 'Proposal & Deals' },
+    { id: 'proposal', label: 'Proposal' },
   ];
 
   return (
@@ -96,9 +94,11 @@ export function LeadTrackerDetail({
           {activeTab === 'proposal' && (
             <ProposalTab 
               leadId={leadId}
+              leads={leads}
               proposals={proposals}
               onAddProposal={onAddProposal}
               onUpdateProposal={onUpdateProposal}
+              onUpdateLeadStatus={onUpdateLeadStatus}
             />
           )}
         </div>

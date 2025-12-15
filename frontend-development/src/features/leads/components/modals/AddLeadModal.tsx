@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { Dialog, DialogContent } from '../../../components/ui/dialog';
-import { Input } from '../../../components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
-import { Textarea } from '../../../components/ui/textarea';
-import { Button } from '../../../components/ui/button';
-import { type Lead } from '../../../lib/mock-data';
+import { Dialog, DialogContent } from '../../../../components/ui/dialog';
+import { Input } from '../../../../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
+import { Textarea } from '../../../../components/ui/textarea';
+import { Button } from '../../../../components/ui/button';
+import { type Lead } from '../../../../lib/mock-data';
 
 interface AddLeadModalProps {
   open: boolean;

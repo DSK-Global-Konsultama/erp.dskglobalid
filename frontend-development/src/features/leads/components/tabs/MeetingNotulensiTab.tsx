@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Plus, Calendar, FileText, Edit, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { StatusChip } from './StatusChip';
-import { ScheduleMeetingModal } from './ScheduleMeetingModal';
-import { NotulensiFormModal } from './NotulensiFormModal';
-import { NotulensiDetailModal } from './NotulensiDetailModal';
-import { Button } from '../../../components/ui/button';
-import type { Meeting, Notulensi, Lead } from '../../../lib/mock-data';
-import type { LeadStatus } from './LeadTrackerDetail';
+import { StatusChip } from '../shared/StatusChip';
+import { ScheduleMeetingModal } from '../modals/ScheduleMeetingModal';
+import { NotulensiFormModal } from '../modals/NotulensiFormModal';
+import { NotulensiDetailModal } from '../modals/NotulensiDetailModal';
+import { Button } from '../../../../components/ui/button';
+import type { Meeting, Notulensi, Lead } from '../../../../lib/mock-data';
+import type { LeadStatus } from '../shared/LeadTrackerDetail';
 
 interface MeetingNotulensiTabProps {
   leadId: string;

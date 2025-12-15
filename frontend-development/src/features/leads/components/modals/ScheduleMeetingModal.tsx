@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
 import { animate } from 'framer-motion';
-import { Dialog, DialogContent } from '../../../components/ui/dialog';
-import { Input } from '../../../components/ui/input';
-import { Textarea } from '../../../components/ui/textarea';
-import { Button } from '../../../components/ui/button';
-import type { Meeting } from '../../../lib/mock-data';
-import type { LeadStatus } from './LeadTrackerDetail';
+import { Dialog, DialogContent } from '../../../../components/ui/dialog';
+import { Input } from '../../../../components/ui/input';
+import { Textarea } from '../../../../components/ui/textarea';
+import { Button } from '../../../../components/ui/button';
+import type { Meeting } from '../../../../lib/mock-data';
+import type { LeadStatus } from '../shared/LeadTrackerDetail';
 
 interface ScheduleMeetingModalProps {
   leadId: string;

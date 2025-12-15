@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { animate } from 'framer-motion';
-import { Dialog, DialogContent } from '../../../components/ui/dialog';
-import { Input } from '../../../components/ui/input';
-import { Textarea } from '../../../components/ui/textarea';
-import { Button } from '../../../components/ui/button';
-import type { Meeting, Notulensi, Lead } from '../../../lib/mock-data';
+import { Dialog, DialogContent } from '../../../../components/ui/dialog';
+import { Input } from '../../../../components/ui/input';
+import { Textarea } from '../../../../components/ui/textarea';
+import { Button } from '../../../../components/ui/button';
+import type { Meeting, Notulensi, Lead } from '../../../../lib/mock-data';
 
 interface NotulensiFormModalProps {
   leadId: string;

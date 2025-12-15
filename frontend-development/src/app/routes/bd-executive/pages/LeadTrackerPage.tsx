@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { LeadsManagement } from '../../../../features/leads/components/LeadsManagement';
-import { LeadTrackerDetail } from '../../../../features/leads/components/LeadTrackerDetail';
+import { LeadsManagement } from '../../../../features/leads/components/management/LeadsManagement';
+import { LeadTrackerDetail } from '../../../../features/leads/components/shared/LeadTrackerDetail';
 import { generateDummyLeadsBDMEO, type Lead, type Meeting, type Notulensi, type Proposal } from '../../../../lib/mock-data';
-import type { LeadStatus } from '../../../../features/leads/components/LeadTrackerDetail';
+import type { LeadStatus } from '../../../../features/leads/components/shared/LeadTrackerDetail';
 
 interface LeadTrackerPageProps {
   userName: string;

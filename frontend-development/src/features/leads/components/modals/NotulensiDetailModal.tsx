@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { X, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import { animate } from 'framer-motion';
-import { Dialog, DialogContent } from '../../../components/ui/dialog';
-import { Button } from '../../../components/ui/button';
-import type { Notulensi } from '../../../lib/mock-data';
+import { Dialog, DialogContent } from '../../../../components/ui/dialog';
+import { Button } from '../../../../components/ui/button';
+import type { Notulensi } from '../../../../lib/mock-data';
 
 interface NotulensiDetailModalProps {
   notulensi: Notulensi | null;

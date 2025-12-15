@@ -1,6 +1,6 @@
 import { Bell, ArrowLeft } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { StatusChip } from '../../features/leads/components/StatusChip';
+import { StatusChip } from '../../features/leads/components/shared/StatusChip';
 
 type UserRole = 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'ITSpecialist' | 'SuperAdmin';
 

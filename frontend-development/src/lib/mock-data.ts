@@ -148,11 +148,13 @@ export interface Proposal {
   proposalFee: number;
   agreeFee?: number;
   paymentType: string;
+  paymentTypeFinal?: string;
+  dealDate?: string;
   hasSubcon: boolean;
   sentAt?: string;
   elStatus?: 'DRAFT' | 'SENT' | 'SIGNED' | 'REJECTED';
   elSignedDate?: string;
-  status: 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED';
+  status: 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | 'ACCEPTED';
   createdAt: string;
 }
 

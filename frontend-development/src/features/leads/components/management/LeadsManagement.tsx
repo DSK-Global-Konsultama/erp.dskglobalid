@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Filter, Edit } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
-import { StatusChip } from './StatusChip';
-import { AddLeadModal } from './AddLeadModal';
-import { mockLeads, type Lead, leadSources, generateDummyLeadsBDMEO } from '../../../lib/mock-data';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
+import { Button } from '../../../../components/ui/button';
+import { Input } from '../../../../components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../../components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
+import { StatusChip } from '../shared/StatusChip';
+import { AddLeadModal } from '../modals/AddLeadModal';
+import { mockLeads, type Lead, leadSources, generateDummyLeadsBDMEO } from '../../../../lib/mock-data';
 import { toast } from 'sonner';
 
 interface LeadsManagementProps {

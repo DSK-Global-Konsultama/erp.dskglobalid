@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../../components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
-import { StatusChip } from '../../../../features/leads/components/StatusChip';
+import { StatusChip } from '../../../../features/leads/components/shared/StatusChip';
 import { mockLeads, leadSources, generateDummyLeadsBDMEO } from '../../../../lib/mock-data';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
