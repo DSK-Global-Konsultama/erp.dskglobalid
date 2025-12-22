@@ -11,10 +11,14 @@ export function StatusChip({ status }: StatusChipProps) {
         return 'bg-teal-100 text-teal-700';
       case 'MEETING_SCHEDULED':
         return 'bg-purple-100 text-purple-700';
+      case 'NEED_NOTULEN':
+        return 'bg-amber-100 text-amber-700';
       case 'NEED_PROPOSAL':
         return 'bg-orange-100 text-orange-700';
       case 'IN_PROPOSAL':
         return 'bg-indigo-100 text-indigo-700';
+      case 'WAITING_APPROVAL':
+        return 'bg-yellow-100 text-yellow-700';
       case 'DEAL_WON':
         return 'bg-green-100 text-green-700';
       case 'ON_HOLD':

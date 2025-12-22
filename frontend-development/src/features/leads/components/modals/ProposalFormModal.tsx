@@ -88,24 +88,100 @@ export function ProposalFormModal({
       setProposalFee(editingProposal.proposalFee?.toString() || '');
       setDiscount('');
 
-      // Default billing model & related fields when editing
-      setBillingModel('STRATEGIC_ADVISORY');
-      setPaymentScheme('50-50');
-      setTermins([
-        { percentage: 50, amount: 0, description: '' },
-        { percentage: 50, amount: 0, description: '' },
-      ]);
+      // Parse paymentType to determine billing model
+      const paymentType = editingProposal.paymentType || '';
+      let detectedModel: BillingModel = 'STRATEGIC_ADVISORY';
+      
+      if (paymentType.includes('Subkon dengan')) {
+        detectedModel = 'SUBCON';
+        const partnerMatch = paymentType.match(/Subkon dengan (.+?):/);
+        const timingMatch = paymentType.match(/pembayaran (.+?) oleh partner/);
+        if (partnerMatch) {
+          setSubconPartner(partnerMatch[1]);
+        }
+        if (timingMatch && timingMatch[1].includes('awal')) {
+          setSubconPaymentTiming('UPFRONT');
+        } else {
+          setSubconPaymentTiming('END');
+        }
+      } else if (paymentType.includes('Termin')) {
+        detectedModel = 'PROJECT_TERMIN';
+        // Parse termin data
+        const terminMatches = paymentType.matchAll(/Termin (\d+): (\d+)% \(IDR ([\d.]+)M\)(?: - (.+))?/g);
+        const parsedTermins: Termin[] = [];
+        for (const match of terminMatches) {
+          parsedTermins.push({
+            percentage: parseInt(match[2]),
+            amount: parseFloat(match[3]) * 1000000,
+            description: match[4] || '',
+          });
+        }
+        if (parsedTermins.length > 0) {
+          setTermins(parsedTermins);
+          // Determine payment scheme
+          if (parsedTermins.length === 2 && parsedTermins[0].percentage === 50 && parsedTermins[1].percentage === 50) {
+            setPaymentScheme('50-50');
+          } else if (parsedTermins.length === 3 && parsedTermins[0].percentage === 50 && parsedTermins[1].percentage === 35 && parsedTermins[2].percentage === 15) {
+            setPaymentScheme('50-35-15');
+          } else if (parsedTermins.length === 3 && parsedTermins[0].percentage === 40 && parsedTermins[1].percentage === 30 && parsedTermins[2].percentage === 30) {
+            setPaymentScheme('40-30-30');
+          } else {
+            setPaymentScheme('Custom');
+          }
+        }
+      } else if (paymentType.includes('Retainer bulanan') || paymentType.includes('Periode')) {
+        detectedModel = 'STRATEGIC_ADVISORY';
+        const periodMatch = paymentType.match(/Periode (.+?) s\/d (.+?);/);
+        const timingMatch = paymentType.match(/Penagihan: (.+)/);
+        if (periodMatch) {
+          setContractStart(periodMatch[1]);
+          setContractEnd(periodMatch[2]);
+        }
+        if (timingMatch && timingMatch[1].includes('Awal')) {
+          setBillingTiming('START_OF_MONTH');
+        } else {
+          setBillingTiming('END_OF_MONTH');
+        }
+      } else if (paymentType.includes('Sengketa') || paymentType.includes('Uang Muka')) {
+        detectedModel = 'DISPUTE_UM_SF';
+        const dpMatch = paymentType.match(/Uang Muka IDR ([\d.]+)M/);
+        const sfMatch = paymentType.match(/Success Fee (\d+)%/);
+        const baseMatch = paymentType.match(/Basis: (.+)/);
+        if (dpMatch) {
+          setDownPayment((parseFloat(dpMatch[1]) * 1000000).toString());
+        }
+        if (sfMatch) {
+          setSuccessFeePercent(sfMatch[1]);
+        }
+        if (baseMatch) {
+          setSuccessFeeBase(baseMatch[1]);
+        }
+      }
 
-      setContractStart('');
-      setContractEnd('');
-      setBillingTiming('START_OF_MONTH');
+      setBillingModel(detectedModel);
 
-      setDownPayment('');
-      setSuccessFeePercent('');
-      setSuccessFeeBase('');
-
-      setSubconPartner('');
-      setSubconPaymentTiming('UPFRONT');
+      // Reset fields that don't match the detected model
+      if (detectedModel !== 'PROJECT_TERMIN') {
+        setPaymentScheme('50-50');
+        setTermins([
+          { percentage: 50, amount: 0, description: '' },
+          { percentage: 50, amount: 0, description: '' },
+        ]);
+      }
+      if (detectedModel !== 'STRATEGIC_ADVISORY') {
+        setContractStart('');
+        setContractEnd('');
+        setBillingTiming('START_OF_MONTH');
+      }
+      if (detectedModel !== 'DISPUTE_UM_SF') {
+        setDownPayment('');
+        setSuccessFeePercent('');
+        setSuccessFeeBase('');
+      }
+      if (detectedModel !== 'SUBCON') {
+        setSubconPartner('');
+        setSubconPaymentTiming('UPFRONT');
+      }
 
       setAttachments([]);
     } else {
@@ -369,17 +445,23 @@ export function ProposalFormModal({
 
     // Update existing proposal
     if (editingProposal && onUpdateProposal) {
+      // Only allow edit if status is DRAFT
+      if (editingProposal.status !== 'DRAFT') {
+        toast.error('Proposal tidak bisa diedit karena sudah disubmit untuk approval');
+        return;
+      }
+      
       onUpdateProposal(editingProposal.id, {
         service: service.trim(),
         proposalFee: Number(proposalFee),
         paymentType: paymentTypeString,
-        hasSubcon: false,
-        status: saveAsDraft ? 'DRAFT' : 'SENT',
+        hasSubcon: billingModel === 'SUBCON',
+        status: saveAsDraft ? 'DRAFT' : 'WAITING_APPROVAL',
       });
       toast.success(
         saveAsDraft
           ? 'Proposal updated and saved as draft'
-          : 'Proposal updated and submitted for CEO approval',
+          : 'Proposal submitted for CEO approval',
       );
       handleClose();
       return;
@@ -392,8 +474,8 @@ export function ProposalFormModal({
       service: service.trim(),
       proposalFee: Number(proposalFee),
       paymentType: paymentTypeString,
-      hasSubcon: false,
-      status: saveAsDraft ? 'DRAFT' : 'SENT',
+      hasSubcon: billingModel === 'SUBCON',
+      status: saveAsDraft ? 'DRAFT' : 'WAITING_APPROVAL',
       createdAt: new Date().toISOString().split('T')[0],
     };
 

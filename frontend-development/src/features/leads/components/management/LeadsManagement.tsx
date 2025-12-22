@@ -31,7 +31,7 @@ export function LeadsManagement({ userName, mode, title, onLeadClick }: LeadsMan
       return [...defaultLeads, ...mockLeads];
     } else if (mode === 'tracker') {
       // For tracker mode, filter for follow-up statuses
-      const relevantStatuses = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_PROPOSAL', 'IN_PROPOSAL'];
+      const relevantStatuses = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_NOTULEN', 'NEED_PROPOSAL', 'IN_PROPOSAL'];
       return defaultLeads.filter(lead => relevantStatuses.includes((lead as any).status));
     } else {
       return defaultLeads;

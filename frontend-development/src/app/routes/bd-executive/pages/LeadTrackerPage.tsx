@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { LeadsManagement } from '../../../../features/leads/components/management/LeadsManagement';
 import { LeadTrackerDetail } from '../../../../features/leads/components/shared/LeadTrackerDetail';
-import { generateDummyLeadsBDMEO, type Lead, type Meeting, type Notulensi, type Proposal } from '../../../../lib/mock-data';
+import { generateDummyLeadsBDMEO, mockMeetings, mockNotulensi, mockProposals, type Lead, type Meeting, type Notulensi, type Proposal } from '../../../../lib/mock-data';
 import type { LeadStatus } from '../../../../features/leads/components/shared/LeadTrackerDetail';
 
 interface LeadTrackerPageProps {
@@ -28,7 +28,7 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
   }, [onResetDetail, onLeadDetailChange]);
   const [leads] = useState<Lead[]>(() => {
     const defaultLeads = generateDummyLeadsBDMEO('Sarah Wijaya');
-    const relevantStatuses = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_PROPOSAL', 'IN_PROPOSAL'];
+    const relevantStatuses = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_NOTULEN', 'NEED_PROPOSAL', 'IN_PROPOSAL'];
     return defaultLeads.filter(lead => relevantStatuses.includes((lead as any).status));
   });
 
@@ -46,9 +46,10 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
       onLeadDetailChange(null);
     }
   }, [selectedLeadId, leads, onLeadDetailChange]);
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [notulensi, setNotulensi] = useState<Notulensi[]>([]);
-  const [proposals, setProposals] = useState<Proposal[]>([]);
+  // Initialize data from mock-data.ts
+  const [meetings, setMeetings] = useState<Meeting[]>(mockMeetings);
+  const [notulensi, setNotulensi] = useState<Notulensi[]>(mockNotulensi);
+  const [proposals, setProposals] = useState<Proposal[]>(mockProposals);
 
   const handleAddMeeting = (meeting: Meeting) => {
     setMeetings([...meetings, meeting]);

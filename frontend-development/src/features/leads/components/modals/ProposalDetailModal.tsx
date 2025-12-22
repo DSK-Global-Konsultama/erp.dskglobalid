@@ -122,13 +122,18 @@ export function ProposalDetailModal({
     }
   };
 
-  const handleSubmitForApproval = () => {
+  const handleSendToClient = () => {
     if (currentProposal && onUpdateProposal) {
       onUpdateProposal(currentProposal.id, {
-        status: 'SENT'
+        status: 'SENT',
+        sentAt: new Date().toISOString().split('T')[0]
       });
-      toast.success('Proposal submitted for approval!');
-      handleClose();
+      setCurrentProposal({
+        ...currentProposal,
+        status: 'SENT',
+        sentAt: new Date().toISOString().split('T')[0]
+      });
+      toast.success('Proposal sent to client!');
     }
   };
 
@@ -146,6 +151,19 @@ export function ProposalDetailModal({
       });
       // Close AgreeFeeModal immediately
       setShowAgreeFeeModal(false);
+    }
+  };
+
+  const handleSubmitForApproval = () => {
+    if (currentProposal && onUpdateProposal) {
+      onUpdateProposal(currentProposal.id, {
+        status: 'WAITING_APPROVAL'
+      });
+      setCurrentProposal({
+        ...currentProposal,
+        status: 'WAITING_APPROVAL'
+      });
+      toast.success('Proposal submitted for approval!');
     }
   };
 
@@ -542,15 +560,6 @@ export function ProposalDetailModal({
                     <p className="text-xs text-gray-500">
                       Agree Fee & payment type final akan diisi setelah client menyatakan setuju (deal).
                     </p>
-                    {(currentProposal.status === 'APPROVED' || currentProposal.status === 'SENT') && (
-                      <Button
-                        type="button"
-                        onClick={() => setShowAgreeFeeModal(true)}
-                        className="w-full"
-                      >
-                        Setujui Deal & Isi Agree Fee
-                      </Button>
-                    )}
                   </div>
                 ) : (
                   /* STATE 2 - SETELAH AGREE FEE DIISI */
@@ -626,9 +635,57 @@ export function ProposalDetailModal({
                   type="button"
                   onClick={handleSubmitForApproval}
                 >
-                  Submit
+                  Submit for Approval
                 </Button>
               </>
+            ) : currentProposal.status === 'WAITING_APPROVAL' ? (
+              <Button
+                type="button"
+                onClick={handleClose}
+              >
+                Close
+              </Button>
+            ) : currentProposal.status === 'APPROVED' ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleClose}
+                >
+                  Close
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSendToClient}
+                >
+                  Send to Client
+                </Button>
+              </>
+            ) : currentProposal.status === 'SENT' ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleClose}
+                >
+                  Close
+                </Button>
+                {!currentProposal.agreeFee && (
+                  <Button
+                    type="button"
+                    onClick={() => setShowAgreeFeeModal(true)}
+                  >
+                    Setujui Deal & Isi Agree Fee
+                  </Button>
+                )}
+              </>
+            ) : currentProposal.status === 'ACCEPTED' ? (
+              <Button
+                type="button"
+                onClick={handleClose}
+              >
+                Close
+              </Button>
             ) : (
               <Button
                 type="button"

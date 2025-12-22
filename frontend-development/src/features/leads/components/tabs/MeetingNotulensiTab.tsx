@@ -226,6 +226,8 @@ export function MeetingNotulensiTab({
                             onClick={() => {
                               if (onUpdateMeeting) {
                                 onUpdateMeeting(meeting.id, { status: 'DONE' });
+                                // Update lead status to NEED_NOTULEN when meeting is marked as done
+                                onUpdateLeadStatus(leadId, 'NEED_NOTULEN');
                               }
                             }}
                             className="px-3 py-1.5 bg-black text-white rounded-lg hover:bg-gray-900 text-sm transition-colors cursor-pointer"

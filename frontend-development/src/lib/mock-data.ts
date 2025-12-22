@@ -154,7 +154,7 @@ export interface Proposal {
   sentAt?: string;
   elStatus?: 'DRAFT' | 'SENT' | 'SIGNED' | 'REJECTED';
   elSignedDate?: string;
-  status: 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | 'ACCEPTED';
+  status: 'DRAFT' | 'WAITING_APPROVAL' | 'APPROVED' | 'SENT' | 'REJECTED' | 'ACCEPTED';
   createdAt: string;
 }
 
@@ -2395,6 +2395,501 @@ export function generateDummyLeadsBDMEO(userName: string): (Lead & { service?: s
       createdBy: userName,
       service: 'Audit Services',
     },
+    // Lead dengan status NEED_NOTULEN - meeting sudah selesai
+    {
+      id: 'L136',
+      clientName: 'Bambang Santoso',
+      company: 'PT Maju Bersama',
+      email: 'bambang@majubersama.com',
+      phone: '081234567890',
+      source: 'Website',
+      status: 'NEED_NOTULEN' as any,
+      createdDate: '2025-01-10',
+      notes: 'Meeting sudah selesai, menunggu notulensi dibuat',
+      createdBy: userName,
+      service: 'Tax Consulting',
+      lastActivity: 'Meeting selesai - 2025-01-15',
+    },
   ];
 }
+
+// Mock data for meetings
+export const mockMeetings: Meeting[] = [
+  {
+    id: 'M001',
+    leadId: 'L103', // Ahmad Fauzi - MEETING_SCHEDULED
+    name: 'Initial Consultation Meeting',
+    dateTime: '2025-01-20T10:00:00',
+    location: 'https://zoom.us/j/123456789',
+    status: 'SCHEDULED',
+    notes: 'Meeting untuk diskusi kebutuhan Audit Services',
+  },
+  {
+    id: 'M002',
+    leadId: 'L111', // Eko Prasetyo - MEETING_SCHEDULED
+    name: 'Project Discussion',
+    dateTime: '2025-03-05T14:00:00',
+    location: 'Office PT Nusantara Abadi, Jakarta',
+    status: 'SCHEDULED',
+    notes: 'Presentasi layanan Audit Services',
+  },
+  {
+    id: 'M003',
+    leadId: 'L119', // Rizki Pratama - MEETING_SCHEDULED
+    name: 'Client Meeting',
+    dateTime: '2025-04-28T09:30:00',
+    location: 'Google Meet - meet.google.com/abc-defg-hij',
+    status: 'SCHEDULED',
+    notes: 'Meeting untuk Web Development project',
+  },
+  {
+    id: 'M004',
+    leadId: 'L124', // Rina Kartika - MEETING_SCHEDULED
+    name: 'Consultation Session',
+    dateTime: '2025-05-18T11:00:00',
+    location: 'Office CV Mandiri Jaya, Bandung',
+    status: 'SCHEDULED',
+    notes: 'Diskusi kebutuhan Web Development',
+  },
+  {
+    id: 'M005',
+    leadId: 'L130', // Dewi Lestari - MEETING_SCHEDULED
+    name: 'Service Presentation',
+    dateTime: '2025-06-28T13:00:00',
+    location: 'https://zoom.us/j/987654321',
+    status: 'SCHEDULED',
+    notes: 'Presentasi Audit Services',
+  },
+  // Meeting untuk PT Global Mandiri (L104) - sudah selesai
+  {
+    id: 'M010',
+    leadId: 'L104', // Dewi Lestari - PT Global Mandiri - NEED_PROPOSAL
+    name: 'Initial Consultation - Financial Advisory',
+    dateTime: '2025-01-10T10:00:00',
+    location: 'Office PT Global Mandiri, Jakarta',
+    status: 'DONE',
+    notes: 'Meeting untuk diskusi kebutuhan Financial Advisory',
+  },
+  // Meeting untuk PT Cahaya Abadi (L105) - sudah selesai
+  {
+    id: 'M011',
+    leadId: 'L105', // Rudi Hartono - PT Cahaya Abadi - IN_PROPOSAL
+    name: 'Project Discussion - Web Development',
+    dateTime: '2025-01-30T14:00:00',
+    location: 'https://zoom.us/j/111222333',
+    status: 'DONE',
+    notes: 'Meeting untuk diskusi kebutuhan Web Development',
+  },
+  // Meeting untuk NEED_NOTULEN status - sudah selesai
+  {
+    id: 'M012',
+    leadId: 'L136', // Client dengan status NEED_NOTULEN
+    name: 'Consultation Meeting',
+    dateTime: '2025-01-15T09:00:00',
+    location: 'Office PT Maju Bersama, Jakarta',
+    status: 'DONE',
+    notes: 'Meeting sudah selesai, menunggu notulensi',
+  },
+  // Meeting untuk Dina Kartika (L114) - sudah selesai
+  {
+    id: 'M013',
+    leadId: 'L114', // Dina Kartika - IN_PROPOSAL
+    name: 'Web Development Consultation',
+    dateTime: '2025-03-05T14:00:00',
+    location: 'Office PT Sumber Rezeki, Jakarta',
+    status: 'DONE',
+    notes: 'Meeting untuk diskusi kebutuhan Web Development',
+  },
+  // Meeting untuk Indra Gunawan (L123) - sudah selesai
+  {
+    id: 'M014',
+    leadId: 'L123', // Indra Gunawan - IN_PROPOSAL
+    name: 'Financial Advisory Consultation - Subcon Project',
+    dateTime: '2025-05-05T10:00:00',
+    location: 'Office PT Cahaya Terang, Jakarta',
+    status: 'DONE',
+    notes: 'Meeting untuk diskusi kebutuhan Financial Advisory dengan subcon partner',
+  },
+];
+
+// Mock data for notulensi
+export const mockNotulensi: Notulensi[] = [
+  {
+    id: 'N002',
+    leadId: 'L112', // Sinta Dewi - NEED_PROPOSAL
+    meetingId: 'M007',
+    clientName: 'Sinta Dewi',
+    meetingInfo: {
+      date: '2025-02-25',
+      time: '14:00 - 15:30',
+      location: 'https://zoom.us/j/555666777',
+    },
+    participants: {
+      internal: ['Rina Kusuma'],
+      client: ['Sinta Dewi', 'Ari Wijaya'],
+    },
+    objectives: 'Presentasi layanan Financial Advisory dan diskusi kebutuhan',
+    discussionSummary: {
+      background: 'PT Bumi Sejahtera membutuhkan konsultasi financial untuk ekspansi bisnis',
+      issuesDiscussed: 'Membahas strategi pendanaan, financial planning, dan risk management',
+      clientInfo: 'Perusahaan retail dengan rencana ekspansi ke 5 kota baru',
+      firmInfo: 'Kami menawarkan Financial Advisory dengan fokus pada business expansion',
+      risks: 'Client perlu memastikan cash flow cukup untuk ekspansi',
+    },
+    agreements: [
+      {
+        item: 'Service Package',
+        details: 'Financial Advisory package untuk business expansion planning',
+      },
+    ],
+    actionItems: [
+      {
+        action: 'Siapkan proposal Financial Advisory',
+        pic: 'Rina Kusuma',
+        deadline: '2025-03-01',
+      },
+    ],
+    nextSteps: 'Kirim proposal dan tunggu feedback dari client',
+    notes: 'Client meminta proposal dengan detail pricing',
+    status: 'APPROVED',
+    createdBy: 'Rina Kusuma',
+    createdAt: '2025-02-25T16:00:00',
+  },
+  {
+    id: 'N003',
+    leadId: 'L120', // Melati Indira - NEED_PROPOSAL
+    meetingId: 'M008',
+    clientName: 'Melati Indira',
+    meetingInfo: {
+      date: '2025-04-25',
+      time: '09:00 - 10:30',
+      location: 'Office PT Harmoni Bangun, Surabaya',
+    },
+    participants: {
+      internal: ['Andi Wijaya'],
+      client: ['Melati Indira', 'Hendra Kurniawan'],
+    },
+    objectives: 'Diskusi kebutuhan Audit Services untuk compliance',
+    discussionSummary: {
+      background: 'PT Harmoni Bangun membutuhkan audit untuk compliance dengan regulasi baru',
+      issuesDiscussed: 'Membahas scope audit, timeline, dan deliverables',
+      clientInfo: 'Perusahaan konstruksi dengan multiple projects',
+      firmInfo: 'Kami menawarkan Audit Services dengan comprehensive approach',
+      risks: 'Tidak ada risiko, client sudah siap dengan dokumentasi',
+    },
+    agreements: [
+      {
+        item: 'Audit Scope',
+        details: 'Financial audit dan compliance audit untuk tahun 2024',
+      },
+    ],
+    actionItems: [
+      {
+        action: 'Buat proposal Audit Services',
+        pic: 'Andi Wijaya',
+        deadline: '2025-04-30',
+      },
+    ],
+    nextSteps: 'Proposal akan dikirim dan menunggu approval',
+    notes: 'Client meminta proposal dengan breakdown biaya',
+    status: 'APPROVED',
+    createdBy: 'Andi Wijaya',
+    createdAt: '2025-04-25T11:00:00',
+  },
+  {
+    id: 'N004',
+    leadId: 'L131', // Hari Setiawan - NEED_PROPOSAL
+    meetingId: 'M009',
+    clientName: 'Hari Setiawan',
+    meetingInfo: {
+      date: '2025-06-20',
+      time: '13:00 - 14:30',
+      location: 'Google Meet - meet.google.com/xyz-abcde-fgh',
+    },
+    participants: {
+      internal: ['Rina Kusuma'],
+      client: ['Hari Setiawan'],
+    },
+    objectives: 'Konsultasi Tax Consulting untuk optimasi pajak',
+    discussionSummary: {
+      background: 'PT Jaya Karya membutuhkan konsultasi untuk tax optimization',
+      issuesDiscussed: 'Membahas strategi tax planning, compliance, dan optimization',
+      clientInfo: 'Perusahaan trading dengan multiple transactions',
+      firmInfo: 'Kami menawarkan Tax Consulting dengan focus pada optimization',
+      risks: 'Minimal, client sudah memiliki sistem yang baik',
+    },
+    agreements: [
+      {
+        item: 'Service Scope',
+        details: 'Tax Consulting untuk tax planning dan compliance',
+      },
+    ],
+    actionItems: [
+      {
+        action: 'Siapkan proposal Tax Consulting',
+        pic: 'Rina Kusuma',
+        deadline: '2025-06-25',
+      },
+    ],
+    nextSteps: 'Kirim proposal dan follow up dengan client',
+    notes: 'Client tertarik dengan layanan kami',
+    status: 'APPROVED',
+    createdBy: 'Rina Kusuma',
+    createdAt: '2025-06-20T15:00:00',
+  },
+  // Notulensi untuk PT Global Mandiri (L104) - sudah approved
+  {
+    id: 'N005',
+    leadId: 'L104', // Dewi Lestari - PT Global Mandiri - NEED_PROPOSAL
+    meetingId: 'M010',
+    clientName: 'Dewi Lestari',
+    meetingInfo: {
+      date: '2025-01-10',
+      time: '10:00 - 11:30',
+      location: 'Office PT Global Mandiri, Jakarta',
+    },
+    participants: {
+      internal: ['Rina Kusuma', 'Andi Wijaya'],
+      client: ['Dewi Lestari', 'Hendra Gunawan'],
+    },
+    objectives: 'Diskusi kebutuhan Financial Advisory untuk optimasi keuangan perusahaan',
+    discussionSummary: {
+      background: 'PT Global Mandiri membutuhkan konsultasi financial untuk optimasi keuangan dan strategi investasi',
+      issuesDiscussed: 'Membahas struktur keuangan perusahaan, cash flow management, investment strategy, dan financial planning',
+      clientInfo: 'PT Global Mandiri adalah perusahaan manufaktur dengan omset 50M per tahun, memiliki 3 cabang',
+      firmInfo: 'Kami menawarkan layanan Financial Advisory dengan paket comprehensive termasuk analisis keuangan dan investment planning',
+      risks: 'Tidak ada risiko signifikan, client sudah memiliki budget yang cukup dan komitmen untuk improvement',
+    },
+    agreements: [
+      {
+        item: 'Scope of Work',
+        details: 'Financial Advisory meliputi analisis keuangan komprehensif, cash flow optimization, investment planning, dan financial strategy',
+      },
+      {
+        item: 'Timeline',
+        details: 'Project akan dimulai setelah proposal disetujui, estimasi durasi 3 bulan dengan progress review bulanan',
+      },
+      {
+        item: 'Budget',
+        details: 'Client menyetujui budget range 40-50 juta untuk project ini',
+      },
+    ],
+    actionItems: [
+      {
+        action: 'Buat proposal Financial Advisory dengan detail scope dan pricing',
+        pic: 'Rina Kusuma',
+        deadline: '2025-01-15',
+      },
+      {
+        action: 'Siapkan case study dan portfolio untuk presentasi',
+        pic: 'Andi Wijaya',
+        deadline: '2025-01-12',
+      },
+    ],
+    nextSteps: 'Menunggu approval proposal dari client, kemudian proceed ke tahap EL dan kick-off meeting',
+    notes: 'Client sangat tertarik dan meminta proposal segera. Meeting berjalan dengan baik dan semua pihak puas',
+    status: 'APPROVED',
+    createdBy: 'Rina Kusuma',
+    createdAt: '2025-01-10T12:00:00',
+  },
+  // Notulensi untuk PT Cahaya Abadi (L105) - DRAFT
+  {
+    id: 'N006',
+    leadId: 'L105', // Rudi Hartono - PT Cahaya Abadi - IN_PROPOSAL
+    meetingId: 'M011',
+    clientName: 'Rudi Hartono',
+    meetingInfo: {
+      date: '2025-01-30',
+      time: '14:00 - 16:00',
+      location: 'https://zoom.us/j/111222333',
+    },
+    participants: {
+      internal: ['Andi Wijaya'],
+      client: ['Rudi Hartono', 'Siti Rahayu'],
+    },
+    objectives: 'Diskusi kebutuhan Web Development untuk company profile dan e-commerce',
+    discussionSummary: {
+      background: 'PT Cahaya Abadi membutuhkan website company profile dan platform e-commerce untuk bisnis mereka',
+      issuesDiscussed: 'Membahas fitur website, design requirements, payment gateway integration, dan timeline development',
+      clientInfo: 'PT Cahaya Abadi adalah perusahaan retail dengan produk fashion, memiliki 5 store offline',
+      firmInfo: 'Kami menawarkan layanan Web Development dengan teknologi modern dan responsive design',
+      risks: 'Client perlu memastikan konten dan produk ready untuk diupload ke website',
+    },
+    agreements: [
+      {
+        item: 'Project Scope',
+        details: 'Web Development meliputi company profile website dan e-commerce platform dengan payment gateway',
+      },
+    ],
+    actionItems: [
+      {
+        action: 'Buat proposal Web Development dengan detail fitur dan pricing',
+        pic: 'Andi Wijaya',
+        deadline: '2025-02-05',
+      },
+    ],
+    nextSteps: 'Proposal akan dikirim dan menunggu feedback dari client',
+    notes: 'Client tertarik dengan layanan kami, perlu follow up untuk proposal',
+    status: 'APPROVED',
+    createdBy: 'Andi Wijaya',
+    createdAt: '2025-01-30T16:30:00',
+  },
+  // Notulensi untuk Dina Kartika (L114) - sudah approved
+  {
+    id: 'N007',
+    leadId: 'L114', // Dina Kartika - IN_PROPOSAL
+    meetingId: 'M013',
+    clientName: 'Dina Kartika',
+    meetingInfo: {
+      date: '2025-03-05',
+      time: '14:00 - 15:30',
+      location: 'Office PT Sumber Rezeki, Jakarta',
+    },
+    participants: {
+      internal: ['Andi Wijaya', 'Rina Kusuma'],
+      client: ['Dina Kartika', 'Budi Santoso'],
+    },
+    objectives: 'Diskusi kebutuhan Web Development untuk website perusahaan dan sistem manajemen',
+    discussionSummary: {
+      background: 'PT Sumber Rezeki membutuhkan website company profile dan sistem manajemen internal untuk operasional perusahaan',
+      issuesDiscussed: 'Membahas fitur website, design requirements, sistem manajemen inventory, user management, dan timeline development',
+      clientInfo: 'PT Sumber Rezeki adalah perusahaan distribusi dengan 10 cabang di berbagai kota, membutuhkan sistem terintegrasi',
+      firmInfo: 'Kami menawarkan layanan Web Development dengan teknologi modern, responsive design, dan sistem manajemen yang scalable',
+      risks: 'Client perlu memastikan data dan konten ready untuk diupload, serta training untuk user sistem',
+    },
+    agreements: [
+      {
+        item: 'Project Scope',
+        details: 'Web Development meliputi company profile website dan sistem manajemen internal dengan fitur inventory dan user management',
+      },
+      {
+        item: 'Budget Range',
+        details: 'Budget disetujui dalam range 30-40 juta untuk project ini',
+      },
+    ],
+    actionItems: [
+      {
+        action: 'Buat proposal Web Development dengan detail fitur, pricing, dan timeline',
+        pic: 'Andi Wijaya',
+        deadline: '2025-03-10',
+      },
+      {
+        action: 'Follow up dengan client untuk konfirmasi requirements',
+        pic: 'Rina Kusuma',
+        deadline: '2025-03-08',
+      },
+    ],
+    nextSteps: 'Proposal akan dikirim dan menunggu approval dari client',
+    notes: 'Client sangat tertarik dengan layanan kami, perlu segera follow up untuk proposal',
+    status: 'APPROVED',
+    createdBy: 'Andi Wijaya',
+    createdAt: '2025-03-05T16:00:00',
+  },
+  // Notulensi untuk Indra Gunawan (L123) - sudah approved
+  {
+    id: 'N008',
+    leadId: 'L123', // Indra Gunawan - IN_PROPOSAL
+    meetingId: 'M014',
+    clientName: 'Indra Gunawan',
+    meetingInfo: {
+      date: '2025-05-05',
+      time: '10:00 - 11:30',
+      location: 'Office PT Cahaya Terang, Jakarta',
+    },
+    participants: {
+      internal: ['Rina Kusuma', 'Andi Wijaya'],
+      client: ['Indra Gunawan', 'Siti Nurhaliza'],
+    },
+    objectives: 'Diskusi kebutuhan Financial Advisory dengan subcon partner untuk project client',
+    discussionSummary: {
+      background: 'PT Cahaya Terang membutuhkan konsultasi financial advisory, namun project ini akan dikerjakan melalui subcon partner (Asahi) dengan white kitchen model',
+      issuesDiscussed: 'Membahas scope financial advisory, subcon arrangement dengan partner Asahi, payment terms, dan timeline project',
+      clientInfo: 'PT Cahaya Terang adalah perusahaan manufaktur dengan omset 100M per tahun, membutuhkan financial planning dan advisory services',
+      firmInfo: 'Kami menawarkan Financial Advisory melalui subcon model dengan partner Asahi, dimana kami akan handle project namun menggunakan bendera partner',
+      risks: 'Perlu koordinasi dengan partner untuk memastikan kualitas deliverable sesuai standar',
+    },
+    agreements: [
+      {
+        item: 'Project Scope',
+        details: 'Financial Advisory services meliputi financial planning, cash flow management, dan investment strategy',
+      },
+      {
+        item: 'Subcon Arrangement',
+        details: 'Project akan dikerjakan melalui subcon dengan partner Asahi menggunakan white kitchen model',
+      },
+      {
+        item: 'Budget Range',
+        details: 'Budget disetujui dalam range 35-45 juta untuk project ini',
+      },
+    ],
+    actionItems: [
+      {
+        action: 'Buat proposal Financial Advisory dengan detail subcon arrangement dan pricing',
+        pic: 'Rina Kusuma',
+        deadline: '2025-05-08',
+      },
+      {
+        action: 'Koordinasi dengan partner Asahi untuk konfirmasi arrangement',
+        pic: 'Andi Wijaya',
+        deadline: '2025-05-07',
+      },
+    ],
+    nextSteps: 'Proposal akan dikirim dan menunggu approval dari client',
+    notes: 'Client setuju dengan subcon arrangement, perlu segera follow up untuk proposal',
+    status: 'APPROVED',
+    createdBy: 'Rina Kusuma',
+    createdAt: '2025-05-05T12:00:00',
+  },
+];
+
+// Mock data for proposals
+export const mockProposals: Proposal[] = [
+  {
+    id: 'P001',
+    leadId: 'L105', // Rudi Hartono - IN_PROPOSAL
+    service: 'Web Development',
+    proposalFee: 45000000,
+    agreeFee: 45000000,
+    paymentType: 'Termin 1: 50% (IDR 25M) - DP saat EL signed | Termin 2: 50% (IDR 25M) - Pelunasan saat project selesai',
+    paymentTypeFinal: 'Termin 1: 50% (IDR 25M) - DP saat EL signed | Termin 2: 50% (IDR 25M) - Pelunasan saat project selesai',
+    dealDate: '2025-02-10',
+    hasSubcon: false,
+    sentAt: '2025-02-05',
+    status: 'ACCEPTED',
+    createdAt: '2025-02-01',
+  },
+  {
+    id: 'P002',
+    leadId: 'L114', // Dina Kartika - IN_PROPOSAL
+    service: 'Web Development',
+    proposalFee: 35000000,
+    paymentType: 'Termin 1: 50% (IDR 17.5M) - DP saat kontrak ditandatangani | Termin 2: 50% (IDR 17.5M) - Pelunasan saat project selesai',
+    hasSubcon: false,
+    status: 'APPROVED',
+    createdAt: '2025-03-10T10:00:00',
+  },
+  {
+    id: 'P003',
+    leadId: 'L123', // Indra Gunawan - IN_PROPOSAL
+    service: 'Financial Advisory',
+    proposalFee: 40000000,
+    paymentType: 'Subkon dengan Asahi: pembayaran 100% di awal oleh partner',
+    hasSubcon: true,
+    sentAt: '2025-05-12T11:00:00',
+    status: 'SENT',
+    createdAt: '2025-05-08T09:00:00',
+  },
+  {
+    id: 'P004',
+    leadId: 'L132', // Sinta Maharani - IN_PROPOSAL
+    service: 'Legal Consulting',
+    proposalFee: 30000000,
+    paymentType: '50-50',
+    hasSubcon: false,
+    sentAt: '2025-06-20T13:00:00',
+    status: 'SENT',
+    createdAt: '2025-06-18T10:00:00',
+  },
+  
+];
 

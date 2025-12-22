@@ -85,19 +85,47 @@ export function ProposalTab({ leadId, leads, proposals, onAddProposal, onUpdateP
                 <div>
                   <p className="text-gray-600">Has Subcon</p>
                   <p className="font-medium">{proposal.hasSubcon ? 'Yes' : 'No'}</p>
+                  {proposal.hasSubcon && proposal.paymentType && (
+                    <>
+                      {(() => {
+                        const partnerMatch = proposal.paymentType.match(/Subkon dengan (.+?):/);
+                        if (partnerMatch) {
+                          return (
+                            <>
+                              <p className="text-gray-600 mt-1">Subcon Partner</p>
+                              <p className="font-medium text-blue-600">{partnerMatch[1]}</p>
+                            </>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </>
+                  )}
                 </div>
-                {proposal.sentAt && (
-                  <div>
-                    <p className="text-gray-600">Sent At</p>
-                    <p className="font-medium">{proposal.sentAt}</p>
-                    {proposal.dealDate && (
-                      <>
-                        <p className="text-gray-600 mt-1">Deal Date</p>
-                        <p className="font-medium text-green-600">{proposal.dealDate}</p>
-                      </>
-                    )}
-                  </div>
-                )}
+                <div>
+                  <p className="text-gray-600">Sent At</p>
+                  <p className="font-medium">
+                    {(proposal.status === 'SENT' || proposal.status === 'ACCEPTED') && proposal.sentAt
+                      ? new Date(proposal.sentAt).toLocaleDateString('id-ID', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })
+                      : '-'
+                    }
+                  </p>
+                  <p className="text-gray-600 mt-1">Deal Date</p>
+                  <p className="font-medium text-green-600">
+                    {proposal.dealDate 
+                      ? new Date(proposal.dealDate).toLocaleDateString('id-ID', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })
+                      : '-'
+                    }
+                  </p>
+                </div>
               </div>
               {/* EL Status */}
               {proposal.elStatus && (
