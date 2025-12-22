@@ -41,6 +41,8 @@ export function StatusChip({ status }: StatusChipProps) {
         return 'bg-blue-100 text-blue-700';
       case 'ACCEPTED':
         return 'bg-green-100 text-green-700';
+      case 'PROPOSAL_EXPIRED':
+        return 'bg-red-100 text-red-700';
       case 'EXPIRED':
         return 'bg-gray-100 text-gray-600';
       case 'SCHEDULED':

@@ -31,7 +31,7 @@ export function LeadsManagement({ userName, mode, title, onLeadClick }: LeadsMan
       return [...defaultLeads, ...mockLeads];
     } else if (mode === 'tracker') {
       // For tracker mode, filter for follow-up statuses
-      const relevantStatuses = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_NOTULEN', 'NEED_PROPOSAL', 'IN_PROPOSAL'];
+      const relevantStatuses = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_NOTULEN', 'NEED_PROPOSAL', 'IN_PROPOSAL', 'PROPOSAL_EXPIRED'];
       return defaultLeads.filter(lead => relevantStatuses.includes((lead as any).status));
     } else {
       return defaultLeads;
@@ -170,6 +170,7 @@ export function LeadsManagement({ userName, mode, title, onLeadClick }: LeadsMan
                     <SelectItem value="MEETING_SCHEDULED">MEETING SCHEDULED</SelectItem>
                     <SelectItem value="NEED_PROPOSAL">NEED PROPOSAL</SelectItem>
                     <SelectItem value="IN_PROPOSAL">IN PROPOSAL</SelectItem>
+                    <SelectItem value="PROPOSAL_EXPIRED">PROPOSAL EXPIRED</SelectItem>
                   </SelectContent>
                 </Select>
                 <div className="flex gap-2">
@@ -225,6 +226,7 @@ export function LeadsManagement({ userName, mode, title, onLeadClick }: LeadsMan
                     <SelectItem value="MEETING_SCHEDULED">MEETING SCHEDULED</SelectItem>
                     <SelectItem value="NEED_PROPOSAL">NEED PROPOSAL</SelectItem>
                     <SelectItem value="IN_PROPOSAL">IN PROPOSAL</SelectItem>
+                    <SelectItem value="PROPOSAL_EXPIRED">PROPOSAL EXPIRED</SelectItem>
                     <SelectItem value="DEAL_WON">DEAL WON</SelectItem>
                     <SelectItem value="ON_HOLD">ON HOLD</SelectItem>
                     <SelectItem value="DROP">DROP</SelectItem>

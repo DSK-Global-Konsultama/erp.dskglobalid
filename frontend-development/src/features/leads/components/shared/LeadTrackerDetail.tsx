@@ -4,7 +4,7 @@ import { MeetingNotulensiTab } from '../tabs/MeetingNotulensiTab';
 import { ProposalTab } from '../tabs/ProposalTab';
 import type { Lead, Meeting, Notulensi, Proposal } from '../../../../lib/mock-data';
 
-export type LeadStatus = 'NEW' | 'TO_BE_MEET' | 'MEETING_SCHEDULED' | 'NEED_NOTULEN' | 'NEED_PROPOSAL' | 'IN_PROPOSAL' | 'DEAL_WON' | 'ON_HOLD' | 'DROP';
+export type LeadStatus = 'NEW' | 'TO_BE_MEET' | 'MEETING_SCHEDULED' | 'NEED_NOTULEN' | 'NEED_PROPOSAL' | 'IN_PROPOSAL' | 'PROPOSAL_EXPIRED' | 'DEAL_WON' | 'ON_HOLD' | 'DROP';
 
 interface LeadTrackerDetailProps {
   leadId: string;

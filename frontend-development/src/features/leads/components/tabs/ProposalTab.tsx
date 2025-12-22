@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { StatusChip } from '../shared/StatusChip';
 import { ProposalFormModal } from '../modals/ProposalFormModal';
@@ -15,12 +15,46 @@ interface ProposalTabProps {
   onUpdateLeadStatus: (leadId: string, status: LeadStatus) => void;
 }
 
+// Helper function to check if proposal is expired (30 days from sentAt)
+const isProposalExpired = (proposal: Proposal): boolean => {
+  // If already marked as expired, return true
+  if (proposal.status === 'PROPOSAL_EXPIRED') {
+    return true;
+  }
+  
+  // Check if proposal with SENT status is expired (>30 days)
+  if (!proposal.sentAt || proposal.status !== 'SENT') {
+    return false;
+  }
+  
+  const sentDate = new Date(proposal.sentAt);
+  const today = new Date();
+  const diffTime = today.getTime() - sentDate.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  return diffDays > 30;
+};
+
 export function ProposalTab({ leadId, leads, proposals, onAddProposal, onUpdateProposal, onUpdateLeadStatus }: ProposalTabProps) {
   const [showProposalForm, setShowProposalForm] = useState(false);
   const [showProposalDetail, setShowProposalDetail] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [editingProposal, setEditingProposal] = useState<Proposal | null>(null);
   const leadProposals = proposals.filter(p => p.leadId === leadId);
+  const lead = leads.find(l => l.id === leadId);
+
+  // Auto-update lead status to PROPOSAL_EXPIRED if any proposal is expired
+  useEffect(() => {
+    if (!lead) return;
+    
+    // Check if any proposal is expired
+    const hasExpiredProposal = leadProposals.some(proposal => isProposalExpired(proposal));
+    
+    // Update lead status if there's an expired proposal and current status is not already PROPOSAL_EXPIRED
+    if (hasExpiredProposal && (lead as any).status !== 'PROPOSAL_EXPIRED') {
+      onUpdateLeadStatus(leadId, 'PROPOSAL_EXPIRED');
+    }
+  }, [leadProposals, lead, leadId, onUpdateLeadStatus]);
 
   return (
     <div className="space-y-6">
@@ -53,13 +87,20 @@ export function ProposalTab({ leadId, leads, proposals, onAddProposal, onUpdateP
         </div>
       ) : (
         <div className="space-y-4">
-          {leadProposals.map((proposal) => (
-            <div key={proposal.id} className="border border-gray-200 rounded-lg p-4">
+          {leadProposals.map((proposal) => {
+            const expired = isProposalExpired(proposal);
+            // Display PROPOSAL_EXPIRED status if proposal is expired
+            const displayStatus = expired ? 'PROPOSAL_EXPIRED' : proposal.status;
+            return (
+            <div 
+              key={proposal.id} 
+              className={`border rounded-lg p-4 ${expired ? 'border-red-500 border-2' : 'border-gray-200'}`}
+            >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h4>{proposal.service}</h4>
-                    <StatusChip status={proposal.status} />
+                    <StatusChip status={displayStatus} />
                   </div>
                   <p className="text-sm text-gray-600">Created: {proposal.createdAt}</p>
                 </div>
@@ -105,7 +146,7 @@ export function ProposalTab({ leadId, leads, proposals, onAddProposal, onUpdateP
                 <div>
                   <p className="text-gray-600">Sent At</p>
                   <p className="font-medium">
-                    {(proposal.status === 'SENT' || proposal.status === 'ACCEPTED') && proposal.sentAt
+                    {(proposal.status === 'SENT' || proposal.status === 'ACCEPTED' || expired) && proposal.sentAt
                       ? new Date(proposal.sentAt).toLocaleDateString('id-ID', {
                           year: 'numeric',
                           month: 'long',
@@ -160,7 +201,8 @@ export function ProposalTab({ leadId, leads, proposals, onAddProposal, onUpdateP
                 </button>
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       )}
 

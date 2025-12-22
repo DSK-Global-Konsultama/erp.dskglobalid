@@ -28,7 +28,7 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
   }, [onResetDetail, onLeadDetailChange]);
   const [leads] = useState<Lead[]>(() => {
     const defaultLeads = generateDummyLeadsBDMEO('Sarah Wijaya');
-    const relevantStatuses = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_NOTULEN', 'NEED_PROPOSAL', 'IN_PROPOSAL'];
+    const relevantStatuses = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_NOTULEN', 'NEED_PROPOSAL', 'IN_PROPOSAL', 'PROPOSAL_EXPIRED'];
     return defaultLeads.filter(lead => relevantStatuses.includes((lead as any).status));
   });
 
