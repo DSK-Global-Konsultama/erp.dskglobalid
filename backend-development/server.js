@@ -25,11 +25,18 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // routes
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
+const roleRoutes = require('./routes/role.routes');
+const departmentRoutes = require('./routes/department.routes');
 
+// Auth (tanpa JWT)
 app.use('/auth', authRoutes);
-app.use('/users', userRoutes);
 
-app.get('/health', (req, res) => {
+// Protected routes (butuh Authorization: Bearer <token>)
+app.use('/users', authenticate, userRoutes);
+app.use('/roles', authenticate, roleRoutes);
+app.use('/departments', authenticate, departmentRoutes);
+
+app.get('/testing', (req, res) => {
   res.json({ status: 'ok' });
 });
 
@@ -37,3 +44,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+ 

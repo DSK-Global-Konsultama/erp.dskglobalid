@@ -148,6 +148,9 @@ exports.login = async (req, res) => {
         email: user.email,
         username: user.username,
         profile_image_path: user.profile_image_path,
+        profile_image_url: user.profile_image_path
+          ? `/uploads/${user.profile_image_path}`
+          : null,
         role: {
           code: user.role_code,
           name: user.role_name

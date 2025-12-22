@@ -210,13 +210,13 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
   const getRoleName = () => {
     switch (role) {
       case 'CEO':
-        return 'CEO';
+        return 'Chief Executive Officer';
       case 'COO-Tax-Audit':
-        return 'COO TAX AUDIT';
+        return 'Chief Operations Officer';
       case 'COO-Legal-TP-SR':
-        return 'COO LEGAL TP SR';
+        return 'Chief Operations Officer';
       case 'SuperAdmin':
-        return 'SUPER ADMIN';
+        return 'SUPERADMIN';
       case 'IT':
       case 'ITSpecialist':
         return 'IT SPECIALIST';
