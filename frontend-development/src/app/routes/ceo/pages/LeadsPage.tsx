@@ -1,6 +1,5 @@
-import { LeadsManagement } from '../../../../features/leads/components/LeadsManagement';
+import { LeadsManagement } from '../../../../features/leads/components/management/LeadsManagement';
 
 export function LeadsPage() {
-  return <LeadsManagement userRole="CEO" userName="" />;
+  return <LeadsManagement userName="Sarah Wijaya" mode="view" title="Semua Lead" />;
 }
-

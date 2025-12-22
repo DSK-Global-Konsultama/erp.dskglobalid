@@ -1,10 +1,10 @@
-import { LeadsManagement } from '../../../features/leads/components/LeadsManagement';
+import { LeadsManagement } from '../../../features/leads/components/management/LeadsManagement';
 
 interface BDMEOProps {
   userName: string;
 }
 
 export function BDMEODashboard({ userName }: BDMEOProps) {
-  return <LeadsManagement userRole="BD-MEO" userName={userName} />;
+  return <LeadsManagement userName={userName} mode="edit" />;
 }
 

@@ -12,7 +12,8 @@ import {
   Settings,
   HelpCircle,
   LogOut,
-  Building2
+  Building2,
+  Inbox
 } from 'lucide-react';
 
 type UserRole = 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist' | 'SuperAdmin';
@@ -36,9 +37,10 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
   // Set default activeNav based on role
   const getDefaultActiveNav = () => {
     switch (role) {
-      case 'BD-MEO':
       case 'BD-Executive':
         return 'leads';
+      case 'BD-MEO':
+        return 'dashboard';
       default:
         return 'dashboard';
     }
@@ -50,8 +52,20 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
   const activeNav = externalActiveNav !== undefined ? externalActiveNav : internalActiveNav;
 
   const getNavItems = (): NavItem[] => {
-    // CEO and COO share the same navigation items
-    const ceoCooNavItems = [
+    // CEO has Inbox, COO doesn't
+    const ceoNavItems = [
+      { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
+      { id: 'inbox', label: 'Lead Inbox', icon: Inbox, path: 'inbox' },
+      { id: 'leads', label: 'Leads', icon: Users, path: 'leads' },
+      { id: 'deals', label: 'Deals', icon: HandshakeIcon, path: 'deals' },
+      { id: 'projects', label: 'Projects', icon: FolderKanban, path: 'projects' },
+      { id: 'invoices', label: 'Invoices', icon: FileText, path: 'invoices' },
+      { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
+      { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
+    ];
+
+    // COO navigation items (without Inbox)
+    const cooNavItems = [
       { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
       { id: 'leads', label: 'Leads', icon: Users, path: 'leads' },
       { id: 'deals', label: 'Deals', icon: HandshakeIcon, path: 'deals' },
@@ -63,19 +77,20 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
 
     switch (role) {
       case 'CEO':
+        return ceoNavItems;
       case 'COO-Tax-Audit':
       case 'COO-Legal-TP-SR':
-        return ceoCooNavItems;
+        return cooNavItems;
       case 'BD-MEO':
         return [
-          { id: 'leads', label: 'My Leads', icon: Users, path: 'dashboard' },
+          { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
+          { id: 'leads', label: 'My Leads', icon: Users, path: 'leads' },
           { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
           { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
         ];
       case 'BD-Executive':
         return [
-          { id: 'leads', label: 'Available Leads', icon: Users, path: 'dashboard' },
-          { id: 'deals', label: 'My Deals', icon: HandshakeIcon, path: 'dashboard' },
+          { id: 'deals', label: 'Lead Tracker', icon: HandshakeIcon, path: 'dashboard' },
           { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
           { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
         ];

@@ -1,21 +1,23 @@
-import { AvailableLeadsPage } from './pages/AvailableLeadsPage';
-import { MyDealsPage } from './pages/MyDealsPage';
+import { LeadTrackerPage } from './pages/LeadTrackerPage';
 
 interface BDExecutiveProps {
   userName: string;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
+  onLeadDetailChange?: (leadDetail: { clientName: string; status: string } | null) => void;
+  onBackFromDetail?: () => void;
+  onResetDetail?: (resetFn: () => void) => void;
 }
 
-export function BDExecutiveDashboard({ userName, activeTab: externalActiveTab }: BDExecutiveProps) {
-  const activeTab = externalActiveTab || 'leads';
+export function BDExecutiveDashboard({ userName, activeTab: externalActiveTab, onLeadDetailChange, onBackFromDetail, onResetDetail }: BDExecutiveProps) {
+  const activeTab = externalActiveTab || 'deals';
 
-  // Render content directly based on activeTab without tabs
+  // Render Lead Tracker (previously My Deals)
   if (activeTab === 'deals') {
-    return <MyDealsPage userName={userName} />;
+    return <LeadTrackerPage userName={userName} onLeadDetailChange={onLeadDetailChange} onBackFromDetail={onBackFromDetail} onResetDetail={onResetDetail} />;
   }
 
-  // Default to leads
-  return <AvailableLeadsPage userName={userName} />;
+  // Default to Lead Tracker
+  return <LeadTrackerPage userName={userName} onLeadDetailChange={onLeadDetailChange} onBackFromDetail={onBackFromDetail} onResetDetail={onResetDetail} />;
 }
 

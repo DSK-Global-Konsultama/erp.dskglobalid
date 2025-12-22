@@ -1,15 +1,23 @@
-import { Bell } from 'lucide-react';
+import { Bell, ArrowLeft } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import { StatusChip } from '../../features/leads/components/shared/StatusChip';
 
 type UserRole = 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'ITSpecialist' | 'SuperAdmin';
+
+interface LeadDetailInfo {
+  clientName: string;
+  status: string;
+  onBack: () => void;
+}
 
 interface HeaderProps {
   role: UserRole;
   userName?: string;
   activeNav?: string;
+  leadDetail?: LeadDetailInfo;
 }
 
-export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps) {
+export function Header({ role, userName, activeNav = 'dashboard', leadDetail }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationCount] = useState(3); // Placeholder for notification count
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -36,8 +44,10 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
     const getCEOCootitle = () => {
       if (activeNav === 'dashboard') {
         return role === 'CEO' ? 'Dashboard CEO' : `Dashboard ${role}`;
+      } else if (activeNav === 'inbox') {
+        return 'Kotak Masuk Lead';
       } else if (activeNav === 'leads') {
-        return 'All Leads';
+        return 'Semua Lead';
       } else if (activeNav === 'deals') {
         return 'All Deals';
       } else if (activeNav === 'projects') {
@@ -58,23 +68,25 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
       case 'COO-Legal-TP-SR':
         return getCEOCootitle();
       case 'BD-MEO':
-        if (activeNav === 'ticketing') {
-          return 'IT Ticketing';
-        } else if (activeNav === 'reimburse') {
-          return 'My Reimbursements';
-        }
-        return 'Input Leads';
-      case 'BD-Executive':
-        if (activeNav === 'leads') {
-          return 'Available Leads';
-        } else if (activeNav === 'deals') {
-          return 'My Deals';
+        if (activeNav === 'dashboard') {
+          return 'Dashboard MEO';
+        } else if (activeNav === 'leads') {
+          return 'My Leads';
         } else if (activeNav === 'ticketing') {
           return 'IT Ticketing';
         } else if (activeNav === 'reimburse') {
           return 'My Reimbursements';
         }
-        return 'Available Leads';
+        return 'Dashboard MEO';
+      case 'BD-Executive':
+        if (activeNav === 'deals') {
+          return 'Lead Tracker';
+        } else if (activeNav === 'ticketing') {
+          return 'IT Ticketing';
+        } else if (activeNav === 'reimburse') {
+          return 'My Reimbursements';
+        }
+        return 'Lead Tracker';
       case 'PM':
         if (activeNav === 'ticketing') {
           return 'IT Ticketing';
@@ -122,8 +134,10 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
     const getCEOCooSubtitle = () => {
       if (activeNav === 'dashboard') {
         return 'Monitoring Business Development & Project Management';
+      } else if (activeNav === 'inbox') {
+        return 'Review dan process lead baru dari MEO';
       } else if (activeNav === 'leads') {
-        return 'Monitor semua leads dari berbagai sumber';
+        return 'View dan monitor semua leads dalam pipeline';
       } else if (activeNav === 'deals') {
         return 'Monitor semua deals';
       } else if (activeNav === 'projects') {
@@ -148,12 +162,16 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
       case 'COO-Legal-TP-SR':
         return getCEOCooSubtitle();
       case 'BD-MEO':
-        if (activeNav === 'ticketing') {
+        if (activeNav === 'dashboard') {
+          return 'Ringkasan leads yang Anda kelola';
+        } else if (activeNav === 'leads') {
+          return 'Kelola semua leads yang Anda buat';
+        } else if (activeNav === 'ticketing') {
           return 'Request bantuan atau fitur baru dari tim IT';
         } else if (activeNav === 'reimburse') {
           return 'Submit dan lacak reimbursement pengeluaran kantor';
         }
-        return 'Input lead baru dari berbagai sumber';
+        return 'Ringkasan leads yang Anda kelola';
       case 'BD-Executive':
         if (activeNav === 'leads') {
           return 'Claim leads untuk di-follow up sampai deal';
@@ -236,6 +254,85 @@ export function Header({ role, userName, activeNav = 'dashboard' }: HeaderProps)
   };
 
   const subtitle = getDashboardSubtitle();
+
+  // If leadDetail is provided, show lead detail header
+  if (leadDetail) {
+    return (
+      <header className="bg-gray-50 px-6 pt-3 sticky top-0 z-10">
+        <div className="flex items-center justify-between">
+          {/* Lead Detail Header - Left Side */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  leadDetail.onBack();
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="flex-1">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-lg font-semibold text-gray-900">{leadDetail.clientName}</h1>
+                  <StatusChip status={leadDetail.status} />
+                </div>
+                <p className="text-gray-500 text-sm mt-1">Lead detail dan progress tracking</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side - Dark Card with Notification and User Section */}
+          <div className="flex-shrink-0">
+            <div className="px-4 py-2 rounded-lg flex items-center gap-4 shadow-lg border border-gray-800/30" style={{ backgroundColor: '#1e1e1e' }}>
+              {/* Notification Icon */}
+              <div className="relative" ref={notificationRef}>
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
+                >
+                  <Bell className="w-5 h-5 text-white" strokeWidth={2} fill="none" />
+                  {notificationCount > 0 && (
+                    <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-gray-900">
+                      {notificationCount > 9 ? '9+' : notificationCount}
+                    </span>
+                  )}
+                </button>
+                
+                {/* Notification Dropdown */}
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="px-4 py-2 border-b border-gray-200">
+                      <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
+                        <p className="text-sm text-gray-900">No new notifications</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Separator */}
+              <div className="h-6 w-px bg-white/30" />
+
+              {/* User Section */}
+              <div className="flex items-center gap-3 pr-6">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-1000 to-red-600 flex items-center justify-center flex-shrink-0 border-2 border-red-800 text-white font-semibold text-sm">
+                  {userName ? userName.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <div className="flex flex-col items-start min-w-0">
+                  <p className="text-[10px] text-gray-400 font-semibold">{getRoleName()}</p>
+                  <p className="text-xs font-bold text-white truncate">{getDisplayName()}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="bg-gray-50 px-6 pt-3 sticky top-0 z-10">
