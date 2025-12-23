@@ -120,7 +120,7 @@ export function ProposalFormModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tier]);
 
-  // Handle subcon toggle - must be checked first as it overrides everything
+  // Handle subcon toggle - changes payment method similar to dispute
   useEffect(() => {
     if (hasSubcon) {
       setPaymentMethod('SUBCON');
@@ -181,10 +181,14 @@ export function ProposalFormModal({
 
   // Handle dispute toggle (only when not subcon)
   useEffect(() => {
-    if (hasSubcon) return; // Don't handle dispute when subcon is active
+    if (hasSubcon) {
+      setIsDispute(false); // Disable dispute when subcon is active
+      return;
+    }
     
     if (isDispute) {
       setPaymentMethod('DISPUTE_UM_SF');
+      setHasSubcon(false); // Disable subcon when dispute is active
     } else if (!editingProposal) {
       // Reset to tier default only if not editing
       switch (tier) {
@@ -816,24 +820,6 @@ export function ProposalFormModal({
                 </div>
               </div>
 
-              {/* Subcon Toggle - Must be first as it overrides everything */}
-              <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-white">
-                <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={hasSubcon}
-                    onChange={(e) => setHasSubcon(e.target.checked)}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    Sub Contract (White Kitchen)?
-                  </span>
-                </label>
-                <p className="text-xs text-gray-500">
-                  Jika aktif, payment method akan menjadi Sub Contract
-                </p>
-              </div>
-
               {/* Dispute Toggle */}
               <div className={`flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-white ${hasSubcon ? 'opacity-60' : ''}`}>
                 <label className={`flex items-center gap-2 flex-shrink-0 ${hasSubcon ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
@@ -850,6 +836,25 @@ export function ProposalFormModal({
                 </label>
                 <p className="text-xs text-gray-500">
                   Jika aktif, payment method akan menjadi UM + Success Fee (hanya untuk dispute)
+                </p>
+              </div>
+
+              {/* Subcon Toggle */}
+              <div className={`flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-white ${isDispute ? 'opacity-60' : ''}`}>
+                <label className={`flex items-center gap-2 flex-shrink-0 ${isDispute ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                  <input
+                    type="checkbox"
+                    checked={hasSubcon}
+                    onChange={(e) => setHasSubcon(e.target.checked)}
+                    disabled={isDispute}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Sub Contract (White Kitchen)?
+                  </span>
+                </label>
+                <p className="text-xs text-gray-500">
+                  Jika aktif, payment method akan menjadi Sub Contract
                 </p>
               </div>
 

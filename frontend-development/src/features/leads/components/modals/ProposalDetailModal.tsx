@@ -428,24 +428,6 @@ export function ProposalDetailModal({
                 </div>
               </div>
 
-              {/* Subcon Toggle */}
-              <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-white">
-                <label className="flex items-center gap-2 flex-shrink-0 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={paymentInfo.hasSubcon}
-                    disabled
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    Sub Contract (White Kitchen)?
-                  </span>
-                </label>
-                <p className="text-xs text-gray-500">
-                  Jika aktif, payment method akan menjadi Sub Contract
-                </p>
-              </div>
-
               {/* Dispute Toggle */}
               <div className={`flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-white ${paymentInfo.hasSubcon ? 'opacity-60' : ''}`}>
                 <label className={`flex items-center gap-2 flex-shrink-0 ${paymentInfo.hasSubcon ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
@@ -461,6 +443,24 @@ export function ProposalDetailModal({
                 </label>
                 <p className="text-xs text-gray-500">
                   Jika aktif, payment method akan menjadi UM + Success Fee (hanya untuk dispute)
+                </p>
+              </div>
+
+              {/* Subcon Toggle */}
+              <div className={`flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-white ${paymentInfo.isDispute ? 'opacity-60' : ''}`}>
+                <label className={`flex items-center gap-2 flex-shrink-0 ${paymentInfo.isDispute ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                  <input
+                    type="checkbox"
+                    checked={paymentInfo.hasSubcon}
+                    disabled
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Sub Contract (White Kitchen)?
+                  </span>
+                </label>
+                <p className="text-xs text-gray-500">
+                  Jika aktif, payment method akan menjadi Sub Contract
                 </p>
               </div>
 
