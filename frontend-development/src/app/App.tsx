@@ -381,6 +381,8 @@ export default function App() {
           <Header 
             role={mapRoleForHeader(currentUser.role)} 
             userName={currentUser.name}
+            userProfileImagePath={currentUser.profile_image_path}
+            userProfileImageUrl={currentUser.profile_image_url}
             activeNav={activeNav}
             leadDetail={leadDetail ? {
               ...leadDetail,

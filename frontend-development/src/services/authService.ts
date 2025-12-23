@@ -15,6 +15,8 @@ export interface User {
   name: string;
   role: UserRole;
   email: string;
+  profile_image_path?: string | null;
+  profile_image_url?: string | null;
 }
 
 export interface LoginCredentials {
@@ -48,6 +50,7 @@ type BackendUser = {
   email?: string;
   username?: string;
   profile_image_path?: string | null;
+  profile_image_url?: string | null;
   role?: {
     code?: BackendRoleCode | string;
     name?: string;
@@ -121,7 +124,9 @@ const mapBackendUserToFrontend = (beUser: BackendUser): User => {
     username: beUser.username || beUser.email || '',
     name: fullName,
     role,
-    email: beUser.email || ''
+    email: beUser.email || '',
+    profile_image_path: beUser.profile_image_path ?? null,
+    profile_image_url: beUser.profile_image_url ?? null,
   };
 };
 
@@ -255,7 +260,9 @@ export const authService = {
         username: beUser.email ?? beUser.name ?? '',
         name: beUser.name ?? '',
         role: primaryRole,
-        email: beUser.email ?? ''
+        email: beUser.email ?? '',
+        profile_image_path: beUser.profile_image_path ?? null,
+        profile_image_url: beUser.profile_image_url ?? null,
       };
 
       const sessionData: SessionData = {
@@ -295,6 +302,9 @@ export const authService = {
           authService.logout();
           return null;
         }
+
+        // IMPORTANT: keep existing user object (incl. profile_image_url/path)
+        (data as any).user = user;
 
         // Update timestamp for activity tracking
         (data as SessionData).timestamp = Date.now();

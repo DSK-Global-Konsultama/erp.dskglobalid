@@ -13,11 +13,13 @@ interface LeadDetailInfo {
 interface HeaderProps {
   role: UserRole;
   userName?: string;
+  userProfileImagePath?: string | null;
+  userProfileImageUrl?: string | null;
   activeNav?: string;
   leadDetail?: LeadDetailInfo;
 }
 
-export function Header({ role, userName, activeNav = 'dashboard', leadDetail }: HeaderProps) {
+export function Header({ role, userName, userProfileImagePath, userProfileImageUrl, activeNav = 'dashboard', leadDetail }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationCount] = useState(3); // Placeholder for notification count
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -38,6 +40,43 @@ export function Header({ role, userName, activeNav = 'dashboard', leadDetail }: 
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showNotifications]);
+
+  const getApiBase = (): string => {
+    const envBase = (import.meta.env.VITE_API_BASE_URL || '').toString().trim();
+    const base = envBase || 'http://localhost:3000';
+    return base.replace(/\/+$/, '');
+  };
+
+  const buildAbsoluteUrl = (value: string): string => {
+    const apiBase = getApiBase();
+    if (/^https?:\/\//i.test(value)) return value;
+    return `${apiBase}${value.startsWith('/') ? value : `/${value}`}`;
+  };
+
+  const resolveUserProfileUrl = (): string | null => {
+    const clean = (v?: string | null) => {
+      const s = (v || '').toString().trim();
+      if (!s || s.toLowerCase() === 'null' || s.toLowerCase() === 'undefined') return null;
+      return s;
+    };
+
+    const url = clean(userProfileImageUrl);
+    if (url) return buildAbsoluteUrl(url);
+
+    const path = clean(userProfileImagePath);
+    if (path) {
+      if (path.startsWith('/uploads/')) return buildAbsoluteUrl(path);
+      if (path.startsWith('uploads/')) return buildAbsoluteUrl(`/${path}`);
+      return buildAbsoluteUrl(`/uploads/${path.replace(/^\/+/, '')}`);
+    }
+
+    return null;
+  };
+
+  const defaultAvatarSrc = (): string => {
+    const apiBase = getApiBase();
+    return `${apiBase}/uploads/profile_images/avatar_default.jpg`;
+  };
 
   const getDashboardTitle = () => {
     // CEO and COO share the same titles
@@ -255,6 +294,19 @@ export function Header({ role, userName, activeNav = 'dashboard', leadDetail }: 
 
   const subtitle = getDashboardSubtitle();
 
+  // User avatar JSX (dipakai di 2 tempat)
+  const UserAvatar = (
+    <img
+      src={resolveUserProfileUrl() || defaultAvatarSrc()}
+      alt={getDisplayName()}
+      className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-red-800"
+      onError={(e) => {
+        // hanya fallback ke default jika user image gagal load
+        (e.target as HTMLImageElement).src = defaultAvatarSrc();
+      }}
+    />
+  );
+
   // If leadDetail is provided, show lead detail header
   if (leadDetail) {
     return (
@@ -319,9 +371,7 @@ export function Header({ role, userName, activeNav = 'dashboard', leadDetail }: 
 
               {/* User Section */}
               <div className="flex items-center gap-3 pr-6">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-1000 to-red-600 flex items-center justify-center flex-shrink-0 border-2 border-red-800 text-white font-semibold text-sm">
-                  {userName ? userName.charAt(0).toUpperCase() : 'U'}
-                </div>
+                {UserAvatar}
                 <div className="flex flex-col items-start min-w-0">
                   <p className="text-[10px] text-gray-400 font-semibold">{getRoleName()}</p>
                   <p className="text-xs font-bold text-white truncate">{getDisplayName()}</p>
@@ -386,9 +436,7 @@ export function Header({ role, userName, activeNav = 'dashboard', leadDetail }: 
 
             {/* User Section */}
             <div className="flex items-center gap-3 pr-6">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-1000 to-red-600 flex items-center justify-center flex-shrink-0 border-2 border-red-800 text-white font-semibold text-sm">
-                {userName ? userName.charAt(0).toUpperCase() : 'U'}
-              </div>
+              {UserAvatar}
               <div className="flex flex-col items-start min-w-0">
                 <p className="text-[10px] text-gray-400 font-semibold">{getRoleName()}</p>
                 <p className="text-xs font-bold text-white truncate">{getDisplayName()}</p>

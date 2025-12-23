@@ -136,6 +136,12 @@ exports.login = async (req, res) => {
       [user.id]
     );
 
+    // Update last_login_at
+    await pool.query(
+      'UPDATE users SET last_login_at = NOW() WHERE id = ?',
+      [user.id]
+    );
+
     const token = generateToken(user, deptRows);
 
     // jangan kirim password_hash ke client

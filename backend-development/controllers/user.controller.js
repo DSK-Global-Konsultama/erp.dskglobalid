@@ -7,9 +7,71 @@ const pool = require('../config/db');
 function mapUserRows(rows) {
   const map = new Map();
 
+  // Normalizer untuk kolom tinyint(1) / boolean-ish dari MySQL
+  const normalizeIsActive = (val) => {
+    // null/undefined => dianggap tidak aktif (lebih aman untuk UI)
+    if (val === null || val === undefined) return false;
+
+    // mysql2 kadang mengembalikan Buffer untuk tipe tertentu
+    if (Buffer.isBuffer(val)) {
+      if (val.length === 0) return false;
+      return val[0] === 1;
+    }
+
+    if (typeof val === 'boolean') return val;
+    if (typeof val === 'number') return val === 1;
+
+    // string: '1'/'0'/'true'/'false'
+    if (typeof val === 'string') {
+      const s = val.trim().toLowerCase();
+      if (s === '1' || s === 'true' || s === 'yes' || s === 'y') return true;
+      if (s === '0' || s === 'false' || s === 'no' || s === 'n') return false;
+      // fallback: parseInt
+      const n = Number(s);
+      if (!Number.isNaN(n)) return n === 1;
+      return false;
+    }
+
+    return false;
+  };
+
+  // Normalizer untuk datetime/timestamp dari MySQL -> ISO string
+  const normalizeDateToIsoOrNull = (val) => {
+    if (val === null || val === undefined) return null;
+
+    // sudah berupa Date
+    if (val instanceof Date) {
+      const t = val.getTime();
+      return Number.isFinite(t) ? val.toISOString() : null;
+    }
+
+    // mysql2 bisa mengembalikan string atau number
+    if (typeof val === 'string' || typeof val === 'number') {
+      const d = new Date(val);
+      const t = d.getTime();
+      return Number.isFinite(t) ? d.toISOString() : null;
+    }
+
+    // fallback: coba Date() dari string representation
+    try {
+      const d = new Date(String(val));
+      const t = d.getTime();
+      return Number.isFinite(t) ? d.toISOString() : null;
+    } catch {
+      return null;
+    }
+  };
+
   for (const row of rows) {
     let user = map.get(row.id);
     if (!user) {
+      // Handle is_active: 0 = false (tidak aktif), 1 = true (aktif)
+      const isActive = normalizeIsActive(row.is_active);
+
+      // Handle dates: convert to ISO string if exists, otherwise null
+      const created_at = normalizeDateToIsoOrNull(row.created_at);
+      const last_login_at = normalizeDateToIsoOrNull(row.last_login_at);
+
       user = {
         id: row.id,
         full_name: row.full_name,
@@ -19,7 +81,9 @@ function mapUserRows(rows) {
         profile_image_url: row.profile_image_path
           ? `/uploads/${row.profile_image_path}`
           : null,
-        is_active: !!row.is_active,
+        is_active: isActive,
+        created_at,
+        last_login_at,
         role: {
           id: row.role_id,
           code: row.role_code,
@@ -53,6 +117,8 @@ exports.getAllUsers = async (req, res) => {
          u.username,
          u.profile_image_path,
          u.is_active,
+         u.last_login_at,
+         u.created_at,
          u.role_id,
          r.code AS role_code,
          r.name AS role_name,
@@ -66,7 +132,32 @@ exports.getAllUsers = async (req, res) => {
        ORDER BY u.id ASC`
     );
 
+    // Debug: log raw data dari database
+    console.log('[getAllUsers] Raw rows sample:', rows.length > 0 ? {
+      id: rows[0].id,
+      full_name: rows[0].full_name,
+      is_active: rows[0].is_active,
+      is_active_type: typeof rows[0].is_active,
+      last_login_at: rows[0].last_login_at,
+      last_login_at_type: typeof rows[0].last_login_at,
+      created_at: rows[0].created_at,
+      created_at_type: typeof rows[0].created_at,
+    } : 'No rows');
+
     const users = mapUserRows(rows);
+    
+    // Debug: log mapped users
+    console.log('[getAllUsers] Mapped users sample:', users.length > 0 ? {
+      id: users[0].id,
+      full_name: users[0].full_name,
+      is_active: users[0].is_active,
+      is_active_type: typeof users[0].is_active,
+      last_login_at: users[0].last_login_at,
+      last_login_at_type: typeof users[0].last_login_at,
+      created_at: users[0].created_at,
+      created_at_type: typeof users[0].created_at,
+    } : 'No users');
+    
     return res.json({ data: users });
   } catch (err) {
     console.error('[getAllUsers] Error:', err);
@@ -87,6 +178,8 @@ exports.getUserById = async (req, res) => {
          u.username,
          u.profile_image_path,
          u.is_active,
+         u.last_login_at,
+         u.created_at,
          u.role_id,
          r.code AS role_code,
          r.name AS role_name,
