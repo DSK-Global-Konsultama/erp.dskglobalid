@@ -6,7 +6,15 @@ import type { LeadStatus } from '../../../../features/leads/components/shared/Le
 
 interface LeadTrackerPageProps {
   userName: string;
-  onLeadDetailChange?: (leadDetail: { clientName: string; status: string } | null) => void;
+  onLeadDetailChange?: (leadDetail: { 
+    clientName: string; 
+    company?: string; 
+    status: string;
+    service?: string;
+    source?: string;
+    picEmail?: string;
+    picPhone?: string;
+  } | null) => void;
   onBackFromDetail?: () => void;
   onResetDetail?: (resetFn: () => void) => void;
 }
@@ -26,30 +34,46 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
       onResetDetail(resetDetail);
     }
   }, [onResetDetail, onLeadDetailChange]);
-  const [leads] = useState<Lead[]>(() => {
+  
+  // Initialize data from mock-data.ts
+  type ExtendedLead = Lead & { 
+    service?: string;
+    status: LeadStatus | Lead['status'];
+  };
+  
+  const [leads] = useState<ExtendedLead[]>(() => {
     const defaultLeads = generateDummyLeadsBDMEO('Sarah Wijaya');
-    const relevantStatuses = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_NOTULEN', 'NEED_PROPOSAL', 'IN_PROPOSAL', 'PROPOSAL_EXPIRED'];
-    return defaultLeads.filter(lead => relevantStatuses.includes((lead as any).status));
+    const relevantStatuses: LeadStatus[] = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_NOTULEN', 'NEED_PROPOSAL', 'IN_PROPOSAL', 'PROPOSAL_EXPIRED'];
+    return defaultLeads.filter(lead => relevantStatuses.includes(lead.status as LeadStatus)) as ExtendedLead[];
   });
+  const [meetings, setMeetings] = useState<Meeting[]>(mockMeetings);
+  const [notulensi, setNotulensi] = useState<Notulensi[]>(mockNotulensi);
+  const [proposals, setProposals] = useState<Proposal[]>(mockProposals);
 
   // Update lead detail in header when selected lead changes
   useEffect(() => {
     if (selectedLeadId && onLeadDetailChange) {
       const lead = leads.find(l => l.id === selectedLeadId);
       if (lead) {
+        // Get service from lead (if available) or from proposal
+        const leadService = lead.service;
+        const leadProposal = proposals.find(p => p.leadId === selectedLeadId);
+        const service = leadService || leadProposal?.service;
+        
         onLeadDetailChange({
           clientName: lead.clientName,
-          status: (lead as any).status || lead.status
+          company: lead.company,
+          status: lead.status,
+          service: service,
+          source: lead.source,
+          picEmail: lead.email,
+          picPhone: lead.phone
         });
       }
     } else if (onLeadDetailChange) {
       onLeadDetailChange(null);
     }
-  }, [selectedLeadId, leads, onLeadDetailChange]);
-  // Initialize data from mock-data.ts
-  const [meetings, setMeetings] = useState<Meeting[]>(mockMeetings);
-  const [notulensi, setNotulensi] = useState<Notulensi[]>(mockNotulensi);
-  const [proposals, setProposals] = useState<Proposal[]>(mockProposals);
+  }, [selectedLeadId, leads, proposals, onLeadDetailChange]);
 
   const handleAddMeeting = (meeting: Meeting) => {
     setMeetings([...meetings, meeting]);
@@ -83,14 +107,23 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
     // Update lead status in leads array
     // Note: In a real app, this would update state properly
     // For now, this is handled by the parent component or API
-    console.log(`Updating lead ${leadId} to status ${status}`);
     // Update header if this is the selected lead
     if (selectedLeadId === leadId && onLeadDetailChange) {
       const lead = leads.find(l => l.id === leadId);
       if (lead) {
+        // Get service from lead (if available) or from proposal
+        const leadService = lead.service;
+        const leadProposal = proposals.find(p => p.leadId === leadId);
+        const service = leadService || leadProposal?.service;
+        
         onLeadDetailChange({
           clientName: lead.clientName,
-          status: status
+          company: lead.company,
+          status: status,
+          service: service,
+          source: lead.source,
+          picEmail: lead.email,
+          picPhone: lead.phone
         });
       }
     }

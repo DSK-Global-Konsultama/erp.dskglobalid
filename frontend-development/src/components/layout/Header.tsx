@@ -1,4 +1,4 @@
-import { Bell, ArrowLeft } from 'lucide-react';
+import { Bell, ArrowLeft, Building2, Tag, Mail, Phone } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { StatusChip } from '../../features/leads/components/shared/StatusChip';
 
@@ -6,7 +6,12 @@ type UserRole = 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Exe
 
 interface LeadDetailInfo {
   clientName: string;
+  company?: string;
   status: string;
+  service?: string;
+  source?: string;
+  picEmail?: string;
+  picPhone?: string;
   onBack: () => void;
 }
 
@@ -274,10 +279,35 @@ export function Header({ role, userName, activeNav = 'dashboard', leadDetail }: 
               </button>
               <div className="flex-1">
                 <div className="flex items-center gap-3">
-                  <h1 className="text-lg font-semibold text-gray-900">{leadDetail.clientName}</h1>
+                  <h1 className="text-lg font-semibold text-gray-900">{leadDetail.company || leadDetail.clientName}</h1>
                   <StatusChip status={leadDetail.status} />
                 </div>
-                <p className="text-gray-500 text-sm mt-1">Lead detail dan progress tracking</p>
+                <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                  {leadDetail.service && (
+                    <div className="flex items-center gap-1">
+                      <Building2 className="w-4 h-4" />
+                      <span>{leadDetail.service}</span>
+                    </div>
+                  )}
+                  {leadDetail.source && (
+                    <div className="flex items-center gap-1">
+                      <Tag className="w-4 h-4" />
+                      <span className="px-2 py-0.5 bg-gray-100 rounded text-gray-700">{leadDetail.source}</span>
+                    </div>
+                  )}
+                  {leadDetail.picEmail && (
+                    <div className="flex items-center gap-1">
+                      <Mail className="w-4 h-4" />
+                      <span>{leadDetail.picEmail}</span>
+                    </div>
+                  )}
+                  {leadDetail.picPhone && (
+                    <div className="flex items-center gap-1">
+                      <Phone className="w-4 h-4" />
+                      <span>{leadDetail.picPhone}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

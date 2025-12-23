@@ -64,7 +64,15 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeNav, setActiveNav] = useState('dashboard');
   const [bdExecutiveTab, setBdExecutiveTab] = useState('leads');
-  const [leadDetail, setLeadDetail] = useState<{ clientName: string; status: string } | null>(null);
+  const [leadDetail, setLeadDetail] = useState<{ 
+    clientName: string; 
+    company?: string; 
+    status: string;
+    service?: string;
+    source?: string;
+    picEmail?: string;
+    picPhone?: string;
+  } | null>(null);
   const resetDetailRef = useRef<(() => void) | null>(null);
 
   // Check for existing session on mount
