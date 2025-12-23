@@ -3,8 +3,8 @@ import { X, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import { animate } from 'framer-motion';
 import { Dialog, DialogContent } from '../../../../components/ui/dialog';
+import { Input } from '../../../../components/ui/input';
 import { Button } from '../../../../components/ui/button';
-import { StatusChip } from '../shared/StatusChip';
 import { AgreeFeeModal } from './AgreeFeeModal';
 import type { Proposal, Lead } from '../../../../lib/mock-data';
 
@@ -17,11 +17,8 @@ interface ProposalDetailModalProps {
   onUpdateProposal?: (id: string, updates: Partial<Proposal>) => void;
 }
 
-type BillingModel =
-  | 'STRATEGIC_ADVISORY'
-  | 'PROJECT_TERMIN'
-  | 'DISPUTE_UM_SF'
-  | 'SUBCON';
+type Tier = 'STRATEGIC_RETAINER' | 'PREMIUM_MODULAR' | 'STANDARDIZED_MODULAR';
+type PaymentMethod = 'MONTHLY_RETAINER' | 'TERMIN' | 'DISPUTE_UM_SF' | 'SUBCON';
 
 export function ProposalDetailModal({
   proposal,
@@ -169,24 +166,97 @@ export function ProposalDetailModal({
 
   if (!currentProposal || !lead) return null;
 
-  // Determine billing model from paymentType
-  const determineBillingModel = (paymentType: string): BillingModel => {
-    if (paymentType.includes('Retainer bulanan') || paymentType.includes('Periode')) {
-      return 'STRATEGIC_ADVISORY';
-    } else if (paymentType.includes('Sengketa') || paymentType.includes('Uang Muka')) {
-      return 'DISPUTE_UM_SF';
-    } else if (paymentType.includes('Subkon')) {
-      return 'SUBCON';
+  // Determine tier, payment method, and subcon status from paymentType
+  const determinePaymentInfo = (paymentType: string, service: string) => {
+    let tier: Tier = 'PREMIUM_MODULAR';
+    let paymentMethod: PaymentMethod = 'TERMIN';
+    let isDispute = false;
+    let hasSubcon = false;
+
+    // PRIORITY 1: Check for subcon first (standalone payment method)
+    if (paymentType.includes('Subkon dengan')) {
+      hasSubcon = true;
+      paymentMethod = 'SUBCON';
+      isDispute = false; // Dispute tidak berlaku saat subcon
+      // Try to detect tier from service
+      if (service.includes('Strategic Tax Advisory')) {
+        tier = 'STRATEGIC_RETAINER';
+      } else if (service.includes('Dokumentasi TP Template') || service.includes('Pendirian Badan Usaha') || 
+                 service.includes('Virtual Office') || service.includes('Laporan Keberlanjutan Dasar') ||
+                 service.includes('Website Company Profile')) {
+        tier = 'STANDARDIZED_MODULAR';
+      } else {
+        tier = 'PREMIUM_MODULAR';
+      }
+    } else {
+      // Only parse other payment methods if not subcon
+      // Check for dispute
+      if (paymentType.includes('Sengketa') || paymentType.includes('Uang Muka')) {
+        isDispute = true;
+        paymentMethod = 'DISPUTE_UM_SF';
+        // Try to detect tier from service
+        if (service.includes('Strategic Tax Advisory')) {
+          tier = 'STRATEGIC_RETAINER';
+        } else if (service.includes('Dokumentasi TP Template') || service.includes('Pendirian Badan Usaha') || 
+                   service.includes('Virtual Office') || service.includes('Laporan Keberlanjutan Dasar') ||
+                   service.includes('Website Company Profile')) {
+          tier = 'STANDARDIZED_MODULAR';
+        } else {
+          tier = 'PREMIUM_MODULAR';
+        }
+      } else if (paymentType.includes('Retainer bulanan') || paymentType.includes('Periode')) {
+        tier = 'STRATEGIC_RETAINER';
+        paymentMethod = 'MONTHLY_RETAINER';
+      } else {
+        // Termin - try to detect tier from service
+        if (service.includes('Strategic Tax Advisory')) {
+          tier = 'STRATEGIC_RETAINER';
+          paymentMethod = 'MONTHLY_RETAINER';
+        } else if (service.includes('Dokumentasi TP Template') || service.includes('Pendirian Badan Usaha') || 
+                   service.includes('Virtual Office') || service.includes('Laporan Keberlanjutan Dasar') ||
+                   service.includes('Website Company Profile')) {
+          tier = 'STANDARDIZED_MODULAR';
+          paymentMethod = 'TERMIN';
+        } else {
+          tier = 'PREMIUM_MODULAR';
+          paymentMethod = 'TERMIN';
+        }
+      }
     }
-    return 'PROJECT_TERMIN';
+
+    return { tier, paymentMethod, isDispute, hasSubcon };
   };
 
-  const billingModel = determineBillingModel(currentProposal.paymentType);
+  const paymentInfo = determinePaymentInfo(currentProposal.paymentType, currentProposal.service);
 
-  // Parse payment type for different billing models
-  const parsePaymentType = (paymentType: string, model: BillingModel) => {
-    if (model === 'PROJECT_TERMIN') {
-      const termins = paymentType.split(' | ').map((term) => {
+  // Parse payment type for different payment methods
+  const parsePaymentType = (paymentType: string, method: PaymentMethod) => {
+    // Extract subcon info if exists (separated by |)
+    let mainPaymentType = paymentType;
+    let subconInfo: { partner?: string; timing?: string } = {};
+    
+    if (paymentType.includes(' | Subkon')) {
+      const parts = paymentType.split(' | Subkon');
+      mainPaymentType = parts[0];
+      const subconPart = 'Subkon' + (parts[1] || '');
+      const partnerMatch = subconPart.match(/Subkon dengan (.+?):/);
+      const timingMatch = subconPart.match(/pembayaran (.+?) oleh partner/);
+      subconInfo = {
+        partner: partnerMatch ? partnerMatch[1] : '',
+        timing: timingMatch && timingMatch[1].includes('awal') ? 'UPFRONT' : 'END'
+      };
+    } else if (paymentType.includes('Subkon dengan')) {
+      // Legacy format where subcon is the main payment type
+      const partnerMatch = paymentType.match(/Subkon dengan (.+?):/);
+      const timingMatch = paymentType.match(/pembayaran (.+?) oleh partner/);
+      subconInfo = {
+        partner: partnerMatch ? partnerMatch[1] : '',
+        timing: timingMatch && timingMatch[1].includes('awal') ? 'UPFRONT' : 'END'
+      };
+    }
+
+    if (method === 'TERMIN') {
+      const termins = mainPaymentType.split(' | ').map((term) => {
         const match = term.match(/Termin (\d+): (\d+)% \(IDR ([\d.]+)M\)(?: - (.+))?/);
         if (match) {
           return {
@@ -198,36 +268,39 @@ export function ProposalDetailModal({
         }
         return null;
       }).filter(Boolean);
-      return { termins };
-    } else if (model === 'STRATEGIC_ADVISORY') {
-      const periodMatch = paymentType.match(/Periode (.+?) s\/d (.+?);/);
-      const timingMatch = paymentType.match(/Penagihan: (.+)/);
+      return { termins, ...subconInfo };
+    } else if (method === 'MONTHLY_RETAINER') {
+      const periodMatch = mainPaymentType.match(/Periode (.+?) s\/d (.+?);/);
+      const timingMatch = mainPaymentType.match(/Penagihan: (.+)/);
       return {
         contractStart: periodMatch ? periodMatch[1] : '',
         contractEnd: periodMatch ? periodMatch[2] : '',
-        billingTiming: timingMatch && timingMatch[1].includes('Awal') ? 'START_OF_MONTH' : 'END_OF_MONTH'
+        billingTiming: timingMatch && timingMatch[1].includes('Awal') ? 'START_OF_MONTH' : 'END_OF_MONTH',
+        ...subconInfo
       };
-    } else if (model === 'DISPUTE_UM_SF') {
-      const dpMatch = paymentType.match(/Uang Muka IDR ([\d.]+)M/);
-      const sfMatch = paymentType.match(/Success Fee (\d+)%/);
-      const baseMatch = paymentType.match(/Basis: (.+)/);
+    } else if (method === 'DISPUTE_UM_SF') {
+      const dpMatch = mainPaymentType.match(/Uang Muka IDR ([\d.]+)M/);
+      const sfMatch = mainPaymentType.match(/Success Fee (\d+)%/);
+      const baseMatch = mainPaymentType.match(/Basis: (.+)/);
       return {
         downPayment: dpMatch ? (parseFloat(dpMatch[1]) * 1000000).toString() : '',
         successFeePercent: sfMatch ? sfMatch[1] : '',
-        successFeeBase: baseMatch ? baseMatch[1] : ''
+        successFeeBase: baseMatch ? baseMatch[1] : '',
+        ...subconInfo
       };
-    } else if (model === 'SUBCON') {
+    } else if (method === 'SUBCON') {
+      // Subcon is standalone - parse directly from paymentType
       const partnerMatch = paymentType.match(/Subkon dengan (.+?):/);
       const timingMatch = paymentType.match(/pembayaran (.+?) oleh partner/);
       return {
-        subconPartner: partnerMatch ? partnerMatch[1] : '',
-        subconPaymentTiming: timingMatch && timingMatch[1].includes('awal') ? 'UPFRONT' : 'END'
+        partner: partnerMatch ? partnerMatch[1] : '',
+        timing: timingMatch && timingMatch[1].includes('awal') ? 'UPFRONT' : 'END'
       };
     }
-    return {};
+    return { ...subconInfo };
   };
 
-  const paymentData = parsePaymentType(currentProposal.paymentType, billingModel);
+  const paymentData = parsePaymentType(currentProposal.paymentType, paymentInfo.paymentMethod) as any;
 
   return (
     <Dialog open={open || isAnimatingOut} onOpenChange={() => {}}>
@@ -266,9 +339,9 @@ export function ProposalDetailModal({
         {/* Content */}
         <div className="flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto px-6 pb-6">
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Client Info */}
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-gray-50 rounded-lg p-3">
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <p className="text-sm text-gray-600">Nama PT</p>
@@ -285,116 +358,266 @@ export function ProposalDetailModal({
                 </div>
               </div>
 
-              {/* Billing Model */}
+              {/* Tier */}
               <div>
-                <label className="block text-sm text-gray-700 mb-2">
-                  Jenis Jasa / Billing Model
+                <label className="block text-sm text-gray-700 mb-1.5">
+                  Kelas Layanan (Tier)
                 </label>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-gray-700">
-                    {billingModel === 'STRATEGIC_ADVISORY' && 'Strategic Advisory (bulanan)'}
-                    {billingModel === 'PROJECT_TERMIN' && 'Premium Modular'}
-                    {billingModel === 'DISPUTE_UM_SF' && 'Premium Modular - Sengketa'}
-                    {billingModel === 'SUBCON' && 'Subkon (White Kitchen)'}
-                  </p>
-                </div>
+                <select
+                  value={paymentInfo.tier}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 cursor-not-allowed"
+                >
+                  <option value="STRATEGIC_RETAINER">Strategic Retainer</option>
+                  <option value="PREMIUM_MODULAR">Premium Modular</option>
+                  <option value="STANDARDIZED_MODULAR">Standardized Modular</option>
+                </select>
                 <p className="text-xs text-gray-500 mt-1">
-                  Pilihan ini menentukan model pembayaran dan cara kita menulis
-                  terms di proposal.
+                  Pilihan tier menentukan service type yang tersedia dan default payment method.
                 </p>
               </div>
 
-              {/* Service */}
+              {/* Service Type */}
               <div>
-                <label className="block text-sm text-gray-700 mb-2">
+                <label className="block text-sm text-gray-700 mb-1.5">
                   Service Type
                 </label>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-gray-700">{currentProposal.service}</p>
-                </div>
+                <select
+                  value={currentProposal.service || ''}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 cursor-not-allowed"
+                >
+                  <option value={currentProposal.service || ''}>{currentProposal.service || '-'}</option>
+                </select>
               </div>
 
               {/* Fees - 3 columns */}
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2">
+                  <label className="block text-sm text-gray-700 mb-1.5">
                     Proposal Fee (IDR)
                   </label>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-gray-700 font-medium">{currentProposal.proposalFee.toLocaleString('id-ID')}</p>
-                  </div>
+                  <Input
+                    type="text"
+                    value={currentProposal.proposalFee.toLocaleString('id-ID')}
+                    disabled
+                    className="w-full bg-gray-100 text-gray-700 cursor-not-allowed"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2">
+                  <label className="block text-sm text-gray-700 mb-1.5">
                     Diskon (IDR)
                   </label>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-gray-700">{'-'}</p>
-                  </div>
+                  <Input
+                    type="text"
+                    value="-"
+                    disabled
+                    className="w-full bg-gray-100 text-gray-700 cursor-not-allowed"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2">
+                  <label className="block text-sm text-gray-700 mb-1.5">
                     Agree Fee
                   </label>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-gray-700">
-                      {currentProposal.agreeFee ? `${currentProposal.agreeFee.toLocaleString('id-ID')}` : 'Akan diisi setelah deal disetujui client'}
-                    </p>
-                  </div>
+                  <Input
+                    type="text"
+                    value={currentProposal.agreeFee ? currentProposal.agreeFee.toLocaleString('id-ID') : 'Akan diisi setelah deal disetujui client'}
+                    disabled
+                    className="w-full bg-gray-100 text-gray-500 cursor-not-allowed"
+                  />
                 </div>
               </div>
 
-              {/* Payment / Billing Section */}
-              <div>
-                <label className="block text-sm text-gray-700 mb-1">
-                  Pengaturan Pembayaran
+              {/* Dispute Toggle */}
+              <div className={`flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-white ${paymentInfo.hasSubcon ? 'opacity-60' : ''}`}>
+                <label className={`flex items-center gap-2 flex-shrink-0 ${paymentInfo.hasSubcon ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                  <input
+                    type="checkbox"
+                    checked={paymentInfo.isDispute}
+                    disabled
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Dispute (Sengketa)?
+                  </span>
                 </label>
-                <p className="text-sm text-gray-500 mb-3">
-                  Model pembayaran akan menyesuaikan jenis jasa yang dipilih di atas.
+                <p className="text-xs text-gray-500">
+                  Jika aktif, payment method akan menjadi UM + Success Fee (hanya untuk dispute)
                 </p>
+              </div>
 
-                {/* 1. PROJECT_TERMIN */}
-                {billingModel === 'PROJECT_TERMIN' && (
+              {/* Subcon Toggle */}
+              <div className={`flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-white ${paymentInfo.isDispute ? 'opacity-60' : ''}`}>
+                <label className={`flex items-center gap-2 flex-shrink-0 ${paymentInfo.isDispute ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                  <input
+                    type="checkbox"
+                    checked={paymentInfo.hasSubcon}
+                    disabled
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Sub Contract (White Kitchen)?
+                  </span>
+                </label>
+                <p className="text-xs text-gray-500">
+                  Jika aktif, payment method akan menjadi Sub Contract
+                </p>
+              </div>
+
+              {/* Payment Method */}
+              <div>
+                <label className="block text-sm text-gray-700 mb-1.5">
+                  Payment Method
+                </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  {paymentInfo.hasSubcon
+                    ? 'Payment method untuk sub contract: Sub Contract'
+                    : paymentInfo.isDispute 
+                    ? 'Payment method untuk dispute: UM + Success Fee' 
+                    : `Payment method default untuk ${paymentInfo.tier}: ${paymentInfo.tier === 'STRATEGIC_RETAINER' ? 'Monthly Retainer' : 'Termin'}`}
+                </p>
+                <select
+                  value={paymentInfo.paymentMethod}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 cursor-not-allowed"
+                >
+                  <option value="MONTHLY_RETAINER">Monthly Retainer</option>
+                  <option value="TERMIN">Termin</option>
+                  <option value="DISPUTE_UM_SF">Dispute (UM + Success Fee)</option>
+                  <option value="SUBCON">Sub Contract</option>
+                </select>
+              </div>
+
+              {/* Subcon Section - Only show when subcon is active */}
+              {paymentInfo.hasSubcon && (
+                <div className="border border-gray-200 rounded-lg p-3 bg-white space-y-2.5">
+                  <p className="text-sm text-gray-600 font-medium mb-0.5">
+                    Payment – Sub Contract (White Kitchen)
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">
+                        Partner / Flag
+                      </label>
+                      <Input
+                        type="text"
+                        value={paymentData.partner || '-'}
+                        disabled
+                        className="w-full bg-gray-100 text-gray-700 cursor-not-allowed"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">
+                        Payment Timing
+                      </label>
+                      <div className="flex gap-4 text-sm mt-1">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            checked={paymentData.timing === 'UPFRONT'}
+                            disabled
+                            className="w-4 h-4"
+                          />
+                          <span className={paymentData.timing === 'UPFRONT' ? 'text-gray-700' : 'text-gray-400'}>100% di awal</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            checked={paymentData.timing === 'END'}
+                            disabled
+                            className="w-4 h-4"
+                          />
+                          <span className={paymentData.timing === 'END' ? 'text-gray-700' : 'text-gray-400'}>100% di akhir</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Proposal Fee di atas adalah nilai yang dibayarkan partner
+                    (mis. Asahi) ke perusahaan kita.
+                  </p>
+                </div>
+              )}
+
+              {/* Payment / Billing Section - Hide when subcon is active */}
+              {!paymentInfo.hasSubcon && (
+              <div>
+                {/* 1. TERMIN */}
+                {paymentInfo.paymentMethod === 'TERMIN' && (
                   <>
-                    <label className="block text-sm text-gray-700 mb-1">
+                    <label className="block text-sm text-gray-700 mb-1.5">
                       Termin Pembayaran (Payment Type)
                     </label>
-                    <p className="text-sm text-gray-500 mb-3">
+                    <p className="text-xs text-gray-500 mb-2">
                       Pilih skema termin pembayaran untuk proposal ini.
                     </p>
 
-                    <div className="border border-gray-200 rounded-lg p-4 bg-white">
+                    {/* Payment Scheme Display */}
+                    {paymentData.termins && paymentData.termins.length > 0 && (
                       <div className="mb-3">
+                        <select
+                          value={
+                            paymentData.termins.length === 2 && 
+                            paymentData.termins[0]?.percentage === 50 && 
+                            paymentData.termins[1]?.percentage === 50 ? '50-50' :
+                            paymentData.termins.length === 3 && 
+                            paymentData.termins[0]?.percentage === 50 && 
+                            paymentData.termins[1]?.percentage === 35 && 
+                            paymentData.termins[2]?.percentage === 15 ? '50-35-15' :
+                            paymentData.termins.length === 3 && 
+                            paymentData.termins[0]?.percentage === 40 && 
+                            paymentData.termins[1]?.percentage === 30 && 
+                            paymentData.termins[2]?.percentage === 30 ? '40-30-30' : 'Custom'
+                          }
+                          disabled
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 cursor-not-allowed"
+                        >
+                          <option value="50-50">50-50</option>
+                          <option value="50-35-15">50-35-15</option>
+                          <option value="40-30-30">40-30-30</option>
+                          <option value="Custom">Custom</option>
+                        </select>
+                      </div>
+                    )}
+
+                    <div className="border border-gray-200 rounded-lg p-3 bg-white">
+                      <div className="flex items-center justify-between mb-2">
                         <p className="text-sm text-gray-600">Detail Termin</p>
                       </div>
                       {paymentData.termins && paymentData.termins.length > 0 ? (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           {paymentData.termins.map((termin: any, index: number) => (
                             <div
                               key={index}
-                              className="border border-gray-200 rounded-lg p-3 bg-gray-50"
+                              className="border border-gray-200 rounded-lg p-2.5 bg-gray-50"
                             >
-                              <div className="mb-2">
+                              <div className="flex items-center justify-between mb-1.5">
                                 <label className="text-sm font-medium text-gray-700">
                                   Termin {termin.number}
                                 </label>
                               </div>
-                              <div className="grid grid-cols-2 gap-3 mb-2">
+                              <div className="grid grid-cols-2 gap-2 mb-1.5">
                                 <div>
                                   <label className="block text-xs text-gray-600 mb-1">
                                     Persentase (%)
                                   </label>
-                                  <div className="bg-white rounded-lg p-2 border border-gray-200">
-                                    <p className="text-gray-700">{termin.percentage}%</p>
-                                  </div>
+                                  <Input
+                                    type="text"
+                                    value={`${termin.percentage}%`}
+                                    disabled
+                                    className="w-full bg-gray-100 text-gray-700 cursor-not-allowed"
+                                  />
                                 </div>
                                 <div>
                                   <label className="block text-xs text-gray-600 mb-1">
                                     Nominal (IDR)
                                   </label>
-                                  <div className="bg-white rounded-lg p-2 border border-gray-200">
-                                    <p className="text-gray-700">{termin.amount.toLocaleString('id-ID')}</p>
-                                  </div>
+                                  <Input
+                                    type="text"
+                                    value={termin.amount.toLocaleString('id-ID')}
+                                    disabled
+                                    className="w-full bg-gray-100 text-gray-700 cursor-not-allowed"
+                                  />
                                 </div>
                               </div>
                               {termin.description && (
@@ -402,9 +625,12 @@ export function ProposalDetailModal({
                                   <label className="block text-xs text-gray-600 mb-1">
                                     Deskripsi termin
                                   </label>
-                                  <div className="bg-white rounded-lg p-2 border border-gray-200">
-                                    <p className="text-gray-700">{termin.description}</p>
-                                  </div>
+                                  <Input
+                                    type="text"
+                                    value={termin.description}
+                                    disabled
+                                    className="w-full bg-gray-100 text-gray-700 cursor-not-allowed"
+                                  />
                                 </div>
                               )}
                             </div>
@@ -415,7 +641,23 @@ export function ProposalDetailModal({
                           <p className="text-gray-700 whitespace-pre-wrap">{currentProposal.paymentType || '-'}</p>
                         </div>
                       )}
-                      <p className="text-sm text-gray-500 mt-2">
+                      {paymentData.termins && paymentData.termins.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-gray-200 flex items-center justify-between">
+                          <span className="text-sm text-gray-600">
+                            Total Persentase:
+                          </span>
+                          <span
+                            className={`font-medium ${
+                              paymentData.termins.reduce((sum: number, t: any) => sum + (t.percentage || 0), 0) === 100
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                            }`}
+                          >
+                            {paymentData.termins.reduce((sum: number, t: any) => sum + (t.percentage || 0), 0)}%
+                          </span>
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-500 mt-1.5">
                         Ini adalah skema termin yang diajukan di proposal. Termin
                         final bisa dikonfirmasi lagi setelah client setuju (deal).
                       </p>
@@ -423,13 +665,13 @@ export function ProposalDetailModal({
                   </>
                 )}
 
-                {/* 2. STRATEGIC_ADVISORY */}
-                {billingModel === 'STRATEGIC_ADVISORY' && (
-                  <div className="border border-gray-200 rounded-lg p-4 bg-white space-y-3">
-                    <p className="text-sm text-gray-600 font-medium mb-1">
+                {/* 2. MONTHLY_RETAINER */}
+                {paymentInfo.paymentMethod === 'MONTHLY_RETAINER' && (
+                  <div className="border border-gray-200 rounded-lg p-3 bg-white space-y-2.5">
+                    <p className="text-sm text-gray-600 font-medium mb-0.5">
                       Payment – Strategic Advisory (Bulanan)
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 mb-1">
                       Proposal Fee akan dianggap sebagai fee per bulan (retainer).
                     </p>
                     <div className="grid grid-cols-2 gap-3">
@@ -437,36 +679,57 @@ export function ProposalDetailModal({
                         <label className="block text-xs text-gray-600 mb-1">
                           Periode Kontrak – Mulai
                         </label>
-                        <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                          <p className="text-gray-700">{paymentData.contractStart || '-'}</p>
-                        </div>
+                        <Input
+                          type="date"
+                          value={paymentData.contractStart || ''}
+                          disabled
+                          className="w-full bg-gray-100 text-gray-700 cursor-not-allowed"
+                        />
                       </div>
                       <div>
                         <label className="block text-xs text-gray-600 mb-1">
                           Periode Kontrak – Selesai
                         </label>
-                        <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                          <p className="text-gray-700">{paymentData.contractEnd || '-'}</p>
-                        </div>
+                        <Input
+                          type="date"
+                          value={paymentData.contractEnd || ''}
+                          disabled
+                          className="w-full bg-gray-100 text-gray-700 cursor-not-allowed"
+                        />
                       </div>
                     </div>
                     <div>
                       <label className="block text-xs text-gray-600 mb-1">
                         Waktu Penagihan
                       </label>
-                      <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                        <p className="text-gray-700">
-                          {paymentData.billingTiming === 'START_OF_MONTH' ? 'Awal bulan' : 'Akhir bulan'}
-                        </p>
+                      <div className="flex gap-4 text-sm mt-1">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            checked={paymentData.billingTiming === 'START_OF_MONTH'}
+                            disabled
+                            className="w-4 h-4"
+                          />
+                          <span className={paymentData.billingTiming === 'START_OF_MONTH' ? 'text-gray-700' : 'text-gray-400'}>Awal bulan</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            checked={paymentData.billingTiming === 'END_OF_MONTH'}
+                            disabled
+                            className="w-4 h-4"
+                          />
+                          <span className={paymentData.billingTiming === 'END_OF_MONTH' ? 'text-gray-700' : 'text-gray-400'}>Akhir bulan</span>
+                        </label>
                       </div>
                     </div>
                   </div>
                 )}
 
                 {/* 3. DISPUTE_UM_SF */}
-                {billingModel === 'DISPUTE_UM_SF' && (
-                  <div className="border border-gray-200 rounded-lg p-4 bg-white space-y-3">
-                    <p className="text-sm text-gray-600 font-medium mb-1">
+                {paymentInfo.paymentMethod === 'DISPUTE_UM_SF' && (
+                  <div className="border border-gray-200 rounded-lg p-3 bg-white space-y-2.5">
+                    <p className="text-sm text-gray-600 font-medium mb-0.5">
                       Payment – Sengketa (UM + Success Fee)
                     </p>
                     <div className="grid grid-cols-3 gap-3">
@@ -474,27 +737,34 @@ export function ProposalDetailModal({
                         <label className="block text-xs text-gray-600 mb-1">
                           Uang Muka (IDR)
                         </label>
-                        <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                          <p className="text-gray-700">
-                            {paymentData.downPayment ? Number(paymentData.downPayment).toLocaleString('id-ID') : '-'}
-                          </p>
-                        </div>
+                        <Input
+                          type="text"
+                          value={paymentData.downPayment ? Number(paymentData.downPayment).toLocaleString('id-ID') : '-'}
+                          disabled
+                          className="w-full bg-gray-100 text-gray-700 cursor-not-allowed"
+                        />
                       </div>
                       <div>
                         <label className="block text-xs text-gray-600 mb-1">
                           Success Fee (%)
                         </label>
-                        <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                          <p className="text-gray-700">{paymentData.successFeePercent || '-'}%</p>
-                        </div>
+                        <Input
+                          type="text"
+                          value={paymentData.successFeePercent ? `${paymentData.successFeePercent}%` : '-'}
+                          disabled
+                          className="w-full bg-gray-100 text-gray-700 cursor-not-allowed"
+                        />
                       </div>
                       <div>
                         <label className="block text-xs text-gray-600 mb-1">
                           Basis Success Fee
                         </label>
-                        <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                          <p className="text-gray-700">{paymentData.successFeeBase || '-'}</p>
-                        </div>
+                        <Input
+                          type="text"
+                          value={paymentData.successFeeBase || '-'}
+                          disabled
+                          className="w-full bg-gray-100 text-gray-700 cursor-not-allowed"
+                        />
                       </div>
                     </div>
                     <p className="text-xs text-gray-500">
@@ -504,39 +774,8 @@ export function ProposalDetailModal({
                   </div>
                 )}
 
-                {/* 4. SUBCON */}
-                {billingModel === 'SUBCON' && (
-                  <div className="border border-gray-200 rounded-lg p-4 bg-white space-y-3">
-                    <p className="text-sm text-gray-600 font-medium mb-1">
-                      Payment – Subkon (White Kitchen / Nebeng Bendera)
-                    </p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">
-                          Partner / Flag
-                        </label>
-                        <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                          <p className="text-gray-700">{paymentData.subconPartner || '-'}</p>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">
-                          Skema Pembayaran ke Kita
-                        </label>
-                        <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                          <p className="text-gray-700">
-                            {paymentData.subconPaymentTiming === 'UPFRONT' ? '100% di awal' : '100% di akhir'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Proposal Fee di atas adalah nilai yang dibayarkan partner
-                      (mis. Asahi) ke perusahaan kita.
-                    </p>
-                  </div>
-                )}
               </div>
+              )}
 
               {/* Contract / Commercial Terms */}
               <div className="border border-gray-200 rounded-lg p-4">

@@ -154,7 +154,7 @@ export interface Proposal {
   sentAt?: string;
   elStatus?: 'DRAFT' | 'SENT' | 'SIGNED' | 'REJECTED';
   elSignedDate?: string;
-  status: 'DRAFT' | 'WAITING_APPROVAL' | 'APPROVED' | 'SENT' | 'REJECTED' | 'ACCEPTED';
+  status: 'DRAFT' | 'WAITING_APPROVAL' | 'APPROVED' | 'SENT' | 'REJECTED' | 'ACCEPTED' | 'PROPOSAL_EXPIRED';
   createdAt: string;
 }
 
@@ -2232,7 +2232,7 @@ export function generateDummyLeadsBDMEO(userName: string): (Lead & { service?: s
       email: 'indra@cahayaterang.com',
       phone: '086789054321',
       source: 'LinkedIn',
-      status: 'IN_PROPOSAL' as any,
+      status: 'PROPOSAL_EXPIRED' as any,
       createdDate: '2025-05-10',
       notes: 'Proposal untuk Financial Advisory',
       createdBy: userName,
@@ -2875,9 +2875,9 @@ export const mockProposals: Proposal[] = [
     proposalFee: 40000000,
     paymentType: 'Subkon dengan Asahi: pembayaran 100% di awal oleh partner',
     hasSubcon: true,
-    sentAt: '2025-05-12T11:00:00',
-    status: 'SENT',
-    createdAt: '2025-05-08T09:00:00',
+    sentAt: '2024-12-10T11:00:00', // Updated to be expired (>30 days ago)
+    status: 'PROPOSAL_EXPIRED',
+    createdAt: '2024-12-05T09:00:00',
   },
   {
     id: 'P004',

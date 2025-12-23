@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import { animate } from 'framer-motion';
 import { Dialog, DialogContent } from '../../../../components/ui/dialog';
 import { Input } from '../../../../components/ui/input';
-import { Textarea } from '../../../../components/ui/textarea';
 import { Button } from '../../../../components/ui/button';
 import type { Proposal, Lead } from '../../../../lib/mock-data';
 import type { LeadStatus } from '../shared/LeadTrackerDetail';
@@ -29,16 +28,37 @@ interface Termin {
 
 type PaymentScheme = '50-50' | '50-35-15' | '40-30-30' | 'Custom';
 
-type BillingModel =
-  | 'STRATEGIC_ADVISORY'
-  | 'PROJECT_TERMIN'
-  | 'DISPUTE_UM_SF'
-  | 'SUBCON';
+type Tier = 'STRATEGIC_RETAINER' | 'PREMIUM_MODULAR' | 'STANDARDIZED_MODULAR';
+
+type PaymentMethod = 'MONTHLY_RETAINER' | 'TERMIN' | 'DISPUTE_UM_SF' | 'SUBCON';
+
+// Service options by tier
+const SERVICE_OPTIONS: Record<Tier, string[]> = {
+  STRATEGIC_RETAINER: ['Strategic Tax Advisory'],
+  PREMIUM_MODULAR: [
+    'Transfer Pricing Advisory',
+    'Transfer Pricing Documentation (MF/LF/CbCR)',
+    'Pendampingan Pemeriksaan Pajak',
+    'Tax Litigation (Banding, Keberatan, Peninjauan Kembali, Kasasi, Gugatan)',
+    'Business Structuring & Legal Engineering',
+    'Customs Valuation & Dispute Advisory',
+    'Sustainability Reporting (GRI/SRG Full)',
+    'Tax Due Diligence (Akuisisi / Ekspansi)',
+    'Legal Risk Mapping & Strategic Contract Review',
+  ],
+  STANDARDIZED_MODULAR: [
+    'Dokumentasi TP Template (MF/LF Basic Format)',
+    'Pendirian Badan Usaha (PT/PMDN/PMA)',
+    'Virtual Office & Domisili Hukum',
+    'Laporan Keberlanjutan Dasar (GRI/SRG Basic)',
+    'Website Company Profile (Basic WebDev)',
+  ],
+};
 
 export function ProposalFormModal({
   leadId,
   leads,
-  proposals,
+  proposals: _proposals,
   open,
   onClose,
   onAddProposal,
@@ -49,37 +69,140 @@ export function ProposalFormModal({
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const lead = leads.find((l) => l.id === leadId);
 
+  // Tier and Service
+  const [tier, setTier] = useState<Tier>('STRATEGIC_RETAINER');
   const [service, setService] = useState('');
   const [proposalFee, setProposalFee] = useState('');
   const [discount, setDiscount] = useState('');
+  const [attachments, setAttachments] = useState<File[]>([]);
+
+  // Payment Method
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('MONTHLY_RETAINER');
+  const [isDispute, setIsDispute] = useState(false);
+
+  // Payment Scheme for TERMIN
   const [paymentScheme, setPaymentScheme] = useState<PaymentScheme>('50-50');
   const [termins, setTermins] = useState<Termin[]>([
     { percentage: 50, amount: 0, description: '' },
     { percentage: 50, amount: 0, description: '' },
   ]);
-  const [attachments, setAttachments] = useState<File[]>([]);
 
-  // Billing model & related states
-  const [billingModel, setBillingModel] =
-    useState<BillingModel>('STRATEGIC_ADVISORY');
-
-  // Strategic advisory
+  // Monthly Retainer fields
   const [contractStart, setContractStart] = useState('');
   const [contractEnd, setContractEnd] = useState('');
   const [billingTiming, setBillingTiming] = useState<
     'START_OF_MONTH' | 'END_OF_MONTH'
   >('START_OF_MONTH');
 
-  // Sengketa (UM + Success Fee)
+  // Dispute fields (UM + Success Fee)
   const [downPayment, setDownPayment] = useState('');
   const [successFeePercent, setSuccessFeePercent] = useState('');
   const [successFeeBase, setSuccessFeeBase] = useState('');
 
-  // Subkon (white kitchen / nebeng bendera)
+  // Subkon (white kitchen / nebeng bendera) - separate toggle
+  const [hasSubcon, setHasSubcon] = useState(false);
   const [subconPartner, setSubconPartner] = useState('');
   const [subconPaymentTiming, setSubconPaymentTiming] = useState<
     'UPFRONT' | 'END'
   >('UPFRONT');
+
+  // Reset service when tier changes
+  useEffect(() => {
+    const availableServices = SERVICE_OPTIONS[tier];
+    if (availableServices.length > 0) {
+      // Reset to first option or empty if current service not in tier options
+      if (!availableServices.includes(service)) {
+        setService('');
+      }
+    } else {
+      setService('');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tier]);
+
+  // Handle subcon toggle - changes payment method similar to dispute
+  useEffect(() => {
+    if (hasSubcon) {
+      setPaymentMethod('SUBCON');
+      setIsDispute(false); // Dispute tidak berlaku saat subcon
+      // Clear irrelevant fields
+      setContractStart('');
+      setContractEnd('');
+      setBillingTiming('START_OF_MONTH');
+      setDownPayment('');
+      setSuccessFeePercent('');
+      setSuccessFeeBase('');
+      setPaymentScheme('50-50');
+      setTermins([
+        { percentage: 50, amount: 0, description: '' },
+        { percentage: 50, amount: 0, description: '' },
+      ]);
+    } else if (!editingProposal) {
+      // Reset to tier default when subcon is turned off
+      if (isDispute) {
+        setPaymentMethod('DISPUTE_UM_SF');
+      } else {
+        switch (tier) {
+          case 'STRATEGIC_RETAINER':
+            setPaymentMethod('MONTHLY_RETAINER');
+            break;
+          case 'PREMIUM_MODULAR':
+          case 'STANDARDIZED_MODULAR':
+            setPaymentMethod('TERMIN');
+            setPaymentScheme('50-50');
+            break;
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasSubcon]);
+
+  // Set default payment method based on tier (only on initial load or tier change when not in edit mode and not subcon)
+  useEffect(() => {
+    if (editingProposal || hasSubcon) return; // Don't override when editing or subcon is active
+    
+    if (isDispute) {
+      setPaymentMethod('DISPUTE_UM_SF');
+      return;
+    }
+    
+    switch (tier) {
+      case 'STRATEGIC_RETAINER':
+        setPaymentMethod('MONTHLY_RETAINER');
+        break;
+      case 'PREMIUM_MODULAR':
+      case 'STANDARDIZED_MODULAR':
+        setPaymentMethod('TERMIN');
+        setPaymentScheme('50-50');
+        break;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tier, isDispute]);
+
+  // Handle dispute toggle (only when not subcon)
+  useEffect(() => {
+    if (hasSubcon) {
+      setIsDispute(false); // Disable dispute when subcon is active
+      return;
+    }
+    
+    if (isDispute) {
+      setPaymentMethod('DISPUTE_UM_SF');
+      setHasSubcon(false); // Disable subcon when dispute is active
+    } else if (!editingProposal) {
+      // Reset to tier default only if not editing
+      switch (tier) {
+        case 'STRATEGIC_RETAINER':
+          setPaymentMethod('MONTHLY_RETAINER');
+          break;
+        case 'PREMIUM_MODULAR':
+        case 'STANDARDIZED_MODULAR':
+          setPaymentMethod('TERMIN');
+          break;
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDispute, hasSubcon]);
 
   // Update form data when editingProposal changes
   useEffect(() => {
@@ -88,12 +211,18 @@ export function ProposalFormModal({
       setProposalFee(editingProposal.proposalFee?.toString() || '');
       setDiscount('');
 
-      // Parse paymentType to determine billing model
+      // Parse paymentType for backward compatibility
       const paymentType = editingProposal.paymentType || '';
-      let detectedModel: BillingModel = 'STRATEGIC_ADVISORY';
+      let detectedTier: Tier = 'PREMIUM_MODULAR';
+      let detectedPaymentMethod: PaymentMethod = 'TERMIN';
+      let detectedDispute = false;
       
-      if (paymentType.includes('Subkon dengan')) {
-        detectedModel = 'SUBCON';
+      // PRIORITY 1: Check for subcon first (most important - standalone payment method)
+      // Also check hasSubcon property for robustness
+      if (paymentType.includes('Subkon dengan') || editingProposal.hasSubcon) {
+        setHasSubcon(true);
+        detectedPaymentMethod = 'SUBCON';
+        setIsDispute(false); // Dispute tidak berlaku saat subcon
         const partnerMatch = paymentType.match(/Subkon dengan (.+?):/);
         const timingMatch = paymentType.match(/pembayaran (.+?) oleh partner/);
         if (partnerMatch) {
@@ -104,104 +233,161 @@ export function ProposalFormModal({
         } else {
           setSubconPaymentTiming('END');
         }
-      } else if (paymentType.includes('Termin')) {
-        detectedModel = 'PROJECT_TERMIN';
-        // Parse termin data
-        const terminMatches = paymentType.matchAll(/Termin (\d+): (\d+)% \(IDR ([\d.]+)M\)(?: - (.+))?/g);
-        const parsedTermins: Termin[] = [];
-        for (const match of terminMatches) {
-          parsedTermins.push({
-            percentage: parseInt(match[2]),
-            amount: parseFloat(match[3]) * 1000000,
-            description: match[4] || '',
-          });
-        }
-        if (parsedTermins.length > 0) {
-          setTermins(parsedTermins);
-          // Determine payment scheme
-          if (parsedTermins.length === 2 && parsedTermins[0].percentage === 50 && parsedTermins[1].percentage === 50) {
-            setPaymentScheme('50-50');
-          } else if (parsedTermins.length === 3 && parsedTermins[0].percentage === 50 && parsedTermins[1].percentage === 35 && parsedTermins[2].percentage === 15) {
-            setPaymentScheme('50-35-15');
-          } else if (parsedTermins.length === 3 && parsedTermins[0].percentage === 40 && parsedTermins[1].percentage === 30 && parsedTermins[2].percentage === 30) {
-            setPaymentScheme('40-30-30');
-          } else {
-            setPaymentScheme('Custom');
-          }
-        }
-      } else if (paymentType.includes('Retainer bulanan') || paymentType.includes('Periode')) {
-        detectedModel = 'STRATEGIC_ADVISORY';
-        const periodMatch = paymentType.match(/Periode (.+?) s\/d (.+?);/);
-        const timingMatch = paymentType.match(/Penagihan: (.+)/);
-        if (periodMatch) {
-          setContractStart(periodMatch[1]);
-          setContractEnd(periodMatch[2]);
-        }
-        if (timingMatch && timingMatch[1].includes('Awal')) {
-          setBillingTiming('START_OF_MONTH');
-        } else {
-          setBillingTiming('END_OF_MONTH');
-        }
-      } else if (paymentType.includes('Sengketa') || paymentType.includes('Uang Muka')) {
-        detectedModel = 'DISPUTE_UM_SF';
-        const dpMatch = paymentType.match(/Uang Muka IDR ([\d.]+)M/);
-        const sfMatch = paymentType.match(/Success Fee (\d+)%/);
-        const baseMatch = paymentType.match(/Basis: (.+)/);
-        if (dpMatch) {
-          setDownPayment((parseFloat(dpMatch[1]) * 1000000).toString());
-        }
-        if (sfMatch) {
-          setSuccessFeePercent(sfMatch[1]);
-        }
-        if (baseMatch) {
-          setSuccessFeeBase(baseMatch[1]);
-        }
-      }
-
-      setBillingModel(detectedModel);
-
-      // Reset fields that don't match the detected model
-      if (detectedModel !== 'PROJECT_TERMIN') {
+        // Clear all other payment fields
+        setContractStart('');
+        setContractEnd('');
+        setBillingTiming('START_OF_MONTH');
+        setDownPayment('');
+        setSuccessFeePercent('');
+        setSuccessFeeBase('');
         setPaymentScheme('50-50');
         setTermins([
           { percentage: 50, amount: 0, description: '' },
           { percentage: 50, amount: 0, description: '' },
         ]);
-      }
-      if (detectedModel !== 'STRATEGIC_ADVISORY') {
-        setContractStart('');
-        setContractEnd('');
-        setBillingTiming('START_OF_MONTH');
-      }
-      if (detectedModel !== 'DISPUTE_UM_SF') {
-        setDownPayment('');
-        setSuccessFeePercent('');
-        setSuccessFeeBase('');
-      }
-      if (detectedModel !== 'SUBCON') {
+      } else {
+        // Only parse other payment methods if not subcon
+        setHasSubcon(false);
         setSubconPartner('');
         setSubconPaymentTiming('UPFRONT');
+
+        // Check for dispute (only if not subcon)
+        if (paymentType.includes('Sengketa') || paymentType.includes('Uang Muka')) {
+          detectedDispute = true;
+          setIsDispute(true);
+          detectedPaymentMethod = 'DISPUTE_UM_SF';
+          const dpMatch = paymentType.match(/Uang Muka IDR ([\d.]+)M/);
+          const sfMatch = paymentType.match(/Success Fee (\d+)%/);
+          const baseMatch = paymentType.match(/Basis: (.+)/);
+          if (dpMatch) {
+            setDownPayment((parseFloat(dpMatch[1]) * 1000000).toString());
+          }
+          if (sfMatch) {
+            setSuccessFeePercent(sfMatch[1]);
+          }
+          if (baseMatch) {
+            setSuccessFeeBase(baseMatch[1]);
+          }
+        } else {
+          setIsDispute(false);
+          setDownPayment('');
+          setSuccessFeePercent('');
+          setSuccessFeeBase('');
+        }
+
+        // Check for retainer (STRATEGIC_RETAINER) - only if not subcon and not dispute
+        if ((paymentType.includes('Retainer bulanan') || paymentType.includes('Periode')) && !detectedDispute) {
+          detectedTier = 'STRATEGIC_RETAINER';
+          detectedPaymentMethod = 'MONTHLY_RETAINER';
+          const periodMatch = paymentType.match(/Periode (.+?) s\/d (.+?);/);
+          const timingMatch = paymentType.match(/Penagihan: (.+)/);
+          if (periodMatch) {
+            setContractStart(periodMatch[1]);
+            setContractEnd(periodMatch[2]);
+          }
+          if (timingMatch && timingMatch[1].includes('Awal')) {
+            setBillingTiming('START_OF_MONTH');
+          } else {
+            setBillingTiming('END_OF_MONTH');
+          }
+        } else if (!detectedDispute) {
+          // Check for termin - only if not subcon and not dispute
+          if (paymentType.includes('Termin')) {
+            detectedPaymentMethod = 'TERMIN';
+            // Parse termin data
+            const terminMatches = paymentType.matchAll(/Termin (\d+): (\d+)% \(IDR ([\d.]+)M\)(?: - (.+))?/g);
+            const parsedTermins: Termin[] = [];
+            for (const match of terminMatches) {
+              parsedTermins.push({
+                percentage: parseInt(match[2]),
+                amount: parseFloat(match[3]) * 1000000,
+                description: match[4] || '',
+              });
+            }
+            if (parsedTermins.length > 0) {
+              setTermins(parsedTermins);
+              // Determine payment scheme
+              if (parsedTermins.length === 2 && parsedTermins[0].percentage === 50 && parsedTermins[1].percentage === 50) {
+                setPaymentScheme('50-50');
+              } else if (parsedTermins.length === 3 && parsedTermins[0].percentage === 50 && parsedTermins[1].percentage === 35 && parsedTermins[2].percentage === 15) {
+                setPaymentScheme('50-35-15');
+              } else if (parsedTermins.length === 3 && parsedTermins[0].percentage === 40 && parsedTermins[1].percentage === 30 && parsedTermins[2].percentage === 30) {
+                setPaymentScheme('40-30-30');
+              } else {
+                setPaymentScheme('Custom');
+              }
+            }
+          }
+          
+          // Try to detect tier from service name
+          if (editingProposal.service) {
+            const serviceName = editingProposal.service;
+            if (SERVICE_OPTIONS.STRATEGIC_RETAINER.includes(serviceName)) {
+              detectedTier = 'STRATEGIC_RETAINER';
+              detectedPaymentMethod = 'MONTHLY_RETAINER';
+            } else if (SERVICE_OPTIONS.STANDARDIZED_MODULAR.includes(serviceName)) {
+              detectedTier = 'STANDARDIZED_MODULAR';
+              detectedPaymentMethod = 'TERMIN';
+            } else {
+              detectedTier = 'PREMIUM_MODULAR';
+              detectedPaymentMethod = 'TERMIN';
+            }
+          }
+        }
+      }
+
+      setTier(detectedTier);
+      setPaymentMethod(detectedPaymentMethod);
+
+      // Reset fields that don't match (only if not subcon)
+      if (detectedPaymentMethod === 'SUBCON') {
+        // Subcon is standalone - all other fields already cleared above
+        // No need to reset again
+      } else {
+        if (detectedPaymentMethod !== 'TERMIN') {
+          setPaymentScheme('50-50');
+          setTermins([
+            { percentage: 50, amount: 0, description: '' },
+            { percentage: 50, amount: 0, description: '' },
+          ]);
+        }
+        if (detectedPaymentMethod !== 'MONTHLY_RETAINER') {
+          setContractStart('');
+          setContractEnd('');
+          setBillingTiming('START_OF_MONTH');
+        }
+        if (detectedPaymentMethod !== 'DISPUTE_UM_SF') {
+          setDownPayment('');
+          setSuccessFeePercent('');
+          setSuccessFeeBase('');
+        }
       }
 
       setAttachments([]);
     } else {
+      // Reset all fields
+      setTier('STRATEGIC_RETAINER');
       setService('');
       setProposalFee('');
       setDiscount('');
+      setAttachments([]);
+      
+      setPaymentMethod('MONTHLY_RETAINER');
+      setIsDispute(false);
       setPaymentScheme('50-50');
       setTermins([
         { percentage: 50, amount: 0, description: '' },
         { percentage: 50, amount: 0, description: '' },
       ]);
-      setAttachments([]);
-
-      setBillingModel('STRATEGIC_ADVISORY');
+      
       setContractStart('');
       setContractEnd('');
       setBillingTiming('START_OF_MONTH');
       setDownPayment('');
       setSuccessFeePercent('');
       setSuccessFeeBase('');
+      
+      setHasSubcon(false);
       setSubconPartner('');
       setSubconPaymentTiming('UPFRONT');
     }
@@ -362,41 +548,37 @@ export function ProposalFormModal({
 
     // Basic validation
     if (!service.trim()) {
-      toast.error('Please enter service type');
+      toast.error('Mohon pilih Service Type');
       return;
     }
     if (!proposalFee || isNaN(Number(proposalFee))) {
-      toast.error('Please enter valid proposal fee');
+      toast.error('Mohon masukkan Proposal Fee yang valid');
       return;
     }
 
-    // Billing-model-specific validation
-    if (
-      billingModel === 'PROJECT_TERMIN' &&
-      !saveAsDraft &&
-      totalPercentage !== 100
-    ) {
+    // Payment method specific validation
+    if (paymentMethod === 'SUBCON' && !saveAsDraft) {
+      if (!subconPartner) {
+        toast.error('Mohon isi nama partner/flag untuk subkon');
+        return;
+      }
+    }
+
+    if (paymentMethod === 'TERMIN' && !saveAsDraft && totalPercentage !== 100) {
       toast.error('Total payment percentage must equal 100%');
       return;
     }
 
-    if (billingModel === 'STRATEGIC_ADVISORY' && !saveAsDraft) {
+    if (paymentMethod === 'MONTHLY_RETAINER' && !saveAsDraft) {
       if (!contractStart || !contractEnd) {
-        toast.error('Mohon isi periode kontrak untuk strategic advisory');
+        toast.error('Mohon isi periode kontrak untuk monthly retainer');
         return;
       }
     }
 
-    if (billingModel === 'DISPUTE_UM_SF' && !saveAsDraft) {
+    if (paymentMethod === 'DISPUTE_UM_SF' && !saveAsDraft) {
       if (!downPayment || !successFeePercent) {
         toast.error('Mohon isi Uang Muka dan Success Fee untuk sengketa');
-        return;
-      }
-    }
-
-    if (billingModel === 'SUBCON' && !saveAsDraft) {
-      if (!subconPartner) {
-        toast.error('Mohon isi nama partner/flag untuk subkon');
         return;
       }
     }
@@ -407,10 +589,17 @@ export function ProposalFormModal({
       return;
     }
 
-    // Build paymentType string from billingModel
+    // Build paymentType string from payment method
     let paymentTypeString = '';
 
-    if (billingModel === 'PROJECT_TERMIN') {
+    if (paymentMethod === 'SUBCON') {
+      // Subcon is standalone payment method - format tunggal
+      const timingText =
+        subconPaymentTiming === 'UPFRONT'
+          ? '100% di awal'
+          : '100% di akhir';
+      paymentTypeString = `Subkon dengan ${subconPartner}: pembayaran ${timingText} oleh partner`;
+    } else if (paymentMethod === 'TERMIN') {
       paymentTypeString = termins
         .map(
           (t, i) =>
@@ -419,7 +608,7 @@ export function ProposalFormModal({
             ).toFixed(0)}M)${t.description ? ' - ' + t.description : ''}`,
         )
         .join(' | ');
-    } else if (billingModel === 'STRATEGIC_ADVISORY') {
+    } else if (paymentMethod === 'MONTHLY_RETAINER') {
       const fee = Number(proposalFee);
       const timingLabel =
         billingTiming === 'START_OF_MONTH' ? 'Awal bulan' : 'Akhir bulan';
@@ -428,19 +617,13 @@ export function ProposalFormModal({
       )}M/bulan; Periode ${contractStart || '-'} s/d ${
         contractEnd || '-'
       }; Penagihan: ${timingLabel}`;
-    } else if (billingModel === 'DISPUTE_UM_SF') {
+    } else if (paymentMethod === 'DISPUTE_UM_SF') {
       const dp = Number(downPayment || 0);
       paymentTypeString = `Sengketa: Uang Muka IDR ${(dp / 1_000_000).toFixed(
         0,
       )}M; Success Fee ${successFeePercent}% dari ${
         successFeeBase || 'nilai kemenangan'
       }`;
-    } else if (billingModel === 'SUBCON') {
-      const timingText =
-        subconPaymentTiming === 'UPFRONT'
-          ? '100% di awal'
-          : '100% di akhir';
-      paymentTypeString = `Subkon dengan ${subconPartner}: pembayaran ${timingText} oleh partner`;
     }
 
     // Update existing proposal
@@ -455,7 +638,7 @@ export function ProposalFormModal({
         service: service.trim(),
         proposalFee: Number(proposalFee),
         paymentType: paymentTypeString,
-        hasSubcon: billingModel === 'SUBCON',
+        hasSubcon: hasSubcon,
         status: saveAsDraft ? 'DRAFT' : 'WAITING_APPROVAL',
       });
       toast.success(
@@ -474,7 +657,7 @@ export function ProposalFormModal({
       service: service.trim(),
       proposalFee: Number(proposalFee),
       paymentType: paymentTypeString,
-      hasSubcon: billingModel === 'SUBCON',
+      hasSubcon: hasSubcon,
       status: saveAsDraft ? 'DRAFT' : 'WAITING_APPROVAL',
       createdAt: new Date().toISOString().split('T')[0],
     };
@@ -534,9 +717,9 @@ export function ProposalFormModal({
         {/* Form Content */}
         <div className="flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto px-6 pb-6">
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Client Info */}
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-gray-50 rounded-lg p-3">
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <p className="text-sm text-gray-600">Nama PT</p>
@@ -553,55 +736,55 @@ export function ProposalFormModal({
                 </div>
               </div>
 
-              {/* Billing Model */}
+              {/* Tier */}
               <div>
-                <label className="block text-sm text-gray-700 mb-2">
-                  Jenis Jasa / Billing Model <span className="text-red-500">*</span>
+                <label className="block text-sm text-gray-700 mb-1.5">
+                  Kelas Layanan (Tier) <span className="text-red-500">*</span>
                 </label>
                 <select
-                  value={billingModel}
-                  onChange={(e) =>
-                    setBillingModel(e.target.value as BillingModel)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={tier}
+                  onChange={(e) => setTier(e.target.value as Tier)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black focus:border-black hover:border-black"
                 >
-                  <option value="STRATEGIC_ADVISORY">
-                    Strategic Advisory (bulanan)
+                  <option value="STRATEGIC_RETAINER">
+                    Strategic Retainer
                   </option>
-                  <option value="PROJECT_TERMIN">
+                  <option value="PREMIUM_MODULAR">
                     Premium Modular
                   </option>
-                  <option value="DISPUTE_UM_SF">
-                    Premium Modular - Sengketa
-                  </option>
-                  <option value="SUBCON">
-                    Subkon (White Kitchen)
+                  <option value="STANDARDIZED_MODULAR">
+                    Standardized Modular
                   </option>
                 </select>
                 <p className="text-xs text-gray-500 mt-1">
-                  Pilihan ini menentukan model pembayaran dan cara kita menulis
-                  terms di proposal.
+                  Pilihan tier menentukan service type yang tersedia dan default payment method.
                 </p>
               </div>
 
-              {/* Service */}
+              {/* Service Type */}
               <div>
-                <label className="block text-sm text-gray-700 mb-2">
+                <label className="block text-sm text-gray-700 mb-1.5">
                   Service Type <span className="text-red-500">*</span>
                 </label>
-                <Input
-                  type="text"
+                <select
                   value={service}
                   onChange={(e) => setService(e.target.value)}
-                  placeholder="e.g., Tax Consulting - Transfer Pricing Review"
-                  className="w-full"
-                />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black focus:border-black hover:border-black"
+                  required
+                >
+                  <option value="">-- Pilih Service Type --</option>
+                  {SERVICE_OPTIONS[tier].map((serviceOption) => (
+                    <option key={serviceOption} value={serviceOption}>
+                      {serviceOption}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Fees - 3 columns */}
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2">
+                  <label className="block text-sm text-gray-700 mb-1.5">
                     Proposal Fee (IDR) <span className="text-red-500">*</span>
                   </label>
                   <Input
@@ -609,11 +792,11 @@ export function ProposalFormModal({
                     value={proposalFee}
                     onChange={(e) => setProposalFee(e.target.value)}
                     placeholder="150000000"
-                    className="w-full"
+                    className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2">
+                  <label className="block text-sm text-gray-700 mb-1.5">
                     Diskon (IDR)
                   </label>
                   <Input
@@ -621,11 +804,11 @@ export function ProposalFormModal({
                     value={discount}
                     onChange={(e) => setDiscount(e.target.value)}
                     placeholder="15000000"
-                    className="w-full"
+                    className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2">
+                  <label className="block text-sm text-gray-700 mb-1.5">
                     Agree Fee
                   </label>
                   <Input
@@ -637,22 +820,143 @@ export function ProposalFormModal({
                 </div>
               </div>
 
-              {/* Payment / Billing Section */}
-              <div>
-                <label className="block text-sm text-gray-700 mb-1">
-                  Pengaturan Pembayaran
+              {/* Dispute Toggle */}
+              <div className={`flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-white ${hasSubcon ? 'opacity-60' : ''}`}>
+                <label className={`flex items-center gap-2 flex-shrink-0 ${hasSubcon ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                  <input
+                    type="checkbox"
+                    checked={isDispute}
+                    onChange={(e) => setIsDispute(e.target.checked)}
+                    disabled={hasSubcon}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Dispute (Sengketa)?
+                  </span>
                 </label>
-                <p className="text-sm text-gray-500 mb-3">
-                  Model pembayaran akan menyesuaikan jenis jasa yang dipilih di atas.
+                <p className="text-xs text-gray-500">
+                  Jika aktif, payment method akan menjadi UM + Success Fee (hanya untuk dispute)
                 </p>
+              </div>
 
-                {/* 1. PROJECT_TERMIN */}
-                {billingModel === 'PROJECT_TERMIN' && (
+              {/* Subcon Toggle */}
+              <div className={`flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-white ${isDispute ? 'opacity-60' : ''}`}>
+                <label className={`flex items-center gap-2 flex-shrink-0 ${isDispute ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                  <input
+                    type="checkbox"
+                    checked={hasSubcon}
+                    onChange={(e) => setHasSubcon(e.target.checked)}
+                    disabled={isDispute}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Sub Contract (White Kitchen)?
+                  </span>
+                </label>
+                <p className="text-xs text-gray-500">
+                  Jika aktif, payment method akan menjadi Sub Contract
+                </p>
+              </div>
+
+              {/* Payment Method */}
+              <div>
+                <label className="block text-sm text-gray-700 mb-1.5">
+                  Payment Method
+                </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  {hasSubcon
+                    ? 'Payment method untuk sub contract: Sub Contract'
+                    : isDispute 
+                    ? 'Payment method untuk dispute: UM + Success Fee' 
+                    : `Payment method default untuk ${tier}: ${tier === 'STRATEGIC_RETAINER' ? 'Monthly Retainer' : 'Termin'}`}
+                </p>
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
+                  disabled={isDispute || hasSubcon}
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black focus:border-black hover:border-black ${isDispute || hasSubcon ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                >
+                  <option value="MONTHLY_RETAINER" disabled={isDispute || hasSubcon}>
+                    Monthly Retainer
+                  </option>
+                  <option value="TERMIN" disabled={isDispute || hasSubcon}>
+                    Termin
+                  </option>
+                  <option value="DISPUTE_UM_SF" disabled={!isDispute || hasSubcon}>
+                    Dispute (UM + Success Fee)
+                  </option>
+                  <option value="SUBCON" disabled={!hasSubcon}>
+                    Sub Contract
+                  </option>
+                  </select>
+                </div>
+
+              {/* Subcon Section - Only show when subcon is active */}
+              {hasSubcon && (
+                <div className="border border-gray-200 rounded-lg p-3 bg-white space-y-2.5">
+                  <p className="text-sm text-gray-600 font-medium mb-0.5">
+                    Payment – Sub Contract (White Kitchen)
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">
+                        Partner / Flag <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        type="text"
+                        value={subconPartner}
+                        onChange={(e) =>
+                          setSubconPartner(e.target.value)
+                        }
+                        placeholder="Asahi"
+                        className="focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">
+                        Payment Timing <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex gap-4 text-sm mt-1">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            checked={subconPaymentTiming === 'UPFRONT'}
+                            onChange={() =>
+                              setSubconPaymentTiming('UPFRONT')
+                            }
+                          />
+                          <span>100% di awal</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            checked={subconPaymentTiming === 'END'}
+                            onChange={() =>
+                              setSubconPaymentTiming('END')
+                            }
+                          />
+                          <span>100% di akhir</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Proposal Fee di atas adalah nilai yang dibayarkan partner
+                    (mis. Asahi) ke perusahaan kita.
+                  </p>
+                </div>
+              )}
+
+              {/* Payment / Billing Section - Hide when subcon is active */}
+              {!hasSubcon && (
+              <div>
+                {/* 1. TERMIN */}
+                {paymentMethod === 'TERMIN' && (
                   <>
-                    <label className="block text-sm text-gray-700 mb-1">
+                    <label className="block text-sm text-gray-700 mb-1.5">
                       Termin Pembayaran (Payment Type)
                     </label>
-                    <p className="text-sm text-gray-500 mb-3">
+                    <p className="text-xs text-gray-500 mb-2">
                       Pilih skema termin pembayaran untuk proposal ini.
                     </p>
 
@@ -661,7 +965,7 @@ export function ProposalFormModal({
                       onChange={(e) =>
                         setPaymentScheme(e.target.value as PaymentScheme)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black focus:border-black hover:border-black mb-3"
                     >
                       <option value="50-50">50-50</option>
                       <option value="50-35-15">50-35-15</option>
@@ -669,8 +973,8 @@ export function ProposalFormModal({
                       <option value="Custom">Custom</option>
                     </select>
 
-                    <div className="border border-gray-200 rounded-lg p-4 bg-white">
-                      <div className="flex items-center justify-between mb-3">
+                    <div className="border border-gray-200 rounded-lg p-3 bg-white">
+                      <div className="flex items-center justify-between mb-2">
                         <p className="text-sm text-gray-600">Detail Termin</p>
                         {paymentScheme === 'Custom' && (
                           <button
@@ -682,13 +986,13 @@ export function ProposalFormModal({
                           </button>
                         )}
                       </div>
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         {termins.map((termin, index) => (
                           <div
                             key={index}
-                            className="border border-gray-200 rounded-lg p-3 bg-gray-50"
+                            className="border border-gray-200 rounded-lg p-2.5 bg-gray-50"
                           >
-                            <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center justify-between mb-1.5">
                               <label className="text-sm font-medium text-gray-700">
                                 Termin {index + 1}
                               </label>
@@ -702,7 +1006,7 @@ export function ProposalFormModal({
                                   </button>
                                 )}
                             </div>
-                            <div className="grid grid-cols-2 gap-3 mb-2">
+                            <div className="grid grid-cols-2 gap-2 mb-1.5">
                               <div>
                                 <label className="block text-xs text-gray-600 mb-1">
                                   Persentase (%)
@@ -718,7 +1022,7 @@ export function ProposalFormModal({
                                     )
                                   }
                                   disabled={paymentScheme !== 'Custom'}
-                                  className="w-full disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                  className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 />
                               </div>
                               <div>
@@ -748,13 +1052,13 @@ export function ProposalFormModal({
                                   )
                                 }
                                 placeholder="e.g., DP saat EL signed, Progress 50%, Pelunasan saat project selesai"
-                                className="w-full"
+                                className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
                               />
                             </div>
                           </div>
                         ))}
                       </div>
-                      <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between">
+                      <div className="mt-2 pt-2 border-t border-gray-200 flex items-center justify-between">
                         <span className="text-sm text-gray-600">
                           Total Persentase:
                         </span>
@@ -768,7 +1072,7 @@ export function ProposalFormModal({
                           {totalPercentage}%
                         </span>
                       </div>
-                      <p className="text-sm text-gray-500 mt-2">
+                      <p className="text-xs text-gray-500 mt-1.5">
                         Ini adalah skema termin yang diajukan di proposal. Termin
                         final bisa dikonfirmasi lagi setelah client setuju (deal).
                       </p>
@@ -776,13 +1080,13 @@ export function ProposalFormModal({
                   </>
                 )}
 
-                {/* 2. STRATEGIC_ADVISORY */}
-                {billingModel === 'STRATEGIC_ADVISORY' && (
-                  <div className="border border-gray-200 rounded-lg p-4 bg-white space-y-3">
-                    <p className="text-sm text-gray-600 font-medium mb-1">
+                {/* 2. MONTHLY_RETAINER */}
+                {paymentMethod === 'MONTHLY_RETAINER' && (
+                  <div className="border border-gray-200 rounded-lg p-3 bg-white space-y-2.5">
+                    <p className="text-sm text-gray-600 font-medium mb-0.5">
                       Payment – Strategic Advisory (Bulanan)
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 mb-1">
                       Proposal Fee akan dianggap sebagai fee per bulan (retainer).
                     </p>
                     <div className="grid grid-cols-2 gap-3">
@@ -794,7 +1098,7 @@ export function ProposalFormModal({
                           type="date"
                           value={contractStart}
                           onChange={(e) => setContractStart(e.target.value)}
-                          className="w-full"
+                          className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
                         />
                       </div>
                       <div>
@@ -805,7 +1109,7 @@ export function ProposalFormModal({
                           type="date"
                           value={contractEnd}
                           onChange={(e) => setContractEnd(e.target.value)}
-                          className="w-full"
+                          className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
                         />
                       </div>
                     </div>
@@ -842,9 +1146,9 @@ export function ProposalFormModal({
                 )}
 
                 {/* 3. DISPUTE_UM_SF */}
-                {billingModel === 'DISPUTE_UM_SF' && (
-                  <div className="border border-gray-200 rounded-lg p-4 bg-white space-y-3">
-                    <p className="text-sm text-gray-600 font-medium mb-1">
+                {paymentMethod === 'DISPUTE_UM_SF' && (
+                  <div className="border border-gray-200 rounded-lg p-3 bg-white space-y-2.5">
+                    <p className="text-sm text-gray-600 font-medium mb-0.5">
                       Payment – Sengketa (UM + Success Fee)
                     </p>
                     <div className="grid grid-cols-3 gap-3">
@@ -857,6 +1161,7 @@ export function ProposalFormModal({
                           value={downPayment}
                           onChange={(e) => setDownPayment(e.target.value)}
                           placeholder="50000000"
+                          className="focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
                         />
                       </div>
                       <div>
@@ -870,6 +1175,7 @@ export function ProposalFormModal({
                             setSuccessFeePercent(e.target.value)
                           }
                           placeholder="20"
+                          className="focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
                         />
                       </div>
                       <div>
@@ -883,6 +1189,7 @@ export function ProposalFormModal({
                             setSuccessFeeBase(e.target.value)
                           }
                           placeholder="% dari pajak yang berhasil dikurangi / restitusi"
+                          className="focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
                         />
                       </div>
                     </div>
@@ -893,65 +1200,12 @@ export function ProposalFormModal({
                   </div>
                 )}
 
-                {/* 4. SUBCON */}
-                {billingModel === 'SUBCON' && (
-                  <div className="border border-gray-200 rounded-lg p-4 bg-white space-y-3">
-                    <p className="text-sm text-gray-600 font-medium mb-1">
-                      Payment – Subkon (White Kitchen / Nebeng Bendera)
-                    </p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">
-                          Partner / Flag
-                        </label>
-                        <Input
-                          type="text"
-                          value={subconPartner}
-                          onChange={(e) =>
-                            setSubconPartner(e.target.value)
-                          }
-                          placeholder="Asahi"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">
-                          Skema Pembayaran ke Kita
-                        </label>
-                        <div className="flex gap-4 text-sm mt-1">
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="radio"
-                              checked={subconPaymentTiming === 'UPFRONT'}
-                              onChange={() =>
-                                setSubconPaymentTiming('UPFRONT')
-                              }
-                            />
-                            <span>100% di awal</span>
-                          </label>
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="radio"
-                              checked={subconPaymentTiming === 'END'}
-                              onChange={() =>
-                                setSubconPaymentTiming('END')
-                              }
-                            />
-                            <span>100% di akhir</span>
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Proposal Fee di atas adalah nilai yang dibayarkan partner
-                      (mis. Asahi) ke perusahaan kita.
-                    </p>
-                  </div>
-                )}
               </div>
+              )}
 
               {/* Attachments */}
               <div>
-                <label className="block text-sm text-gray-700 mb-2">
+                <label className="block text-sm text-gray-700 mb-1.5">
                   Attachments <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2">
