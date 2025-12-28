@@ -2,7 +2,7 @@
  * BD_MEO: Form Builder (Simplified)
  */
 import { useState, useEffect } from 'react';
-import { Trash2, GripVertical, Eye, Save, Send } from 'lucide-react';
+import { Trash2, GripVertical, Eye, Save, Send, FileText } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -300,6 +300,9 @@ export function FormBuilder({ campaignId, campaignName, formId, onBack, onSave }
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-lg shadow-sm">
         {/* Left side - Form info */}
         <div className="flex items-center gap-4">
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg">
+            <FileText className="w-7 h-7 text-black-600" />
+          </div>
           <div>
             <div className="text-sm font-medium text-gray-900">{formTitle}</div>
             {formDescription && (

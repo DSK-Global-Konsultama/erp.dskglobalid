@@ -8,6 +8,7 @@ import { mockCampaigns, mockForms, getBankDataByCampaign } from '../../../../lib
 import type { Campaign, BankDataEntry } from '../../../../lib/leadManagementTypes';
 import { OverviewTab } from '../tabs/OverviewTab';
 import { FormsTab } from '../tabs/FormsTab';
+import { SubmissionsTab } from '../tabs/SubmissionsTab';
 import { SubmissionDetailModal } from '../modals/SubmissionDetailModal';
 
 interface CampaignDetailProps {
@@ -17,7 +18,7 @@ interface CampaignDetailProps {
   onEditForm?: (formId: string) => void;
 }
 
-type TabType = 'overview' | 'forms';
+type TabType = 'overview' | 'forms' | 'submissions';
 
 export function CampaignDetail({ campaignId, onBack, onCreateForm, onEditForm }: CampaignDetailProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -160,6 +161,16 @@ export function CampaignDetail({ campaignId, onBack, onCreateForm, onEditForm }:
             >
               Forms ({campaignForms.length})
             </button>
+            <button
+              onClick={() => setActiveTab('submissions')}
+              className={`py-4 border-b-2 transition-colors ${
+                activeTab === 'submissions'
+                  ? 'border-black text-black'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Submissions ({submissions.length})
+            </button>
           </div>
         </div>
 
@@ -179,6 +190,13 @@ export function CampaignDetail({ campaignId, onBack, onCreateForm, onEditForm }:
               forms={campaignForms}
               onCreateForm={onCreateForm}
               onEditForm={onEditForm}
+            />
+          )}
+
+          {activeTab === 'submissions' && (
+            <SubmissionsTab
+              submissions={submissions}
+              onViewSubmission={setSelectedSubmission}
             />
           )}
         </div>
