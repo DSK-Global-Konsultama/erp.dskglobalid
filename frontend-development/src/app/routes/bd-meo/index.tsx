@@ -5,6 +5,7 @@ interface BDMEOProps {
 }
 
 export function BDMEODashboard({ userName }: BDMEOProps) {
-  return <LeadsManagement userName={userName} mode="edit" />;
+  // BD-MEO can only view leads, cannot add new leads (per CEO policy)
+  return <LeadsManagement userName={userName} mode="view" />;
 }
 

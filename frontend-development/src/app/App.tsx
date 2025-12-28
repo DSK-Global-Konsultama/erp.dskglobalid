@@ -29,9 +29,11 @@ import { ReimbursePage as COOReimbursePage } from './routes/coo/pages/ReimburseP
 import { BDMEODashboard } from './routes/bd-meo';
 import { DashboardPage as BDMEODashboardPage } from './routes/bd-meo/pages/DashboardPage';
 import { CampaignsPage as BDMEOCampaignsPage } from './routes/bd-meo/pages/CampaignsPage';
+import { BankDataPage as BDMEOBankDataPage } from './routes/bd-meo/pages/BankDataPage';
 import { TicketingPage as BDMEOTicketingPage } from './routes/bd-meo/pages/TicketingPage';
 import { BDExecutiveDashboard } from './routes/bd-executive';
 import { TicketingPage as BDExecutiveTicketingPage } from './routes/bd-executive/pages/TicketingPage';
+import { BankDataPage as BDExecutiveBankDataPage } from './routes/bd-executive/pages/BankDataPage';
 import { PMDashboard } from './routes/pm';
 import { TicketingPage as PMTicketingPage } from './routes/pm/pages/TicketingPage';
 import { AdminDashboard } from './routes/admin';
@@ -347,12 +349,17 @@ export default function App() {
                   resetFormBuilderDetailRef.current = resetFn;
                 }}
               />;
+            case 'bank-data':
+              return <BDMEOBankDataPage />;
             case 'leads':
               return <BDMEODashboard userName={currentUser.name} />;
             default:
               return <BDMEODashboardPage userName={currentUser.name} />;
           }
         } else if (currentUser.role === 'BD-Executive') {
+          if (activeNav === 'bank-data') {
+            return <BDExecutiveBankDataPage />;
+          }
           // Only show BD Executive content if on leads or deals, otherwise show dashboard
           if (activeNav === 'leads' || activeNav === 'deals') {
             return (

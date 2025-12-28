@@ -79,17 +79,17 @@ export function CampaignDetail({ campaignId, onBack, onCreateForm, onEditForm }:
           <div>
             <h1 className="text-2xl font-semibold mb-2">{campaign.name}</h1>
             <div className="flex items-center gap-2">
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs ${getTypeColor(campaign.type)}`}>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border ${getTypeColor(campaign.type)}`}>
                 {campaign.type}
               </span>
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs ${getStatusColor(campaign.status)}`}>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border ${getStatusColor(campaign.status)}`}>
                 {campaign.status}
               </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border bg-gray-100 text-gray-700">
                 {formatChannel(campaign.channel)}
               </span>
               {campaign.topicTag && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-indigo-100 text-indigo-700">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border bg-indigo-100 text-indigo-700">
                   {campaign.topicTag}
                 </span>
               )}

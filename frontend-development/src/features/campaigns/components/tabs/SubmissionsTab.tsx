@@ -98,20 +98,6 @@ export function SubmissionsTab({ submissions, onViewSubmission }: SubmissionsTab
     URL.revokeObjectURL(url);
   };
 
-  // Get status color
-  const getStatusColor = (status: BankDataEntry['triageStatus']) => {
-    switch (status) {
-      case 'RAW_NEW':
-        return 'bg-yellow-100 text-yellow-700';
-      case 'PROMOTED_TO_LEAD':
-        return 'bg-green-100 text-green-700';
-      case 'REJECTED':
-        return 'bg-red-100 text-red-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
-    }
-  };
-
   // Format channel
   const formatChannel = (channel: string) => {
     if (channel === 'IG') {

@@ -1,42 +1,35 @@
 /**
- * Submission Detail Modal
- * View submission details from campaign overview
+ * Bank Data Detail Modal
+ * Shows detailed information about a bank data entry
  */
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { animate } from 'framer-motion';
 import { Dialog, DialogContent } from '../../../../components/ui/dialog';
+import { Button } from '../../../../components/ui/button';
 import type { BankDataEntry } from '../../../../lib/leadManagementTypes';
+import { getTriageStatusBadge } from '../../../../lib/statusHelpers';
 
-interface SubmissionDetailModalProps {
-  submission: BankDataEntry | null;
+interface BankDataDetailModalProps {
+  entry: BankDataEntry | null;
   open: boolean;
   onClose: () => void;
+  onUpdate?: (updates: Partial<BankDataEntry>) => void;
+  onReject?: (reason: string) => void;
+  onPromote?: () => void;
+  canEdit?: boolean; // For BD-MEO, this should be false
 }
 
-export function SubmissionDetailModal({ submission, open, onClose }: SubmissionDetailModalProps) {
+export function BankDataDetailModal({ 
+  entry, 
+  open,
+  onClose, 
+  onUpdate, 
+  onReject, 
+  onPromote,
+  canEdit = true 
+}: BankDataDetailModalProps) {
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
-
-  const getStatusColor = (status: BankDataEntry['triageStatus']) => {
-    switch (status) {
-      case 'RAW_NEW':
-        return 'bg-yellow-100 text-yellow-700';
-      case 'REJECTED':
-        return 'bg-red-100 text-red-700';
-      case 'PROMOTED_TO_LEAD':
-        return 'bg-green-100 text-green-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
-    }
-  };
-
-  // Format channel display (capitalize first letter only)
-  const formatChannel = (channel: string) => {
-    if (channel === 'IG') {
-      return 'Instagram';
-    }
-    return channel.charAt(0).toUpperCase() + channel.slice(1).toLowerCase();
-  };
 
   // Handle close with animation
   const handleClose = () => {
@@ -60,7 +53,7 @@ export function SubmissionDetailModal({ submission, open, onClose }: SubmissionD
 
   // Handle open animation - use MutationObserver to catch element immediately
   useEffect(() => {
-    if (!open || isAnimatingOut || !submission) return;
+    if (!open || isAnimatingOut || !entry) return;
 
     const setupAnimation = () => {
       const dialogContent = document.querySelector('[data-slot="dialog-content"]') as HTMLElement;
@@ -102,7 +95,7 @@ export function SubmissionDetailModal({ submission, open, onClose }: SubmissionD
     return () => {
       observer.disconnect();
     };
-  }, [open, isAnimatingOut, submission]);
+  }, [open, isAnimatingOut, entry]);
 
   // Handle close animation when open becomes false from parent
   useEffect(() => {
@@ -125,7 +118,17 @@ export function SubmissionDetailModal({ submission, open, onClose }: SubmissionD
     return () => clearTimeout(timer);
   }, [open, isAnimatingOut]);
 
-  if (!submission) return null;
+  if (!entry) return null;
+
+  const statusBadge = getTriageStatusBadge(entry.triageStatus);
+
+  // Format channel
+  const formatChannel = (channel: string) => {
+    if (channel === 'IG') {
+      return 'Instagram';
+    }
+    return channel.charAt(0).toUpperCase() + channel.slice(1).toLowerCase();
+  };
 
   return (
     <Dialog open={open || isAnimatingOut} onOpenChange={() => {}}>
@@ -151,12 +154,12 @@ export function SubmissionDetailModal({ submission, open, onClose }: SubmissionD
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
           <div>
-            <h2 className="text-lg font-semibold">Submission Detail</h2>
+            <h2 className="text-lg font-semibold">Bank Data Detail</h2>
             <div className="flex items-center gap-2 mt-1">
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border ${getStatusColor(submission.triageStatus)}`}>
-                {submission.triageStatus}
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border ${statusBadge.color}`}>
+                {statusBadge.label}
               </span>
-              <span className="text-sm text-gray-500">ID: {submission.id}</span>
+              <span className="text-sm text-gray-500">ID: {entry.id}</span>
             </div>
           </div>
           <button
@@ -169,30 +172,30 @@ export function SubmissionDetailModal({ submission, open, onClose }: SubmissionD
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6">
-          <div className="py-6 space-y-6">
-            {/* Submitted Info */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Submission Info</h3>
+          <div className="pt-0 pb-6 space-y-6">
+            {/* Submission Info */}
+            <div className="pt-0 -mt-0">
+              <h3 className="text-sm font-medium text-gray-700 mb-3 mt-0">Submission Info</h3>
               <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Submitted At:</span>
                   <span className="font-medium text-gray-900">
-                    {new Date(submission.submittedAt).toLocaleString('id-ID')}
+                    {new Date(entry.submittedAt).toLocaleString('id-ID')}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Campaign:</span>
-                  <span className="font-medium text-gray-900">{submission.campaignName}</span>
+                  <span className="font-medium text-gray-900">{entry.campaignName}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Source Channel:</span>
-                  <span className="font-medium text-gray-900">{formatChannel(submission.sourceChannel)}</span>
+                  <span className="font-medium text-gray-900">{formatChannel(entry.sourceChannel)}</span>
                 </div>
-                {submission.topicTag && (
+                {entry.topicTag && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Topic Tag:</span>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border bg-indigo-100 text-indigo-700">
-                      {submission.topicTag}
+                      {entry.topicTag}
                     </span>
                   </div>
                 )}
@@ -205,30 +208,30 @@ export function SubmissionDetailModal({ submission, open, onClose }: SubmissionD
               <div className="space-y-3">
                 <div className="bg-white border border-gray-200 rounded-lg p-3">
                   <div className="text-xs text-gray-600 mb-1">Client Name</div>
-                  <div className="font-medium text-gray-900">{submission.clientName}</div>
+                  <div className="font-medium text-gray-900">{entry.clientName}</div>
                 </div>
                 
                 <div className="bg-white border border-gray-200 rounded-lg p-3">
                   <div className="text-xs text-gray-600 mb-1">PIC Name</div>
-                  <div className="font-medium text-gray-900">{submission.picName}</div>
+                  <div className="font-medium text-gray-900">{entry.picName}</div>
                 </div>
                 <div className="bg-white border border-gray-200 rounded-lg p-3">
                   <div className="text-xs text-gray-600 mb-1">Email</div>
-                  <div className="font-medium text-gray-900">{submission.email}</div>
+                  <div className="font-medium text-gray-900">{entry.email}</div>
                 </div>
                 <div className="bg-white border border-gray-200 rounded-lg p-3">
                   <div className="text-xs text-gray-600 mb-1">Phone Number</div>
-                  <div className="font-medium text-gray-900">{submission.phone}</div>
+                  <div className="font-medium text-gray-900">{entry.phone}</div>
                 </div>
               </div>
             </div>
 
             {/* Extra Form Answers */}
-            {Object.keys(submission.extraAnswers).length > 0 && (
+            {Object.keys(entry.extraAnswers).length > 0 && (
               <div>
                 <h3 className="text-sm font-medium text-gray-700 mb-3">Form Answers</h3>
                 <div className="space-y-3">
-                  {Object.entries(submission.extraAnswers).map(([key, value]) => (
+                  {Object.entries(entry.extraAnswers).map(([key, value]) => (
                     <div key={key} className="bg-white border border-gray-200 rounded-lg p-3">
                       <div className="text-xs text-gray-600 mb-1">{key}</div>
                       <div className="font-medium text-gray-900">
@@ -248,85 +251,60 @@ export function SubmissionDetailModal({ submission, open, onClose }: SubmissionD
               </div>
             )}
 
-            {/* Processing History */}
-            {(submission.cleanedBy || submission.rejectedBy || submission.promotedBy) && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-3">Processing History</h3>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                  {submission.cleanedBy && (
-                    <div className="text-sm">
-                      <div className="font-medium text-gray-900 mb-1">Cleaned</div>
-                      <div className="text-gray-600">
-                        By: {submission.cleanedBy}
-                        {submission.cleanedAt && (
-                          <span className="ml-2 text-gray-500">
-                            on {new Date(submission.cleanedAt).toLocaleDateString('id-ID')}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
 
-                  {submission.rejectedBy && (
-                    <div className="text-sm">
-                      <div className="font-medium text-red-600 mb-1">Rejected</div>
-                      <div className="text-gray-600">
-                        By: {submission.rejectedBy}
-                        {submission.rejectedAt && (
-                          <span className="ml-2 text-gray-500">
-                            on {new Date(submission.rejectedAt).toLocaleDateString('id-ID')}
-                          </span>
-                        )}
-                      </div>
-                      {submission.rejectedReason && (
-                        <div className="mt-1 text-red-600 bg-red-50 rounded p-2">
-                          Reason: {submission.rejectedReason}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {submission.promotedBy && (
-                    <div className="text-sm">
-                      <div className="font-medium text-green-600 mb-1">Promoted to Lead</div>
-                      <div className="text-gray-600">
-                        By: {submission.promotedBy}
-                        {submission.promotedAt && (
-                          <span className="ml-2 text-gray-500">
-                            on {new Date(submission.promotedAt).toLocaleDateString('id-ID')}
-                          </span>
-                        )}
-                      </div>
-                      {submission.promotedToLeadId && (
-                        <div className="mt-1 text-green-600 bg-green-50 rounded p-2">
-                          Lead ID: {submission.promotedToLeadId}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Notes */}
-            {submission.notes && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-3">Notes</h3>
-                <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-900 whitespace-pre-wrap">
-                  {submission.notes}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Footer Info */}
-        <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 flex-shrink-0">
-          <div className="text-sm text-gray-600">
-            <strong>Note:</strong> Data ini dikelola oleh BD Admin di halaman Bank Data. 
-            MEO hanya bisa melihat (read-only).
+        {/* Footer Actions (only for BD-Admin) */}
+        {canEdit ? (
+          <div className="border-t border-gray-200 px-6 py-4 bg-white flex-shrink-0">
+            <div className="flex gap-3 justify-end">
+              {entry.triageStatus === 'RAW_NEW' && (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      if (onReject) {
+                        onReject('');
+                      }
+                    }}
+                    className="border-red-600 text-red-600 hover:bg-red-50"
+                  >
+                    Reject
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (onPromote) {
+                        onPromote();
+                      }
+                    }}
+                    className="bg-black text-white hover:bg-gray-800"
+                  >
+                    Promote to Lead
+                  </Button>
+                </>
+              )}
+              {(entry.triageStatus === 'REJECTED' || entry.triageStatus === 'PROMOTED_TO_LEAD') && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleClose}
+                >
+                  Cancel
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 flex-shrink-0">
+            <div className="text-sm text-gray-600">
+              <strong>Note:</strong> Data ini dikelola oleh BD Admin di halaman Bank Data. 
+              MEO hanya bisa melihat (read-only).
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

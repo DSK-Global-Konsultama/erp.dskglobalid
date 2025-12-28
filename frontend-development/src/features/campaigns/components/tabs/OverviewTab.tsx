@@ -1,5 +1,6 @@
 import { Eye } from 'lucide-react';
 import type { Campaign, BankDataEntry } from '../../../../lib/leadManagementTypes';
+import { getTriageStatusBadge } from '../../../../lib/statusHelpers';
 
 interface OverviewTabProps {
   campaign: Campaign;
@@ -50,13 +51,14 @@ export function OverviewTab({ campaign, submissions, onViewSubmission }: Overvie
                   <div className="text-right">
                     <div className="text-sm text-gray-600">{submission.submittedAt}</div>
                     <div>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs ${
-                        submission.triageStatus === 'RAW_NEW' ? 'bg-yellow-100 text-yellow-700' :
-                        submission.triageStatus === 'PROMOTED_TO_LEAD' ? 'bg-green-100 text-green-700' :
-                        'bg-gray-100 text-gray-700'
-                      }`}>
-                        {submission.triageStatus}
-                      </span>
+                      {(() => {
+                        const statusBadge = getTriageStatusBadge(submission.triageStatus);
+                        return (
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border ${statusBadge.color}`}>
+                            {statusBadge.label}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                   <button

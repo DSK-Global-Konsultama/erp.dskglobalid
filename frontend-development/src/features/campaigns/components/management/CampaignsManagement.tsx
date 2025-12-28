@@ -215,7 +215,7 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-md text-xs font-medium ${getTypeColor(campaign.type)}`}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border ${getTypeColor(campaign.type)}`}>
                           {campaign.type}
                         </span>
                       </td>
@@ -235,7 +235,7 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(campaign.status)}`}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border ${getStatusColor(campaign.status)}`}>
                           {campaign.status}
                         </span>
                       </td>

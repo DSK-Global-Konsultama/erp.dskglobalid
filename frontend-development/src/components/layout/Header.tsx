@@ -132,8 +132,10 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
           return 'Dashboard MEO';
         } else if (activeNav === 'campaigns') {
           return 'Campaigns';
+        } else if (activeNav === 'bank-data') {
+          return 'Bank Data';
         } else if (activeNav === 'leads') {
-          return 'My Leads';
+          return 'Leads';
         } else if (activeNav === 'ticketing') {
           return 'IT Ticketing';
         } else if (activeNav === 'reimburse') {
@@ -143,6 +145,8 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
       case 'BD-Executive':
         if (activeNav === 'deals') {
           return 'Lead Tracker';
+        } else if (activeNav === 'bank-data') {
+          return 'Bank Data';
         } else if (activeNav === 'ticketing') {
           return 'IT Ticketing';
         } else if (activeNav === 'reimburse') {
@@ -228,6 +232,8 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
           return 'Ringkasan leads yang Anda kelola';
         } else if (activeNav === 'campaigns') {
           return 'Kelola campaign untuk lead generation';
+        } else if (activeNav === 'bank-data') {
+          return 'Lihat data submissions dari campaign (View Only)';
         } else if (activeNav === 'leads') {
           return 'Kelola semua leads yang Anda buat';
         } else if (activeNav === 'ticketing') {
@@ -241,6 +247,8 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
           return 'Claim leads untuk di-follow up sampai deal';
         } else if (activeNav === 'deals') {
           return 'BD Executive menggali kebutuhan client, buat proposal dan EL';
+        } else if (activeNav === 'bank-data') {
+          return 'Review dan kelola data submissions dari campaign';
         } else if (activeNav === 'ticketing') {
           return 'Request bantuan atau fitur baru dari tim IT';
         } else if (activeNav === 'reimburse') {

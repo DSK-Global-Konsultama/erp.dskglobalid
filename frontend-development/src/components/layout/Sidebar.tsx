@@ -14,7 +14,8 @@ import {
   LogOut,
   Building2,
   Inbox,
-  Megaphone
+  Megaphone,
+  Database
 } from 'lucide-react';
 
 type UserRole = 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist' | 'SuperAdmin';
@@ -86,13 +87,15 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
         return [
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
           { id: 'campaigns', label: 'Campaigns', icon: Megaphone, path: 'campaigns' },
-          { id: 'leads', label: 'My Leads', icon: Users, path: 'leads' },
+          { id: 'bank-data', label: 'Bank Data', icon: Database, path: 'bank-data' },
+          { id: 'leads', label: 'Leads', icon: Users, path: 'leads' },
           { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
           { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
         ];
       case 'BD-Executive':
         return [
           { id: 'deals', label: 'Lead Tracker', icon: HandshakeIcon, path: 'dashboard' },
+          { id: 'bank-data', label: 'Bank Data', icon: Database, path: 'bank-data' },
           { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
           { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
         ];

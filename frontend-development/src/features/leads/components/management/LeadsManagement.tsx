@@ -3,7 +3,6 @@ import { Plus, Search, Filter, Edit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../../components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
 import { StatusChip } from '../shared/StatusChip';
 import { AddLeadModal } from '../modals/AddLeadModal';
@@ -269,115 +268,133 @@ export function LeadsManagement({ userName, mode, title, onLeadClick }: LeadsMan
             )}
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
+        <CardContent className="px-6">
+          <div className="overflow-hidden rounded-lg border border-gray-200">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
                   {mode === 'tracker' ? (
                     <>
-                      <TableHead>Client</TableHead>
-                      <TableHead>PIC</TableHead>
-                      <TableHead>Service</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Last Activity</TableHead>
+                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Client</th>
+                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">PIC</th>
+                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Service</th>
+                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Status</th>
+                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Last Activity</th>
                     </>
                   ) : (
                     <>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Client Name</TableHead>
-                      <TableHead>PIC Name</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Service</TableHead>
-                      <TableHead>Source</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created At</TableHead>
-                      {mode === 'view' && <TableHead>Last Activity</TableHead>}
-                      {mode === 'edit' && <TableHead>Aksi</TableHead>}
+                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">ID</th>
+                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Client Name</th>
+                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">PIC Name</th>
+                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Contact</th>
+                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Service</th>
+                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Source</th>
+                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Status</th>
+                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Created At</th>
+                      {mode === 'view' && <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Last Activity</th>}
+                      {mode === 'edit' && <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Actions</th>}
                     </>
                   )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
                 {filteredLeads.length === 0 ? (
-                  <TableRow>
-                    <TableCell 
-                      colSpan={mode === 'tracker' ? 5 : mode === 'view' ? 8 : 9} 
-                      className="text-center py-12 text-gray-500"
+                  <tr>
+                    <td 
+                      colSpan={mode === 'tracker' ? 5 : mode === 'view' ? 9 : 9} 
+                      className="px-6 py-12 text-center text-gray-500"
                     >
                       No leads found
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ) : (
                   paginatedLeads.map((lead) => (
-                    <TableRow 
+                    <tr 
                       key={lead.id} 
-                      className={`hover:bg-gray-50 ${mode === 'tracker' && onLeadClick ? 'cursor-pointer' : ''}`}
+                      className={`hover:bg-gray-50 transition-colors ${mode === 'tracker' && onLeadClick ? 'cursor-pointer' : ''}`}
                       onClick={mode === 'tracker' && onLeadClick ? () => onLeadClick(lead.id) : undefined}
                     >
                       {mode === 'tracker' ? (
                         <>
-                          <TableCell className="font-medium">{lead.company}</TableCell>
-                          <TableCell>
+                          <td className="px-6 py-4">
+                            <div className="font-medium text-gray-900">{lead.company}</div>
+                          </td>
+                          <td className="px-6 py-4">
                             <div className="text-sm">
-                              <div>{lead.clientName}</div>
+                              <div className="text-gray-900">{lead.clientName}</div>
                               <div className="text-gray-600">{lead.email}</div>
                             </div>
-                          </TableCell>
-                          <TableCell>{(lead as any).service || '-'}</TableCell>
-                          <TableCell>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-700">{(lead as any).service || '-'}</span>
+                          </td>
+                          <td className="px-6 py-4">
                             <StatusChip status={(lead as any).status || 'NEW'} />
-                          </TableCell>
-                          <TableCell className="text-gray-600 text-sm">
-                            {(lead as any).lastActivity || '-'}
-                          </TableCell>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-600">
+                              {(lead as any).lastActivity || '-'}
+                            </span>
+                          </td>
                         </>
                       ) : (
                         <>
-                          <TableCell>{lead.id}</TableCell>
-                          <TableCell>{lead.company}</TableCell>
-                          <TableCell>{lead.clientName}</TableCell>
-                          <TableCell>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-700">{lead.id}</span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="font-medium text-gray-900">{lead.company}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-700">{lead.clientName}</span>
+                          </td>
+                          <td className="px-6 py-4">
                             <div className="text-sm">
-                              <div>{lead.phone}</div>
+                              <div className="text-gray-900">{lead.phone}</div>
                               <div className="text-gray-600">{lead.email}</div>
                             </div>
-                          </TableCell>
-                          <TableCell>{(lead as any).service || '-'}</TableCell>
-                          <TableCell>{lead.source}</TableCell>
-                          <TableCell>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-700">{(lead as any).service || '-'}</span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-700">{lead.source}</span>
+                          </td>
+                          <td className="px-6 py-4">
                             <StatusChip status={lead.status} />
-                          </TableCell>
-                          <TableCell className="text-gray-600">{formatDate(lead.createdDate)}</TableCell>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-600">{formatDate(lead.createdDate)}</span>
+                          </td>
                           {mode === 'view' && (
-                            <TableCell className="text-gray-600">
-                              {(lead as any).lastActivity || (lead.lastFollowUp ? formatDate(lead.lastFollowUp) : formatDate(lead.createdDate))}
-                            </TableCell>
+                            <td className="px-6 py-4">
+                              <span className="text-sm text-gray-600">
+                                {(lead as any).lastActivity || (lead.lastFollowUp ? formatDate(lead.lastFollowUp) : formatDate(lead.createdDate))}
+                              </span>
+                            </td>
                           )}
                           {mode === 'edit' && (
-                            <TableCell>
-                              <Button
-                                variant="outline"
-                                size="sm"
+                            <td className="px-6 py-4">
+                              <button
                                 onClick={() => handleEdit(lead)}
-                                className="flex items-center gap-2"
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                               >
                                 <Edit className="w-4 h-4" />
                                 Edit
-                              </Button>
-                            </TableCell>
+                              </button>
+                            </td>
                           )}
                         </>
                       )}
-                    </TableRow>
+                    </tr>
                   ))
                 )}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
           </div>
           {/* Pagination */}
           {filteredLeads.length > 0 && (
-            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between bg-white">
               <div className="text-sm text-gray-600">
                 Showing {paginatedLeads.length} of {paginationTotal} leads
               </div>
@@ -389,7 +406,7 @@ export function LeadsManagement({ userName, mode, title, onLeadClick }: LeadsMan
                 >
                   Previous
                 </button>
-                <button className="h-8 px-3 rounded-md bg-black text-white text-sm font-medium">
+                <button className="h-8 px-3 rounded-md bg-white text-black border border-black text-sm font-medium">
                   {currentPage}
                 </button>
                 <button 

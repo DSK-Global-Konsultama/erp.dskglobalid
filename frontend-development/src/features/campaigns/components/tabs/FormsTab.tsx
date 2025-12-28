@@ -50,7 +50,7 @@ export function FormsTab({ campaignId, forms, onCreateForm, onEditForm }: FormsT
                     <p className="text-sm text-gray-600">{form.description}</p>
                   )}
                 </div>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs ${
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border ${
                   form.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
                 }`}>
                   {form.status}

@@ -220,8 +220,8 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
         {/* Form Content - Area Input */}
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto px-6">
-            <div className="space-y-6 py-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Campaign Type */}
             <div>
               <label className="block text-sm text-gray-700 mb-2">
