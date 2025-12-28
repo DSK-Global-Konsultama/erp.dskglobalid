@@ -201,7 +201,7 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
       if (activeNav === 'dashboard') {
         return 'Monitoring Business Development & Project Management';
       } else if (activeNav === 'inbox') {
-        return 'Review dan process lead baru dari MEO';
+        return 'Review and follow-up on leads promoted by BD Admin';
       } else if (activeNav === 'leads') {
         return 'View dan monitor semua leads dalam pipeline';
       } else if (activeNav === 'deals') {
