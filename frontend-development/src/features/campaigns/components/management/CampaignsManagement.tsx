@@ -61,11 +61,11 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
   const getStatusColor = (status: CampaignStatus) => {
     switch (status) {
       case 'ACTIVE':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-700';
       case 'PAUSED':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 text-yellow-700';
       case 'ENDED':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -73,11 +73,11 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
   const getTypeColor = (type: CampaignType) => {
     switch (type) {
       case 'WEBINAR':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-700';
       case 'SOCIAL':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-purple-100 text-purple-700';
       case 'FREEBIE':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-700';
     }
   };
 
@@ -206,7 +206,7 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded-md text-xs font-medium ${getTypeColor(campaign.type)}`}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs ${getTypeColor(campaign.type)}`}>
                           {campaign.type}
                         </span>
                       </TableCell>
@@ -226,7 +226,7 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(campaign.status)}`}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs ${getStatusColor(campaign.status)}`}>
                           {campaign.status}
                         </span>
                       </TableCell>

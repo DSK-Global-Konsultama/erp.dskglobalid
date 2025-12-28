@@ -74,7 +74,15 @@ export default function App() {
     picEmail?: string;
     picPhone?: string;
   } | null>(null);
+  const [campaignDetail, setCampaignDetail] = useState<{
+    name: string;
+    type: string;
+    status: string;
+    channel: string;
+    topicTag?: string;
+  } | null>(null);
   const resetDetailRef = useRef<(() => void) | null>(null);
+  const resetCampaignDetailRef = useRef<(() => void) | null>(null);
 
   // Check for existing session on mount
   useEffect(() => {
@@ -179,6 +187,12 @@ export default function App() {
         }
       }
     }
+    
+    // Reset campaign detail when navigating away from campaigns page
+    if (campaignDetail && path !== 'campaigns') {
+      setCampaignDetail(null);
+    }
+    
     setActiveNav(path);
     // Sync tab state for BD-Executive when clicking sidebar
     if (currentUser?.role === 'BD-Executive' && (path === 'leads' || path === 'deals')) {
@@ -312,7 +326,14 @@ export default function App() {
             case 'dashboard':
               return <BDMEODashboardPage userName={currentUser.name} />;
             case 'campaigns':
-              return <BDMEOCampaignsPage userName={currentUser.name} />;
+              return <BDMEOCampaignsPage 
+                userName={currentUser.name}
+                activeNav={activeNav}
+                onCampaignDetailChange={setCampaignDetail}
+                onResetDetail={(resetFn) => {
+                  resetCampaignDetailRef.current = resetFn;
+                }}
+              />;
             case 'leads':
               return <BDMEODashboard userName={currentUser.name} />;
             default:
@@ -402,6 +423,16 @@ export default function App() {
                 // Reset detail in LeadTrackerPage
                 if (resetDetailRef.current) {
                   resetDetailRef.current();
+                }
+              }
+            } : undefined}
+            campaignDetail={campaignDetail ? {
+              ...campaignDetail,
+              onBack: () => {
+                setCampaignDetail(null);
+                // Reset detail in CampaignsPage
+                if (resetCampaignDetailRef.current) {
+                  resetCampaignDetailRef.current();
                 }
               }
             } : undefined}

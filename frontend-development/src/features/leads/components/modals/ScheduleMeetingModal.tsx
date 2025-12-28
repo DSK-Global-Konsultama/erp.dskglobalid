@@ -7,7 +7,7 @@ import { Input } from '../../../../components/ui/input';
 import { Textarea } from '../../../../components/ui/textarea';
 import { Button } from '../../../../components/ui/button';
 import type { Meeting } from '../../../../lib/mock-data';
-import type { LeadStatus } from '../shared/LeadTrackerDetail';
+import type { LeadStatus } from '../management/LeadTrackerDetail';
 
 interface ScheduleMeetingModalProps {
   leadId: string;

@@ -4,7 +4,7 @@ import { StatusChip } from '../shared/StatusChip';
 import { ProposalFormModal } from '../modals/ProposalFormModal';
 import { ProposalDetailModal } from '../modals/ProposalDetailModal';
 import type { Proposal, Lead } from '../../../../lib/mock-data';
-import type { LeadStatus } from '../shared/LeadTrackerDetail';
+import type { LeadStatus } from '../management/LeadTrackerDetail';
 
 interface ProposalTabProps {
   leadId: string;

@@ -7,7 +7,7 @@ import { NotulensiFormModal } from '../modals/NotulensiFormModal';
 import { NotulensiDetailModal } from '../modals/NotulensiDetailModal';
 import { Button } from '../../../../components/ui/button';
 import type { Meeting, Notulensi, Lead } from '../../../../lib/mock-data';
-import type { LeadStatus } from '../shared/LeadTrackerDetail';
+import type { LeadStatus } from '../management/LeadTrackerDetail';
 
 interface MeetingNotulensiTabProps {
   leadId: string;

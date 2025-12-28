@@ -6,7 +6,7 @@ import { Dialog, DialogContent } from '../../../../components/ui/dialog';
 import { Input } from '../../../../components/ui/input';
 import { Button } from '../../../../components/ui/button';
 import type { Proposal, Lead } from '../../../../lib/mock-data';
-import type { LeadStatus } from '../shared/LeadTrackerDetail';
+import type { LeadStatus } from '../management/LeadTrackerDetail';
 
 interface ProposalFormModalProps {
   leadId: string;
