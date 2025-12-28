@@ -4,7 +4,7 @@
  */
 
 // Campaign & Form Types
-export type CampaignType = 'WEBINAR' | 'SOCIAL' | 'FREEBIE';
+export type CampaignType = 'WEBINAR' | 'SOCIAL' | 'FREEBIE' | 'EVENT';
 export type Channel = 'IG' | 'LINKEDIN' | 'WEBSITE' | 'EVENT';
 export type CampaignStatus = 'ACTIVE' | 'PAUSED' | 'ENDED';
 

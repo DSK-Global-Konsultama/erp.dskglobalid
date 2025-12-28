@@ -24,6 +24,11 @@ interface CampaignDetailInfo {
   onBack: () => void;
 }
 
+interface FormBuilderDetailInfo {
+  campaignName: string;
+  onBack: () => void;
+}
+
 interface HeaderProps {
   role: UserRole;
   userName?: string;
@@ -32,9 +37,10 @@ interface HeaderProps {
   activeNav?: string;
   leadDetail?: LeadDetailInfo;
   campaignDetail?: CampaignDetailInfo;
+  formBuilderDetail?: FormBuilderDetailInfo;
 }
 
-export function Header({ role, userName, userProfileImagePath, userProfileImageUrl, activeNav = 'dashboard', leadDetail, campaignDetail }: HeaderProps) {
+export function Header({ role, userName, userProfileImagePath, userProfileImageUrl, activeNav = 'dashboard', leadDetail, campaignDetail, formBuilderDetail }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationCount] = useState(3); // Placeholder for notification count
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -325,6 +331,82 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
       }}
     />
   );
+
+  // If formBuilderDetail is provided, show form builder header
+  if (formBuilderDetail) {
+    return (
+      <header className="bg-gray-50 px-6 pt-3 sticky top-0 z-10">
+        <div className="flex items-center justify-between">
+          {/* Form Builder Header - Left Side */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  formBuilderDetail.onBack();
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="flex-1">
+                <h1 className="text-lg font-semibold text-gray-900">Form Builder</h1>
+                <p className="text-gray-500 text-sm mt-1">
+                  {formBuilderDetail.campaignName}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side - Dark Card with Notification and User Section */}
+          <div className="flex-shrink-0">
+            <div className="px-4 py-2 rounded-lg flex items-center gap-4 shadow-lg border border-gray-800/30" style={{ backgroundColor: '#1e1e1e' }}>
+              {/* Notification Icon */}
+              <div className="relative" ref={notificationRef}>
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
+                >
+                  <Bell className="w-5 h-5 text-white" strokeWidth={2} fill="none" />
+                  {notificationCount > 0 && (
+                    <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-gray-900">
+                      {notificationCount > 9 ? '9+' : notificationCount}
+                    </span>
+                  )}
+                </button>
+                
+                {/* Notification Dropdown */}
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="px-4 py-2 border-b border-gray-200">
+                      <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
+                        <p className="text-sm text-gray-900">No new notifications</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Separator */}
+              <div className="h-6 w-px bg-white/30" />
+
+              {/* User Section */}
+              <div className="flex items-center gap-3 pr-6">
+                {UserAvatar}
+                <div className="flex flex-col items-start min-w-0">
+                  <p className="text-[10px] text-gray-400 font-semibold">{getRoleName()}</p>
+                  <p className="text-xs font-bold text-white truncate">{getDisplayName()}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   // If campaignDetail is provided, show campaign detail header
   if (campaignDetail) {

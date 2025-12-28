@@ -30,6 +30,7 @@ export const mockCampaigns: Campaign[] = [
     name: 'IG Story: Transfer Pricing Awareness',
     type: 'SOCIAL',
     channel: 'IG',
+    dateRange: { start: '2025-12-01', end: '2025-12-31' },
     notes: 'Carousel post + story series',
     status: 'ACTIVE',
     createdBy: 'Andi (MEO)',
@@ -41,6 +42,7 @@ export const mockCampaigns: Campaign[] = [
     name: 'Free Download: Tax Compliance Checklist',
     type: 'FREEBIE',
     channel: 'WEBSITE',
+    dateRange: { start: '2025-11-20', end: '2026-01-31' },
     notes: 'Lead magnet - downloadable PDF checklist',
     status: 'ACTIVE',
     createdBy: 'Sarah (MEO)',
@@ -54,6 +56,7 @@ export const mockCampaigns: Campaign[] = [
     channel: 'EVENT',
     topicTag: 'LEGAL_SETUP',
     dateRange: { start: '2025-11-15', end: '2025-11-30' },
+    notes: 'Webinar tentang setup legal entity untuk startup dan bisnis baru',
     status: 'ENDED',
     createdBy: 'Andi (MEO)',
     createdAt: '2025-11-10',
@@ -64,11 +67,24 @@ export const mockCampaigns: Campaign[] = [
     name: 'LinkedIn Post: Financial Advisory Case Study',
     type: 'SOCIAL',
     channel: 'LINKEDIN',
+    dateRange: { start: '2025-12-10', end: '2026-01-10' },
     notes: 'Case study success story',
     status: 'ACTIVE',
     createdBy: 'Sarah (MEO)',
     createdAt: '2025-12-10',
     updatedAt: '2025-12-10'
+  },
+  {
+    id: 'camp6',
+    name: 'Annual Tax Seminar 2026',
+    type: 'EVENT',
+    channel: 'EVENT',
+    dateRange: { start: '2026-01-15', end: '2026-01-20' },
+    notes: 'Annual tax seminar untuk corporate clients dengan topik update perpajakan 2026',
+    status: 'ACTIVE',
+    createdBy: 'Andi (MEO)',
+    createdAt: '2025-12-20',
+    updatedAt: '2025-12-20'
   }
 ];
 
@@ -231,6 +247,49 @@ export const mockForms: Form[] = [
     createdAt: '2025-11-10',
     updatedAt: '2025-11-11',
     publishedAt: '2025-11-11'
+  },
+  {
+    id: 'form5',
+    campaignId: 'camp6',
+    title: 'Registration: Annual Tax Seminar 2026',
+    description: 'Daftar untuk mengikuti Annual Tax Seminar 2026 - Update Perpajakan Terbaru',
+    fields: [
+      ...coreFields,
+      {
+        id: 'f9',
+        type: 'DROPDOWN',
+        label: 'Jenis Perusahaan',
+        required: true,
+        options: ['PT (PMDN)', 'PT (PMA)', 'CV', 'Firma', 'Perseroan Terbatas', 'Lainnya']
+      },
+      {
+        id: 'f10',
+        type: 'DROPDOWN',
+        label: 'Bidang Usaha',
+        required: true,
+        options: ['Manufacturing', 'Trading', 'Services', 'Technology', 'Real Estate', 'Finance', 'Other']
+      },
+      {
+        id: 'f11',
+        type: 'RADIO',
+        label: 'Apakah Anda ingin mengikuti sesi Q&A?',
+        required: false,
+        options: ['Ya', 'Tidak']
+      },
+      {
+        id: 'f12',
+        type: 'LONG_TEXT',
+        label: 'Pertanyaan atau topik yang ingin dibahas',
+        required: false,
+        placeholder: 'Tuliskan pertanyaan atau topik yang ingin Anda pelajari...'
+      }
+    ],
+    status: 'PUBLISHED',
+    publicLink: 'https://forms.company.com/annual-tax-seminar-2026',
+    createdBy: 'Andi (MEO)',
+    createdAt: '2025-12-20',
+    updatedAt: '2025-12-21',
+    publishedAt: '2025-12-21'
   }
 ];
 
@@ -436,6 +495,112 @@ export const mockBankData: BankDataEntry[] = [
     submittedAt: '2025-12-17 09:30:00',
     createdAt: '2025-12-17 09:30:00',
     updatedAt: '2025-12-17 09:30:00'
+  },
+  // EVENT campaign submissions
+  {
+    id: 'bd10',
+    campaignId: 'camp6',
+    formId: 'form5',
+    clientName: 'PT Maju Bersama',
+    picName: 'Dewi Sartika',
+    email: 'dewi@majubersama.co.id',
+    phone: '+62 812-3456-7890',
+    sourceChannel: 'EVENT',
+    campaignName: 'Annual Tax Seminar 2026',
+    triageStatus: 'RAW_NEW',
+    extraAnswers: {
+      'Jenis Perusahaan': 'PT (PMDN)',
+      'Bidang Usaha': 'Manufacturing',
+      'Apakah Anda ingin mengikuti sesi Q&A?': 'Ya',
+      'Pertanyaan atau topik yang ingin dibahas': 'Update PPh 21 dan PPh 23 untuk tahun 2026'
+    },
+    submittedAt: '2026-01-05 10:15:00',
+    createdAt: '2026-01-05 10:15:00',
+    updatedAt: '2026-01-05 10:15:00'
+  },
+  {
+    id: 'bd11',
+    campaignId: 'camp6',
+    formId: 'form5',
+    clientName: 'PT Sejahtera Abadi',
+    picName: 'Rudi Hartono',
+    email: 'rudi@sejahteraabadi.com',
+    phone: '+62 813-4567-8901',
+    sourceChannel: 'EVENT',
+    campaignName: 'Annual Tax Seminar 2026',
+    triageStatus: 'RAW_NEW',
+    extraAnswers: {
+      'Jenis Perusahaan': 'PT (PMA)',
+      'Bidang Usaha': 'Technology',
+      'Apakah Anda ingin mengikuti sesi Q&A?': 'Ya',
+      'Pertanyaan atau topik yang ingin dibahas': 'Tax incentives untuk perusahaan teknologi'
+    },
+    submittedAt: '2026-01-06 14:30:00',
+    createdAt: '2026-01-06 14:30:00',
+    updatedAt: '2026-01-06 14:30:00'
+  },
+  {
+    id: 'bd12',
+    campaignId: 'camp6',
+    formId: 'form5',
+    clientName: 'CV Mandiri Jaya',
+    picName: 'Sari Indrawati',
+    email: 'sari@mandirijaya.id',
+    phone: '+62 814-5678-9012',
+    sourceChannel: 'EVENT',
+    campaignName: 'Annual Tax Seminar 2026',
+    triageStatus: 'RAW_NEW',
+    extraAnswers: {
+      'Jenis Perusahaan': 'CV',
+      'Bidang Usaha': 'Services',
+      'Apakah Anda ingin mengikuti sesi Q&A?': 'Tidak',
+      'Pertanyaan atau topik yang ingin dibahas': 'Perubahan tarif PPN dan cara menghitungnya'
+    },
+    submittedAt: '2026-01-07 11:45:00',
+    createdAt: '2026-01-07 11:45:00',
+    updatedAt: '2026-01-07 11:45:00'
+  },
+  {
+    id: 'bd13',
+    campaignId: 'camp6',
+    formId: 'form5',
+    clientName: 'PT Global Finance',
+    picName: 'Bambang Wijaya',
+    email: 'bambang@globalfinance.co.id',
+    phone: '+62 815-6789-0123',
+    sourceChannel: 'EVENT',
+    campaignName: 'Annual Tax Seminar 2026',
+    triageStatus: 'RAW_NEW',
+    extraAnswers: {
+      'Jenis Perusahaan': 'PT (PMDN)',
+      'Bidang Usaha': 'Finance',
+      'Apakah Anda ingin mengikuti sesi Q&A?': 'Ya',
+      'Pertanyaan atau topik yang ingin dibahas': 'Tax planning untuk perusahaan finance dan investment'
+    },
+    submittedAt: '2026-01-08 09:20:00',
+    createdAt: '2026-01-08 09:20:00',
+    updatedAt: '2026-01-08 09:20:00'
+  },
+  {
+    id: 'bd14',
+    campaignId: 'camp6',
+    formId: 'form5',
+    clientName: 'PT Properti Nusantara',
+    picName: 'Indra Gunawan',
+    email: 'indra@propertinusantara.id',
+    phone: '+62 816-7890-1234',
+    sourceChannel: 'EVENT',
+    campaignName: 'Annual Tax Seminar 2026',
+    triageStatus: 'RAW_NEW',
+    extraAnswers: {
+      'Jenis Perusahaan': 'PT (PMDN)',
+      'Bidang Usaha': 'Real Estate',
+      'Apakah Anda ingin mengikuti sesi Q&A?': 'Ya',
+      'Pertanyaan atau topik yang ingin dibahas': 'Tax treatment untuk penjualan property dan PPh final'
+    },
+    submittedAt: '2026-01-09 15:10:00',
+    createdAt: '2026-01-09 15:10:00',
+    updatedAt: '2026-01-09 15:10:00'
   }
 ];
 

@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, Eye, Filter } from 'lucide-react';
 import { Button } from '../../../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../../components/ui/table';
 import { Input } from '../../../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
 import { mockCampaigns } from '../../../../lib/leadManagementMockData';
@@ -61,11 +60,11 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
   const getStatusColor = (status: CampaignStatus) => {
     switch (status) {
       case 'ACTIVE':
-        return 'bg-green-100 text-green-700';
+        return 'bg-green-100 text-green-800';
       case 'PAUSED':
-        return 'bg-yellow-100 text-yellow-700';
+        return 'bg-yellow-100 text-yellow-800';
       case 'ENDED':
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -73,12 +72,22 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
   const getTypeColor = (type: CampaignType) => {
     switch (type) {
       case 'WEBINAR':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-blue-100 text-blue-800';
       case 'SOCIAL':
-        return 'bg-purple-100 text-purple-700';
+        return 'bg-purple-100 text-purple-800';
       case 'FREEBIE':
-        return 'bg-green-100 text-green-700';
+        return 'bg-green-100 text-green-800';
+      case 'EVENT':
+        return 'bg-red-100 text-red-800';
     }
+  };
+
+  // Format channel display (capitalize first letter only)
+  const formatChannel = (channel: Channel) => {
+    if (channel === 'IG') {
+      return 'Instagram';
+    }
+    return channel.charAt(0).toUpperCase() + channel.slice(1).toLowerCase();
   };
 
   return (
@@ -171,31 +180,31 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Campaign Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Channel</TableHead>
-                  <TableHead>Topic Tag</TableHead>
-                  <TableHead>Submissions</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+        <CardContent className="px-6">
+          <div className="overflow-hidden rounded-lg border border-gray-200">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Campaign Name</th>
+                  <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Type</th>
+                  <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Channel</th>
+                  <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Topic Tag</th>
+                  <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Submissions</th>
+                  <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Status</th>
+                  <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
                 {paginatedCampaigns.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-12 text-gray-500">
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                       No campaigns found
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ) : (
                   paginatedCampaigns.map((campaign) => (
-                    <TableRow key={campaign.id} className="hover:bg-gray-50 transition-colors">
-                      <TableCell>
+                    <tr key={campaign.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
                         <div>
                           <div className="font-medium text-gray-900">{campaign.name}</div>
                           {campaign.dateRange && (
@@ -204,33 +213,33 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
                             </div>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs ${getTypeColor(campaign.type)}`}>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded-md text-xs font-medium ${getTypeColor(campaign.type)}`}>
                           {campaign.type}
                         </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-gray-700">{campaign.channel}</span>
-                      </TableCell>
-                      <TableCell>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-700">{formatChannel(campaign.channel)}</span>
+                      </td>
+                      <td className="px-6 py-4">
                         {campaign.topicTag ? (
                           <span className="text-sm text-gray-700">{campaign.topicTag}</span>
                         ) : (
                           <span className="text-sm text-gray-400">—</span>
                         )}
-                      </TableCell>
-                      <TableCell>
+                      </td>
+                      <td className="px-6 py-4">
                         <span className="text-sm font-medium text-gray-900">
                           {getSubmissionCount(campaign.id)}
                         </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs ${getStatusColor(campaign.status)}`}>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(campaign.status)}`}>
                           {campaign.status}
                         </span>
-                      </TableCell>
-                      <TableCell>
+                      </td>
+                      <td className="px-6 py-4">
                         <button
                           onClick={() => onViewDetail(campaign.id)}
                           className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -238,16 +247,16 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
                           <Eye className="w-4 h-4" />
                           View
                         </button>
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   ))
                 )}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
           </div>
           {/* Pagination */}
           {filteredCampaigns.length > 0 && (
-            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between bg-white">
               <div className="text-sm text-gray-600">
                 Showing {paginatedCampaigns.length} of {filteredCampaigns.length} campaigns
               </div>

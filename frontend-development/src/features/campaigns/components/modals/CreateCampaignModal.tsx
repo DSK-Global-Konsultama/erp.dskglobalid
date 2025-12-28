@@ -119,6 +119,48 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate required fields
+    if (!formData.type) {
+      alert('Campaign Type is required');
+      return;
+    }
+    
+    if (!formData.channel) {
+      alert('Channel is required');
+      return;
+    }
+    
+    if (!formData.name.trim()) {
+      alert('Campaign Name is required');
+      return;
+    }
+    
+    if (isWebinar && !formData.topicTag.trim()) {
+      alert('Topic Tag is required for Webinar campaigns');
+      return;
+    }
+    
+    if (!formData.dateStart) {
+      alert('Start Date is required');
+      return;
+    }
+    
+    if (!formData.dateEnd) {
+      alert('End Date is required');
+      return;
+    }
+    
+    if (!formData.notes.trim()) {
+      alert('Notes is required');
+      return;
+    }
+    
+    // Validate date range
+    if (formData.dateStart && formData.dateEnd && new Date(formData.dateStart) > new Date(formData.dateEnd)) {
+      alert('End Date must be after Start Date');
+      return;
+    }
+    
     // In real app: API call to create campaign
     console.log('Creating campaign:', formData);
     
@@ -129,6 +171,7 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
   };
 
   const isWebinar = formData.type === 'WEBINAR';
+  const isEventType = formData.type === 'WEBINAR' || formData.type === 'EVENT';
 
   return (
     <Dialog open={open || isAnimatingOut} onOpenChange={() => {
@@ -191,10 +234,10 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
                   setFormData({ 
                     ...formData, 
                     type: newType,
-                    // Auto-set channel: WEBINAR → EVENT, others → LINKEDIN default
-                    channel: newType === 'WEBINAR' ? 'EVENT' : 'LINKEDIN',
-                    // Reset topic tag if not webinar
-                    topicTag: newType !== 'WEBINAR' ? '' : formData.topicTag
+                    // Auto-set channel: WEBINAR/EVENT → EVENT, others → LINKEDIN default
+                    channel: (newType === 'WEBINAR' || newType === 'EVENT') ? 'EVENT' : 'LINKEDIN',
+                    // Reset topic tag if not webinar or event
+                    topicTag: (newType !== 'WEBINAR' && newType !== 'EVENT') ? '' : formData.topicTag
                   });
                 }}
               >
@@ -205,12 +248,14 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
                   <SelectItem value="WEBINAR">Webinar</SelectItem>
                   <SelectItem value="SOCIAL">Social Media</SelectItem>
                   <SelectItem value="FREEBIE">Freebie / Lead Magnet</SelectItem>
+                  <SelectItem value="EVENT">Event</SelectItem>
                 </SelectContent>
               </Select>
               <p className="mt-1 text-sm text-gray-500">
                 {formData.type === 'WEBINAR' && 'Event webinar atau online seminar'}
                 {formData.type === 'SOCIAL' && 'Campaign di social media (post, story, ads)'}
                 {formData.type === 'FREEBIE' && 'Free download atau lead magnet di website'}
+                {formData.type === 'EVENT' && 'Event fisik atau seminar offline'}
               </p>
             </div>
 
@@ -222,14 +267,14 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
               <Select
                 value={formData.channel}
                 onValueChange={(value) => setFormData({ ...formData, channel: value as Channel })}
-                disabled={isWebinar}
+                disabled={isEventType}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={isWebinar ? "Event (Webinar)" : "Select channel"} />
+                  <SelectValue placeholder={isEventType ? "Event" : "Select channel"} />
                 </SelectTrigger>
                 <SelectContent className="z-[10000]">
-                  {isWebinar ? (
-                    <SelectItem value="EVENT">Event (Webinar)</SelectItem>
+                  {isEventType ? (
+                    <SelectItem value="EVENT">Event</SelectItem>
                   ) : (
                     <>
                       <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
@@ -239,9 +284,9 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
                   )}
                 </SelectContent>
               </Select>
-              {isWebinar && (
+              {isEventType && (
                 <p className="mt-1 text-sm text-gray-500">
-                  Channel otomatis di-set ke EVENT untuk campaign webinar
+                  Channel otomatis di-set ke EVENT untuk campaign {formData.type === 'WEBINAR' ? 'webinar' : 'event'}
                 </p>
               )}
             </div>
@@ -261,11 +306,11 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
               />
             </div>
 
-            {/* Topic Tag (Webinar only) */}
-            {isWebinar && (
+            {/* Topic Tag (Webinar required, Event optional) */}
+            {(isWebinar || formData.type === 'EVENT') && (
               <div className="md:col-span-2">
                 <label className="block text-sm text-gray-700 mb-2">
-                  Topic Tag
+                  Topic Tag {isWebinar && <span className="text-red-500">*</span>}
                 </label>
                 <Input
                   type="text"
@@ -273,6 +318,7 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
                   onChange={(e) => setFormData({ ...formData, topicTag: e.target.value })}
                   placeholder="e.g., TAX_PLANNING, LEGAL_SETUP"
                   className="w-full"
+                  required={isWebinar}
                 />
                 <p className="mt-1 text-sm text-gray-500">
                   Topic tag untuk analytics (tidak ditampilkan ke user form)
@@ -280,27 +326,29 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
               </div>
             )}
 
-            {/* Date Range (Optional) */}
+            {/* Date Range */}
             <div>
               <label className="block text-sm text-gray-700 mb-2">
-                Start Date (Optional)
+                Start Date <span className="text-red-500">*</span>
               </label>
               <Input
                 type="date"
                 value={formData.dateStart}
                 onChange={(e) => setFormData({ ...formData, dateStart: e.target.value })}
                 className="w-full"
+                required
               />
             </div>
             <div>
               <label className="block text-sm text-gray-700 mb-2">
-                End Date (Optional)
+                End Date <span className="text-red-500">*</span>
               </label>
               <Input
                 type="date"
                 value={formData.dateEnd}
                 onChange={(e) => setFormData({ ...formData, dateEnd: e.target.value })}
                 className="w-full"
+                required
               />
             </div>
           </div>
@@ -308,7 +356,7 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
           {/* Notes */}
           <div>
             <label className="block text-sm text-gray-700 mb-2">
-              Notes (Optional)
+              Notes <span className="text-red-500">*</span>
             </label>
             <Textarea
               value={formData.notes}
@@ -316,6 +364,7 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
               rows={4}
               className="w-full"
               placeholder="Target audience, goals, special instructions..."
+              required
             />
           </div>
             </div>

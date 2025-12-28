@@ -30,6 +30,14 @@ export function SubmissionDetailModal({ submission, open, onClose }: SubmissionD
     }
   };
 
+  // Format channel display (capitalize first letter only)
+  const formatChannel = (channel: string) => {
+    if (channel === 'IG') {
+      return 'Instagram';
+    }
+    return channel.charAt(0).toUpperCase() + channel.slice(1).toLowerCase();
+  };
+
   // Handle close with animation
   const handleClose = () => {
     if (isAnimatingOut) return;
@@ -178,7 +186,7 @@ export function SubmissionDetailModal({ submission, open, onClose }: SubmissionD
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Source Channel:</span>
-                  <span className="font-medium text-gray-900">{submission.sourceChannel}</span>
+                  <span className="font-medium text-gray-900">{formatChannel(submission.sourceChannel)}</span>
                 </div>
                 {submission.topicTag && (
                   <div className="flex justify-between">

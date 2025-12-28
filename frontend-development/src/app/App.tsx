@@ -81,8 +81,12 @@ export default function App() {
     channel: string;
     topicTag?: string;
   } | null>(null);
+  const [formBuilderDetail, setFormBuilderDetail] = useState<{
+    campaignName: string;
+  } | null>(null);
   const resetDetailRef = useRef<(() => void) | null>(null);
   const resetCampaignDetailRef = useRef<(() => void) | null>(null);
+  const resetFormBuilderDetailRef = useRef<(() => void) | null>(null);
 
   // Check for existing session on mount
   useEffect(() => {
@@ -191,6 +195,11 @@ export default function App() {
     // Reset campaign detail when navigating away from campaigns page
     if (campaignDetail && path !== 'campaigns') {
       setCampaignDetail(null);
+    }
+    
+    // Reset form builder detail when navigating away from campaigns page
+    if (formBuilderDetail && path !== 'campaigns') {
+      setFormBuilderDetail(null);
     }
     
     setActiveNav(path);
@@ -330,8 +339,12 @@ export default function App() {
                 userName={currentUser.name}
                 activeNav={activeNav}
                 onCampaignDetailChange={setCampaignDetail}
+                onFormBuilderDetailChange={setFormBuilderDetail}
                 onResetDetail={(resetFn) => {
                   resetCampaignDetailRef.current = resetFn;
+                }}
+                onResetFormBuilderDetail={(resetFn) => {
+                  resetFormBuilderDetailRef.current = resetFn;
                 }}
               />;
             case 'leads':
@@ -433,6 +446,16 @@ export default function App() {
                 // Reset detail in CampaignsPage
                 if (resetCampaignDetailRef.current) {
                   resetCampaignDetailRef.current();
+                }
+              }
+            } : undefined}
+            formBuilderDetail={formBuilderDetail ? {
+              ...formBuilderDetail,
+              onBack: () => {
+                setFormBuilderDetail(null);
+                // Reset form builder detail in CampaignsPage
+                if (resetFormBuilderDetailRef.current) {
+                  resetFormBuilderDetailRef.current();
                 }
               }
             } : undefined}

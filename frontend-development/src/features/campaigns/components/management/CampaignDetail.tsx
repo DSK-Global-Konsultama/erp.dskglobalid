@@ -52,7 +52,16 @@ export function CampaignDetail({ campaignId, onBack, onCreateForm, onEditForm }:
       case 'WEBINAR': return 'bg-blue-100 text-blue-700';
       case 'SOCIAL': return 'bg-purple-100 text-purple-700';
       case 'FREEBIE': return 'bg-green-100 text-green-700';
+      case 'EVENT': return 'bg-red-100 text-red-700';
     }
+  };
+
+  // Format channel display (capitalize first letter only)
+  const formatChannel = (channel: Campaign['channel']) => {
+    if (channel === 'IG') {
+      return 'Instagram';
+    }
+    return channel.charAt(0).toUpperCase() + channel.slice(1).toLowerCase();
   };
 
   // Calculate stats
@@ -76,7 +85,7 @@ export function CampaignDetail({ campaignId, onBack, onCreateForm, onEditForm }:
                 {campaign.status}
               </span>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
-                {campaign.channel}
+                {formatChannel(campaign.channel)}
               </span>
               {campaign.topicTag && (
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-indigo-100 text-indigo-700">
