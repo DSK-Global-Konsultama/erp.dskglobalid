@@ -28,6 +28,7 @@ import { ReimbursePage as COOReimbursePage } from './routes/coo/pages/ReimburseP
 // Other role imports
 import { BDMEODashboard } from './routes/bd-meo';
 import { DashboardPage as BDMEODashboardPage } from './routes/bd-meo/pages/DashboardPage';
+import { CampaignsPage as BDMEOCampaignsPage } from './routes/bd-meo/pages/CampaignsPage';
 import { TicketingPage as BDMEOTicketingPage } from './routes/bd-meo/pages/TicketingPage';
 import { BDExecutiveDashboard } from './routes/bd-executive';
 import { TicketingPage as BDExecutiveTicketingPage } from './routes/bd-executive/pages/TicketingPage';
@@ -310,8 +311,10 @@ export default function App() {
           switch (activeNav) {
             case 'dashboard':
               return <BDMEODashboardPage userName={currentUser.name} />;
+            case 'campaigns':
+              return <BDMEOCampaignsPage userName={currentUser.name} />;
             case 'leads':
-          return <BDMEODashboard userName={currentUser.name} />;
+              return <BDMEODashboard userName={currentUser.name} />;
             default:
               return <BDMEODashboardPage userName={currentUser.name} />;
           }

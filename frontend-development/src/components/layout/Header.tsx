@@ -114,6 +114,8 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
       case 'BD-MEO':
         if (activeNav === 'dashboard') {
           return 'Dashboard MEO';
+        } else if (activeNav === 'campaigns') {
+          return 'Campaigns';
         } else if (activeNav === 'leads') {
           return 'My Leads';
         } else if (activeNav === 'ticketing') {
@@ -208,6 +210,8 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
       case 'BD-MEO':
         if (activeNav === 'dashboard') {
           return 'Ringkasan leads yang Anda kelola';
+        } else if (activeNav === 'campaigns') {
+          return 'Kelola campaign untuk lead generation';
         } else if (activeNav === 'leads') {
           return 'Kelola semua leads yang Anda buat';
         } else if (activeNav === 'ticketing') {

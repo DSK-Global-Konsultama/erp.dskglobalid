@@ -13,7 +13,8 @@ import {
   HelpCircle,
   LogOut,
   Building2,
-  Inbox
+  Inbox,
+  Megaphone
 } from 'lucide-react';
 
 type UserRole = 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist' | 'SuperAdmin';
@@ -84,6 +85,7 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
       case 'BD-MEO':
         return [
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
+          { id: 'campaigns', label: 'Campaigns', icon: Megaphone, path: 'campaigns' },
           { id: 'leads', label: 'My Leads', icon: Users, path: 'leads' },
           { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
           { id: 'reimburse', label: 'Reimburse', icon: Receipt, path: 'reimburse' },
