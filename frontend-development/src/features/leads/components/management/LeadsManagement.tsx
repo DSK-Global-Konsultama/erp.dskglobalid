@@ -25,15 +25,15 @@ export function LeadsManagement({ userName, mode, title, onLeadClick }: LeadsMan
   // Use same data source for both MEO and CEO - always use 'Sarah Wijaya' to ensure consistency
   const defaultLeads = generateDummyLeadsBDMEO('Sarah Wijaya');
   
+  // Status yang relevan mulai dari TO_BE_MEET
+  const relevantStatuses = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_NOTULEN', 'NOTULEN_SUBMITTED', 'NOTULEN_APPROVED', 'NEED_PROPOSAL', 'IN_PROPOSAL', 'PROPOSAL_APPROVED', 'PROPOSAL_SENT', 'PROPOSAL_ACCEPTED', 'PROPOSAL_EXPIRED', 'NEED_EL', 'EL_SUBMITTED', 'EL_APPROVED', 'EL_SENT', 'EL_SIGNED', 'NEED_HANDOVER', 'HANDOVER_SUBMITTED', 'HANDOVER_APPROVED', 'HANDOVER_SENT_TO_PM', 'DONE', 'DEAL_WON'];
+
   const [leads, setLeads] = useState<Lead[]>(() => {
     if (mode === 'edit') {
       return [...defaultLeads, ...mockLeads];
-    } else if (mode === 'tracker') {
-      // For tracker mode, filter for follow-up statuses
-      const relevantStatuses = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_NOTULEN', 'NEED_PROPOSAL', 'IN_PROPOSAL', 'PROPOSAL_EXPIRED'];
-      return defaultLeads.filter(lead => relevantStatuses.includes((lead as any).status));
     } else {
-      return defaultLeads;
+      // For tracker and view mode, filter for statuses starting from TO_BE_MEET
+      return defaultLeads.filter(lead => relevantStatuses.includes((lead as any).status));
     }
   });
   const [currentPage, setCurrentPage] = useState(1);
@@ -167,9 +167,26 @@ export function LeadsManagement({ userName, mode, title, onLeadClick }: LeadsMan
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="TO_BE_MEET">TO BE MEET</SelectItem>
                     <SelectItem value="MEETING_SCHEDULED">MEETING SCHEDULED</SelectItem>
+                    <SelectItem value="NEED_NOTULEN">NEED NOTULEN</SelectItem>
+                    <SelectItem value="NOTULEN_SUBMITTED">NOTULEN SUBMITTED</SelectItem>
+                    <SelectItem value="NOTULEN_APPROVED">NOTULEN APPROVED</SelectItem>
                     <SelectItem value="NEED_PROPOSAL">NEED PROPOSAL</SelectItem>
                     <SelectItem value="IN_PROPOSAL">IN PROPOSAL</SelectItem>
+                    <SelectItem value="PROPOSAL_APPROVED">PROPOSAL APPROVED</SelectItem>
+                    <SelectItem value="PROPOSAL_SENT">PROPOSAL SENT</SelectItem>
+                    <SelectItem value="PROPOSAL_ACCEPTED">PROPOSAL ACCEPTED</SelectItem>
                     <SelectItem value="PROPOSAL_EXPIRED">PROPOSAL EXPIRED</SelectItem>
+                    <SelectItem value="NEED_EL">NEED EL</SelectItem>
+                    <SelectItem value="EL_SUBMITTED">EL SUBMITTED</SelectItem>
+                    <SelectItem value="EL_APPROVED">EL APPROVED</SelectItem>
+                    <SelectItem value="EL_SENT">EL SENT</SelectItem>
+                    <SelectItem value="EL_SIGNED">EL SIGNED</SelectItem>
+                    <SelectItem value="NEED_HANDOVER">NEED HANDOVER</SelectItem>
+                    <SelectItem value="HANDOVER_SUBMITTED">HANDOVER SUBMITTED</SelectItem>
+                    <SelectItem value="HANDOVER_APPROVED">HANDOVER APPROVED</SelectItem>
+                    <SelectItem value="HANDOVER_SENT_TO_PM">HANDOVER SENT TO PM</SelectItem>
+                    <SelectItem value="DONE">DONE</SelectItem>
+                    <SelectItem value="DEAL_WON">DEAL WON</SelectItem>
                   </SelectContent>
                 </Select>
                 <div className="flex gap-2">
@@ -220,15 +237,28 @@ export function LeadsManagement({ userName, mode, title, onLeadClick }: LeadsMan
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="NEW">NEW</SelectItem>
                     <SelectItem value="TO_BE_MEET">TO BE MEET</SelectItem>
                     <SelectItem value="MEETING_SCHEDULED">MEETING SCHEDULED</SelectItem>
+                    <SelectItem value="NEED_NOTULEN">NEED NOTULEN</SelectItem>
+                    <SelectItem value="NOTULEN_SUBMITTED">NOTULEN SUBMITTED</SelectItem>
+                    <SelectItem value="NOTULEN_APPROVED">NOTULEN APPROVED</SelectItem>
                     <SelectItem value="NEED_PROPOSAL">NEED PROPOSAL</SelectItem>
                     <SelectItem value="IN_PROPOSAL">IN PROPOSAL</SelectItem>
+                    <SelectItem value="PROPOSAL_APPROVED">PROPOSAL APPROVED</SelectItem>
+                    <SelectItem value="PROPOSAL_SENT">PROPOSAL SENT</SelectItem>
+                    <SelectItem value="PROPOSAL_ACCEPTED">PROPOSAL ACCEPTED</SelectItem>
                     <SelectItem value="PROPOSAL_EXPIRED">PROPOSAL EXPIRED</SelectItem>
+                    <SelectItem value="NEED_EL">NEED EL</SelectItem>
+                    <SelectItem value="EL_SUBMITTED">EL SUBMITTED</SelectItem>
+                    <SelectItem value="EL_APPROVED">EL APPROVED</SelectItem>
+                    <SelectItem value="EL_SENT">EL SENT</SelectItem>
+                    <SelectItem value="EL_SIGNED">EL SIGNED</SelectItem>
+                    <SelectItem value="NEED_HANDOVER">NEED HANDOVER</SelectItem>
+                    <SelectItem value="HANDOVER_SUBMITTED">HANDOVER SUBMITTED</SelectItem>
+                    <SelectItem value="HANDOVER_APPROVED">HANDOVER APPROVED</SelectItem>
+                    <SelectItem value="HANDOVER_SENT_TO_PM">HANDOVER SENT TO PM</SelectItem>
+                    <SelectItem value="DONE">DONE</SelectItem>
                     <SelectItem value="DEAL_WON">DEAL WON</SelectItem>
-                    <SelectItem value="ON_HOLD">ON HOLD</SelectItem>
-                    <SelectItem value="DROP">DROP</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button 
@@ -273,35 +303,23 @@ export function LeadsManagement({ userName, mode, title, onLeadClick }: LeadsMan
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  {mode === 'tracker' ? (
-                    <>
-                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Client</th>
-                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">PIC</th>
-                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Service</th>
-                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Status</th>
-                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Last Activity</th>
-                    </>
-                  ) : (
-                    <>
-                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">ID</th>
-                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Client Name</th>
-                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">PIC Name</th>
-                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Contact</th>
-                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Service</th>
-                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Source</th>
-                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Status</th>
-                      <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Created At</th>
-                      {mode === 'view' && <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Last Activity</th>}
-                      {mode === 'edit' && <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Actions</th>}
-                    </>
-                  )}
+                  <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">ID</th>
+                  <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Client Name</th>
+                  <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">PIC Name</th>
+                  <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Contact</th>
+                  <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Source</th>
+                  <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Status</th>
+                  <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Created At</th>
+                  {mode === 'tracker' && <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Last Activity</th>}
+                  {mode === 'view' && <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Last Activity</th>}
+                  {mode === 'edit' && <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Actions</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredLeads.length === 0 ? (
                   <tr>
                     <td 
-                      colSpan={mode === 'tracker' ? 5 : mode === 'view' ? 9 : 9} 
+                      colSpan={mode === 'tracker' ? 8 : mode === 'view' ? 8 : 8} 
                       className="px-6 py-12 text-center text-gray-500"
                     >
                       No leads found
@@ -314,77 +332,54 @@ export function LeadsManagement({ userName, mode, title, onLeadClick }: LeadsMan
                       className={`hover:bg-gray-50 transition-colors ${mode === 'tracker' && onLeadClick ? 'cursor-pointer' : ''}`}
                       onClick={mode === 'tracker' && onLeadClick ? () => onLeadClick(lead.id) : undefined}
                     >
-                      {mode === 'tracker' ? (
-                        <>
-                          <td className="px-6 py-4">
-                            <div className="font-medium text-gray-900">{lead.company}</div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm">
-                              <div className="text-gray-900">{lead.clientName}</div>
-                              <div className="text-gray-600">{lead.email}</div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="text-sm text-gray-700">{(lead as any).service || '-'}</span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <StatusChip status={(lead as any).status || 'NEW'} />
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="text-sm text-gray-600">
-                              {(lead as any).lastActivity || '-'}
-                            </span>
-                          </td>
-                        </>
-                      ) : (
-                        <>
-                          <td className="px-6 py-4">
-                            <span className="text-sm text-gray-700">{lead.id}</span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="font-medium text-gray-900">{lead.company}</div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="text-sm text-gray-700">{lead.clientName}</span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm">
-                              <div className="text-gray-900">{lead.phone}</div>
-                              <div className="text-gray-600">{lead.email}</div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="text-sm text-gray-700">{(lead as any).service || '-'}</span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="text-sm text-gray-700">{lead.source}</span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <StatusChip status={lead.status} />
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="text-sm text-gray-600">{formatDate(lead.createdDate)}</span>
-                          </td>
-                          {mode === 'view' && (
-                            <td className="px-6 py-4">
-                              <span className="text-sm text-gray-600">
-                                {(lead as any).lastActivity || (lead.lastFollowUp ? formatDate(lead.lastFollowUp) : formatDate(lead.createdDate))}
-                              </span>
-                            </td>
-                          )}
-                          {mode === 'edit' && (
-                            <td className="px-6 py-4">
-                              <button
-                                onClick={() => handleEdit(lead)}
-                                className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              >
-                                <Edit className="w-4 h-4" />
-                                Edit
-                              </button>
-                            </td>
-                          )}
-                        </>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-700">{lead.id}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-gray-900">{lead.company}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-700">{lead.clientName}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm">
+                          <div className="text-gray-900">{lead.phone}</div>
+                          <div className="text-gray-600">{lead.email}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-700">{lead.source}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <StatusChip status={(lead as any).status || lead.status} />
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-600">{formatDate(lead.createdDate)}</span>
+                      </td>
+                      {mode === 'tracker' && (
+                        <td className="px-6 py-4">
+                          <span className="text-sm text-gray-600">
+                            {(lead as any).lastActivity || '-'}
+                          </span>
+                        </td>
+                      )}
+                      {mode === 'view' && (
+                        <td className="px-6 py-4">
+                          <span className="text-sm text-gray-600">
+                            {(lead as any).lastActivity || (lead.lastFollowUp ? formatDate(lead.lastFollowUp) : formatDate(lead.createdDate))}
+                          </span>
+                        </td>
+                      )}
+                      {mode === 'edit' && (
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => handleEdit(lead)}
+                            className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                            <Edit className="w-4 h-4" />
+                            Edit
+                          </button>
+                        </td>
                       )}
                     </tr>
                   ))

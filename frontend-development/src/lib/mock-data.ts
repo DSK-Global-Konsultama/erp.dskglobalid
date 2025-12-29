@@ -152,10 +152,27 @@ export interface Proposal {
   dealDate?: string;
   hasSubcon: boolean;
   sentAt?: string;
-  elStatus?: 'DRAFT' | 'SENT' | 'SIGNED' | 'REJECTED';
+  elStatus?: 'DRAFT' | 'WAITING_CEO_APPROVAL' | 'SENT' | 'SIGNED' | 'REJECTED' | 'APPROVED';
   elSignedDate?: string;
-  status: 'DRAFT' | 'WAITING_APPROVAL' | 'APPROVED' | 'SENT' | 'REJECTED' | 'ACCEPTED' | 'PROPOSAL_EXPIRED';
+  status: 'DRAFT' | 'WAITING_APPROVAL' | 'WAITING_CEO_APPROVAL' | 'APPROVED' | 'SENT' | 'REJECTED' | 'ACCEPTED' | 'PROPOSAL_EXPIRED';
   createdAt: string;
+  createdBy?: string;
+  clientName?: string;
+}
+
+export interface Handover {
+  id: string;
+  leadId: string;
+  projectId?: string;
+  clientName: string;
+  projectTitle: string;
+  pm: string;
+  status: 'DRAFT' | 'WAITING_CEO_APPROVAL' | 'APPROVED' | 'REJECTED' | 'SENT_TO_PM';
+  createdBy: string;
+  createdAt: string;
+  summary?: string;
+  deliverables?: string[];
+  notes?: string;
 }
 
 // Master data
@@ -416,6 +433,91 @@ export const mockLeads: Lead[] = [
     createdDate: '2025-10-05',
     claimedDate: '2025-10-06',
     notes: 'Deal untuk Transfer Pricing',
+    createdBy: 'Tommy Budiman',
+  },
+  // Dummy leads untuk CEO Approval
+  {
+    id: 'L201',
+    clientName: 'Ahmad Pratama',
+    company: 'PT Teknologi Maju',
+    email: 'ahmad@teknologimaju.com',
+    phone: '081111111111',
+    source: 'Website',
+    status: 'follow-up',
+    claimedBy: 'Andi Wijaya',
+    createdDate: '2025-11-15',
+    claimedDate: '2025-11-16',
+    notes: 'Lead untuk Tax Compliance',
+    createdBy: 'Sarah Wijaya',
+  },
+  {
+    id: 'L202',
+    clientName: 'Budi Santoso',
+    company: 'PT Maju Jaya',
+    email: 'budi@majujaya.com',
+    phone: '082222222222',
+    source: 'LinkedIn',
+    status: 'follow-up',
+    claimedBy: 'Rina Kusuma',
+    createdDate: '2025-11-10',
+    claimedDate: '2025-11-11',
+    notes: 'Lead untuk Audit and Assurance',
+    createdBy: 'Tommy Budiman',
+  },
+  {
+    id: 'L203',
+    clientName: 'Sari Indrawati',
+    company: 'PT Indah Permai',
+    email: 'sari@indahpermai.com',
+    phone: '083333333333',
+    source: 'Referral',
+    status: 'follow-up',
+    claimedBy: 'Dedi Supriyanto',
+    createdDate: '2025-11-12',
+    claimedDate: '2025-11-13',
+    notes: 'Lead untuk Transfer Pricing',
+    createdBy: 'Sarah Wijaya',
+  },
+  {
+    id: 'L204',
+    clientName: 'Rudi Kurniawan',
+    company: 'PT Digital Nusantara',
+    email: 'rudi@digitalnusantara.com',
+    phone: '084444444444',
+    source: 'Facebook',
+    status: 'follow-up',
+    claimedBy: 'Fitri Handayani',
+    createdDate: '2025-11-14',
+    claimedDate: '2025-11-15',
+    notes: 'Lead untuk Web Development dengan subcon',
+    createdBy: 'Tommy Budiman',
+  },
+  {
+    id: 'L205',
+    clientName: 'Hendra Gunawan',
+    company: 'PT Bumi Nusantara',
+    email: 'hendra@buminusantara.com',
+    phone: '085555555555',
+    source: 'Event',
+    status: 'follow-up',
+    claimedBy: 'Andi Wijaya',
+    createdDate: '2025-11-05',
+    claimedDate: '2025-11-06',
+    notes: 'Lead untuk Tax Dispute',
+    createdBy: 'Sarah Wijaya',
+  },
+  {
+    id: 'L206',
+    clientName: 'Linda Wijayanti',
+    company: 'PT Harmoni Jaya',
+    email: 'linda@harmonijaya.com',
+    phone: '086666666666',
+    source: 'Instagram',
+    status: 'follow-up',
+    claimedBy: 'Rina Kusuma',
+    createdDate: '2025-11-08',
+    claimedDate: '2025-11-09',
+    notes: 'Lead untuk Strategic Tax Advisory',
     createdBy: 'Tommy Budiman',
   },
 ];
@@ -2840,6 +2942,130 @@ export const mockNotulensi: Notulensi[] = [
     createdBy: 'Rina Kusuma',
     createdAt: '2025-05-05T12:00:00',
   },
+  // Dummy data untuk CEO Approval - Notulensi dengan status WAITING_CEO_APPROVAL
+  {
+    id: 'N101',
+    leadId: 'L201',
+    meetingId: 'M101',
+    clientName: 'Ahmad Pratama',
+    meetingInfo: {
+      date: '2025-11-20',
+      time: '10:00 - 11:30',
+      location: 'Office PT Teknologi Maju, Jakarta',
+    },
+    participants: {
+      internal: ['Andi Wijaya', 'Rina Kusuma'],
+      client: ['Ahmad Pratama', 'Siti Nurhaliza'],
+    },
+    objectives: 'Diskusi kebutuhan Tax Compliance dan konsultasi perpajakan',
+    discussionSummary: {
+      background: 'PT Teknologi Maju membutuhkan konsultasi tax compliance untuk tahun 2025',
+      issuesDiscussed: 'Membahas kewajiban perpajakan, tax planning, dan compliance requirements',
+      clientInfo: 'Perusahaan teknologi dengan 50+ karyawan, revenue 5M per tahun',
+      firmInfo: 'Kami menawarkan Tax Compliance service dengan comprehensive approach',
+      risks: 'Client perlu memastikan semua dokumen lengkap untuk audit',
+    },
+    agreements: [
+      {
+        item: 'Service Package',
+        details: 'Tax Compliance package untuk tahun 2025 dengan monthly consultation',
+      },
+    ],
+    actionItems: [
+      {
+        action: 'Siapkan proposal Tax Compliance',
+        pic: 'Andi Wijaya',
+        deadline: '2025-11-25',
+      },
+    ],
+    nextSteps: 'Proposal akan dikirim setelah approval dari CEO',
+    notes: 'Client sangat tertarik dan meminta proposal secepatnya',
+    status: 'WAITING_CEO_APPROVAL',
+    createdBy: 'Andi Wijaya',
+    createdAt: '2025-11-20T12:00:00',
+  },
+  {
+    id: 'N102',
+    leadId: 'L202',
+    meetingId: 'M102',
+    clientName: 'Budi Santoso',
+    meetingInfo: {
+      date: '2025-11-18',
+      time: '14:00 - 15:30',
+      location: 'https://zoom.us/j/123456789',
+    },
+    participants: {
+      internal: ['Rina Kusuma'],
+      client: ['Budi Santoso', 'Dewi Lestari'],
+    },
+    objectives: 'Presentasi layanan Audit and Assurance untuk compliance',
+    discussionSummary: {
+      background: 'PT Maju Jaya membutuhkan audit untuk compliance dengan regulasi baru',
+      issuesDiscussed: 'Membahas scope audit, timeline, deliverables, dan pricing',
+      clientInfo: 'Perusahaan manufaktur dengan multiple divisions',
+      firmInfo: 'Kami menawarkan Audit and Assurance dengan comprehensive approach',
+      risks: 'Tidak ada risiko signifikan, client sudah siap dengan dokumentasi',
+    },
+    agreements: [
+      {
+        item: 'Audit Scope',
+        details: 'Financial audit dan compliance audit untuk tahun 2024 dan Q1 2025',
+      },
+    ],
+    actionItems: [
+      {
+        action: 'Buat proposal Audit and Assurance',
+        pic: 'Rina Kusuma',
+        deadline: '2025-11-22',
+      },
+    ],
+    nextSteps: 'Proposal akan dikirim setelah approval dari CEO',
+    notes: 'Client meminta proposal dengan detail breakdown biaya per service',
+    status: 'WAITING_CEO_APPROVAL',
+    createdBy: 'Rina Kusuma',
+    createdAt: '2025-11-18T16:00:00',
+  },
+  {
+    id: 'N103',
+    leadId: 'L203',
+    meetingId: 'M103',
+    clientName: 'Sari Indrawati',
+    meetingInfo: {
+      date: '2025-11-15',
+      time: '09:00 - 10:30',
+      location: 'Office PT Indah Permai, Bandung',
+    },
+    participants: {
+      internal: ['Dedi Supriyanto'],
+      client: ['Sari Indrawati'],
+    },
+    objectives: 'Konsultasi Transfer Pricing untuk intercompany transactions',
+    discussionSummary: {
+      background: 'PT Indah Permai membutuhkan transfer pricing documentation untuk compliance',
+      issuesDiscussed: 'Membahas intercompany transactions, pricing methodology, dan documentation requirements',
+      clientInfo: 'Perusahaan retail dengan multiple subsidiaries',
+      firmInfo: 'Kami menawarkan Transfer Pricing service dengan comprehensive documentation',
+      risks: 'Client perlu memastikan semua intercompany transactions terdokumentasi dengan baik',
+    },
+    agreements: [
+      {
+        item: 'Service Package',
+        details: 'Transfer Pricing documentation dan consultation package',
+      },
+    ],
+    actionItems: [
+      {
+        action: 'Siapkan proposal Transfer Pricing',
+        pic: 'Dedi Supriyanto',
+        deadline: '2025-11-20',
+      },
+    ],
+    nextSteps: 'Proposal akan dikirim setelah approval dari CEO',
+    notes: 'Client sangat tertarik dan meminta proposal dengan detail pricing',
+    status: 'WAITING_CEO_APPROVAL',
+    createdBy: 'Dedi Supriyanto',
+    createdAt: '2025-11-15T11:00:00',
+  },
 ];
 
 // Mock data for proposals
@@ -2890,6 +3116,87 @@ export const mockProposals: Proposal[] = [
     status: 'SENT',
     createdAt: '2025-06-18T10:00:00',
   },
-  
+  // Dummy data untuk CEO Approval - Proposal dengan status WAITING_CEO_APPROVAL
+  {
+    id: 'P101',
+    leadId: 'L201',
+    service: 'Tax Compliance',
+    proposalFee: 25000000,
+    paymentType: 'Termin 1: 50% (IDR 12.5M) - DP saat kontrak ditandatangani | Termin 2: 50% (IDR 12.5M) - Pelunasan saat project selesai',
+    hasSubcon: false,
+    status: 'WAITING_CEO_APPROVAL',
+    createdAt: '2025-11-20T14:00:00',
+    createdBy: 'Andi Wijaya',
+    clientName: 'Ahmad Pratama',
+  },
+  {
+    id: 'P102',
+    leadId: 'L202',
+    service: 'Audit and Assurance',
+    proposalFee: 50000000,
+    paymentType: 'Termin 1: 40% (IDR 20M) - DP saat kontrak ditandatangani | Termin 2: 35% (IDR 17.5M) - Progress 50% | Termin 3: 25% (IDR 12.5M) - Pelunasan saat project selesai',
+    hasSubcon: false,
+    status: 'WAITING_CEO_APPROVAL',
+    createdAt: '2025-11-18T16:00:00',
+    createdBy: 'Rina Kusuma',
+    clientName: 'Budi Santoso',
+  },
+  {
+    id: 'P103',
+    leadId: 'L203',
+    service: 'Transfer Pricing',
+    proposalFee: 35000000,
+    paymentType: 'Termin 1: 50% (IDR 17.5M) - DP saat kontrak ditandatangani | Termin 2: 50% (IDR 17.5M) - Pelunasan saat project selesai',
+    hasSubcon: false,
+    status: 'WAITING_CEO_APPROVAL',
+    createdAt: '2025-11-15T11:00:00',
+    createdBy: 'Dedi Supriyanto',
+    clientName: 'Sari Indrawati',
+  },
+  {
+    id: 'P104',
+    leadId: 'L204',
+    service: 'Web Development',
+    proposalFee: 60000000,
+    paymentType: 'Subkon dengan Asahi: pembayaran 100% di awal oleh partner',
+    hasSubcon: true,
+    status: 'WAITING_CEO_APPROVAL',
+    createdAt: '2025-11-19T10:00:00',
+    createdBy: 'Fitri Handayani',
+    clientName: 'Rudi Kurniawan',
+  },
+  // Dummy data untuk CEO Approval - Proposal dengan elStatus WAITING_CEO_APPROVAL
+  {
+    id: 'P105',
+    leadId: 'L205',
+    service: 'Tax Dispute',
+    proposalFee: 80000000,
+    agreeFee: 75000000,
+    paymentType: 'Termin 1: 50% (IDR 37.5M) - DP saat EL signed | Termin 2: 50% (IDR 37.5M) - Pelunasan saat project selesai',
+    paymentTypeFinal: 'Termin 1: 50% (IDR 37.5M) - DP saat EL signed | Termin 2: 50% (IDR 37.5M) - Pelunasan saat project selesai',
+    dealDate: '2025-11-10',
+    hasSubcon: false,
+    status: 'APPROVED',
+    elStatus: 'WAITING_CEO_APPROVAL',
+    createdAt: '2025-11-05T09:00:00',
+    createdBy: 'Andi Wijaya',
+    clientName: 'Hendra Gunawan',
+  },
+  {
+    id: 'P106',
+    leadId: 'L206',
+    service: 'Strategic Tax Advisory',
+    proposalFee: 120000000,
+    agreeFee: 115000000,
+    paymentType: 'Retainer bulanan: IDR 9.58M per bulan untuk periode 12 bulan (Jan 2025 - Des 2025); Penagihan: Awal bulan',
+    paymentTypeFinal: 'Retainer bulanan: IDR 9.58M per bulan untuk periode 12 bulan (Jan 2025 - Des 2025); Penagihan: Awal bulan',
+    dealDate: '2025-11-12',
+    hasSubcon: false,
+    status: 'APPROVED',
+    elStatus: 'WAITING_CEO_APPROVAL',
+    createdAt: '2025-11-08T10:00:00',
+    createdBy: 'Rina Kusuma',
+    clientName: 'Linda Wijayanti',
+  },
 ];
 

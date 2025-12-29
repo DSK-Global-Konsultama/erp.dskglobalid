@@ -14,6 +14,7 @@ import { ProjectsPage as CEOProjectsPage } from './routes/ceo/pages/ProjectsPage
 import { InvoicesPage as CEOInvoicesPage } from './routes/ceo/pages/InvoicesPage';
 import { TicketingPage as CEOTicketingPage } from './routes/ceo/pages/TicketingPage';
 import { ReimbursePage as CEOReimbursePage } from './routes/ceo/pages/ReimbursePage';
+import { ApprovalPage as CEOApprovalPage } from './routes/ceo/pages/ApprovalPage';
 
 // COO imports
 import { COODashboard } from './routes/coo';
@@ -306,6 +307,8 @@ export default function App() {
               return <CEODashboard />;
             case 'inbox':
               return <CEOInboxPage />;
+            case 'approval':
+              return <CEOApprovalPage />;
             case 'leads':
               return <CEOLeadsPage />;
             case 'deals':

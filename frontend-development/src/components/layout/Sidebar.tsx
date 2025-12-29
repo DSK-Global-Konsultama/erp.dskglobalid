@@ -15,7 +15,8 @@ import {
   Building2,
   Inbox,
   Megaphone,
-  Database
+  Database,
+  FileCheck
 } from 'lucide-react';
 
 type UserRole = 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist' | 'SuperAdmin';
@@ -58,6 +59,7 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
     const ceoNavItems = [
       { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
       { id: 'inbox', label: 'Lead Inbox', icon: Inbox, path: 'inbox' },
+      { id: 'approval', label: 'Approval', icon: FileCheck, path: 'approval' },
       { id: 'leads', label: 'Leads', icon: Users, path: 'leads' },
       { id: 'deals', label: 'Deals', icon: HandshakeIcon, path: 'deals' },
       { id: 'projects', label: 'Projects', icon: FolderKanban, path: 'projects' },

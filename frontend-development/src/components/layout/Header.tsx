@@ -106,6 +106,8 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
         return role === 'CEO' ? 'Dashboard CEO' : `Dashboard ${role}`;
       } else if (activeNav === 'inbox') {
         return 'Kotak Masuk Lead';
+      } else if (activeNav === 'approval') {
+        return 'Approval';
       } else if (activeNav === 'leads') {
         return 'Semua Lead';
       } else if (activeNav === 'deals') {
@@ -202,6 +204,8 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
         return 'Monitoring Business Development & Project Management';
       } else if (activeNav === 'inbox') {
         return 'Review and follow-up on leads promoted by BD Admin';
+      } else if (activeNav === 'approval') {
+        return 'Review dan approve dokumen dari BD Admin';
       } else if (activeNav === 'leads') {
         return 'View dan monitor semua leads dalam pipeline';
       } else if (activeNav === 'deals') {
