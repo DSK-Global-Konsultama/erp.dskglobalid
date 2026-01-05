@@ -1,3 +1,4 @@
+
 on: push
 name: Deploy Website on cPanel
 jobs:
@@ -17,4 +18,3 @@ jobs:
         server-dir: /erp.dsk-global.id/
         log-level: verbose
         timeout: 120000
-        
