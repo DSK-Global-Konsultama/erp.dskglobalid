@@ -160,6 +160,21 @@ export interface Proposal {
   clientName?: string;
 }
 
+export interface EngagementLetter {
+  id: string;
+  leadId: string;
+  service: string;
+  agreeFee?: number;
+  hasSubcon: boolean;
+  signedDate?: string;
+  paymentType?: string;
+  paymentTypeFinal?: string;
+  status: 'DRAFT' | 'WAITING_APPROVAL' | 'WAITING_CEO_APPROVAL' | 'APPROVED' | 'SENT' | 'REJECTED' | 'SIGNED';
+  createdAt?: string; // Only filled when document is uploaded
+  createdBy?: string;
+  clientName?: string;
+}
+
 export interface Handover {
   id: string;
   leadId: string;

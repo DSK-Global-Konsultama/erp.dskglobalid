@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { LeadInfoTab } from '../tabs/LeadInfoTab';
 import { MeetingNotulensiTab } from '../tabs/MeetingNotulensiTab';
 import { ProposalTab } from '../tabs/ProposalTab';
-import type { Lead, Meeting, Notulensi, Proposal } from '../../../../lib/mock-data';
+import { EngagementLetterTab } from '../tabs/EngagementLetterTab';
+import type { Lead, Meeting, Notulensi, Proposal, EngagementLetter } from '../../../../lib/mock-data';
 
 export type LeadStatus = 'NEW' | 'TO_BE_MEET' | 'MEETING_SCHEDULED' | 'NEED_NOTULEN' | 'NEED_PROPOSAL' | 'IN_PROPOSAL' | 'PROPOSAL_EXPIRED' | 'DEAL_WON' | 'ON_HOLD' | 'DROP';
 
@@ -13,6 +14,7 @@ interface LeadTrackerDetailProps {
   meetings: Meeting[];
   notulensi: Notulensi[];
   proposals: Proposal[];
+  engagementLetters: EngagementLetter[];
   onAddMeeting: (meeting: Meeting) => void;
   onUpdateMeeting?: (id: string, updates: Partial<Meeting>) => void;
   onDeleteMeeting?: (id: string) => void;
@@ -20,6 +22,8 @@ interface LeadTrackerDetailProps {
   onUpdateNotulensi: (id: string, updates: Partial<Notulensi>) => void;
   onAddProposal: (proposal: Proposal) => void;
   onUpdateProposal: (id: string, updates: Partial<Proposal>) => void;
+  onAddEngagementLetter: (el: EngagementLetter) => void;
+  onUpdateEngagementLetter: (id: string, updates: Partial<EngagementLetter>) => void;
   onUpdateLeadStatus: (leadId: string, status: LeadStatus) => void;
 }
 
@@ -30,6 +34,7 @@ export function LeadTrackerDetail({
   meetings,
   notulensi,
   proposals,
+  engagementLetters,
   onAddMeeting,
   onUpdateMeeting,
   onDeleteMeeting,
@@ -37,9 +42,11 @@ export function LeadTrackerDetail({
   onUpdateNotulensi,
   onAddProposal,
   onUpdateProposal,
+  onAddEngagementLetter,
+  onUpdateEngagementLetter,
   onUpdateLeadStatus
 }: LeadTrackerDetailProps) {
-  const [activeTab, setActiveTab] = useState<'info' | 'meeting' | 'proposal'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'meeting' | 'proposal' | 'engagement-letter'>('info');
   
   const lead = leads.find(l => l.id === leadId);
   
@@ -51,6 +58,7 @@ export function LeadTrackerDetail({
     { id: 'info', label: 'Info Lead' },
     { id: 'meeting', label: 'Meeting & Notulensi' },
     { id: 'proposal', label: 'Proposal' },
+    { id: 'engagement-letter', label: 'Engagement Letter' },
   ];
 
   return (
@@ -98,6 +106,17 @@ export function LeadTrackerDetail({
               proposals={proposals}
               onAddProposal={onAddProposal}
               onUpdateProposal={onUpdateProposal}
+              onUpdateLeadStatus={onUpdateLeadStatus}
+            />
+          )}
+          {activeTab === 'engagement-letter' && (
+            <EngagementLetterTab 
+              leadId={leadId}
+              leads={leads}
+              proposals={proposals}
+              engagementLetters={engagementLetters}
+              onAddEngagementLetter={onAddEngagementLetter}
+              onUpdateEngagementLetter={onUpdateEngagementLetter}
               onUpdateLeadStatus={onUpdateLeadStatus}
             />
           )}

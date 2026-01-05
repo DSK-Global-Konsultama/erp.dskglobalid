@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { LeadsManagement } from '../../../../features/leads/components/management/LeadsManagement';
 import { LeadTrackerDetail, type LeadStatus } from '../../../../features/leads/components/management/LeadTrackerDetail';
-import { generateDummyLeadsBDMEO, mockMeetings, mockNotulensi, mockProposals, type Lead, type Meeting, type Notulensi, type Proposal } from '../../../../lib/mock-data';
+import { generateDummyLeadsBDMEO, mockMeetings, mockNotulensi, mockProposals, type Lead, type Meeting, type Notulensi, type Proposal, type EngagementLetter } from '../../../../lib/mock-data';
 
 interface LeadTrackerPageProps {
   userName: string;
@@ -48,6 +48,7 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
   const [meetings, setMeetings] = useState<Meeting[]>(mockMeetings);
   const [notulensi, setNotulensi] = useState<Notulensi[]>(mockNotulensi);
   const [proposals, setProposals] = useState<Proposal[]>(mockProposals);
+  const [engagementLetters, setEngagementLetters] = useState<EngagementLetter[]>([]);
 
   // Update lead detail in header when selected lead changes
   useEffect(() => {
@@ -102,6 +103,14 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
     setProposals(proposals.map(p => p.id === id ? { ...p, ...updates } : p));
   };
 
+  const handleAddEngagementLetter = (el: EngagementLetter) => {
+    setEngagementLetters([...engagementLetters, el]);
+  };
+
+  const handleUpdateEngagementLetter = (id: string, updates: Partial<EngagementLetter>) => {
+    setEngagementLetters(engagementLetters.map(el => el.id === id ? { ...el, ...updates } : el));
+  };
+
   const handleUpdateLeadStatus = (leadId: string, status: LeadStatus) => {
     // Update lead status in leads array
     // Note: In a real app, this would update state properly
@@ -150,6 +159,7 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
         meetings={meetings}
         notulensi={notulensi}
         proposals={proposals}
+        engagementLetters={engagementLetters}
         onAddMeeting={handleAddMeeting}
         onUpdateMeeting={handleUpdateMeeting}
         onDeleteMeeting={handleDeleteMeeting}
@@ -157,6 +167,8 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
         onUpdateNotulensi={handleUpdateNotulensi}
         onAddProposal={handleAddProposal}
         onUpdateProposal={handleUpdateProposal}
+        onAddEngagementLetter={handleAddEngagementLetter}
+        onUpdateEngagementLetter={handleUpdateEngagementLetter}
         onUpdateLeadStatus={handleUpdateLeadStatus}
       />
     );

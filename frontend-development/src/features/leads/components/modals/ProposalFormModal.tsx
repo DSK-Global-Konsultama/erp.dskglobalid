@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { animate } from 'framer-motion';
 import { Dialog, DialogContent } from '../../../../components/ui/dialog';
@@ -75,6 +75,7 @@ export function ProposalFormModal({
   const [proposalFee, setProposalFee] = useState('');
   const [discount, setDiscount] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // Payment Method
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('MONTHLY_RETAINER');
@@ -467,6 +468,30 @@ export function ProposalFormModal({
       setAttachments([...attachments, ...newFiles]);
       // Reset input value to allow selecting the same file again
       e.target.value = '';
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const newFiles = Array.from(files);
+      setAttachments([...attachments, ...newFiles]);
     }
   };
 
@@ -1205,39 +1230,63 @@ export function ProposalFormModal({
 
               {/* Attachments */}
               <div>
-                <label className="block text-sm text-gray-700 mb-1.5">
+                <label className="block text-sm text-gray-700 mb-2">
                   Attachments <span className="text-red-500">*</span>
                 </label>
-                <div className="space-y-2">
-                  {attachments.map((attachment, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg"
-                    >
-                      <span className="flex-1 text-sm">{attachment.name}</span>
-                      <span className="text-xs text-gray-500">
-                        {(attachment.size / 1024).toFixed(2)} KB
+                <div className="border border-gray-200 rounded-lg p-4 bg-white">
+                  <div 
+                    className={`flex flex-col items-center justify-center py-6 border-2 border-dashed rounded-lg transition-colors ${
+                      isDragOver 
+                        ? 'border-blue-500 bg-blue-50' 
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <Upload className={`w-10 h-10 mb-3 ${isDragOver ? 'text-blue-500' : 'text-gray-400'}`} />
+                    <label htmlFor="file-upload" className="cursor-pointer">
+                      <span className={`text-sm ${isDragOver ? 'text-blue-600 font-medium' : 'text-gray-600'}`}>
+                        Click to upload or drag and drop
                       </span>
-                      <button
-                        onClick={() => handleRemoveAttachment(index)}
-                        className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                  <div>
-                    <Input
-                      type="file"
-                      onChange={handleFileChange}
-                      className="w-full"
-                      multiple
-                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Format yang didukung: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX
+                      <input
+                        id="file-upload"
+                        type="file"
+                        className="hidden"
+                        multiple
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                        onChange={handleFileChange}
+                      />
+                    </label>
+                    <p className="text-xs text-gray-500 mt-2">
+                      PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX (Max. 10MB per file)
                     </p>
                   </div>
+                  {attachments.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      {attachments.map((attachment, index) => (
+                        <div
+                          key={index}
+                          className="p-3 bg-gray-50 rounded-lg"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-700">{attachment.name}</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {(attachment.size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => handleRemoveAttachment(index)}
+                              className="text-sm text-red-600 hover:text-red-700"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
