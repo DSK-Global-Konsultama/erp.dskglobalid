@@ -15,4 +15,6 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         server-dir: /DATA/dskgloba/
+        log-level: verbose
+        timeout: 120000
         
