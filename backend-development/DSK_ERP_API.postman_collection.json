@@ -1,0 +1,643 @@
+{
+  "info": {
+    "name": "DSK Global ERP API",
+    "description": "Complete CRUD API collection for DSK Global ERP System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "campaign_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "form_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "form_field_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bank_data_entry_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.token) {",
+                  "        pm.collectionVariables.set('token', jsonData.token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"superadmin\",\n  \"password\": \"password\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Campaigns",
+      "item": [
+        {
+          "name": "Get All Campaigns",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns"]
+            }
+          }
+        },
+        {
+          "name": "Get Campaign by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Campaign",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.id) {",
+                  "        pm.collectionVariables.set('campaign_id', jsonData.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Campaign 2025\",\n  \"type\": \"SOCIAL_MEDIA\",\n  \"channel\": \"INSTAGRAM\",\n  \"topic_tag\": \"TAX\",\n  \"date_start\": \"2025-01-01\",\n  \"date_end\": \"2025-12-31\",\n  \"notes\": \"Test campaign untuk pengujian\",\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/campaigns",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns"]
+            }
+          }
+        },
+        {
+          "name": "Update Campaign",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PAUSED\",\n  \"notes\": \"Updated notes\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Campaign",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Forms",
+      "item": [
+        {
+          "name": "Get All Forms",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/forms",
+              "host": ["{{base_url}}"],
+              "path": ["forms"]
+            }
+          }
+        },
+        {
+          "name": "Get Form by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/forms/{{form_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["forms", "{{form_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Form",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.id) {",
+                  "        pm.collectionVariables.set('form_id', jsonData.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Test Registration Form\",\n  \"description\": \"Form untuk testing\",\n  \"status\": \"DRAFT\",\n  \"primary_campaign_id\": \"{{campaign_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/forms",
+              "host": ["{{base_url}}"],
+              "path": ["forms"]
+            }
+          }
+        },
+        {
+          "name": "Update Form",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PUBLISHED\",\n  \"public_link\": \"https://example.com/form/test\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/forms/{{form_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["forms", "{{form_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Form",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/forms/{{form_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["forms", "{{form_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Form Fields",
+      "item": [
+        {
+          "name": "Get All Form Fields",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/form-fields?form_id={{form_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["form-fields"],
+              "query": [
+                {
+                  "key": "form_id",
+                  "value": "{{form_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Form Field by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/form-fields/{{form_field_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["form-fields", "{{form_field_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Form Field (Short Text)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"form_id\": \"{{form_id}}\",\n  \"field_key\": \"full_name\",\n  \"type\": \"SHORT_TEXT\",\n  \"label\": \"Nama Lengkap\",\n  \"required\": true,\n  \"is_core\": true,\n  \"placeholder\": \"Masukkan nama lengkap\",\n  \"sort_order\": 1,\n  \"options\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/form-fields",
+              "host": ["{{base_url}}"],
+              "path": ["form-fields"]
+            }
+          }
+        },
+        {
+          "name": "Create Form Field (Dropdown with Options)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.id) {",
+                  "        pm.collectionVariables.set('form_field_id', jsonData.data.id.toString());",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"form_id\": \"{{form_id}}\",\n  \"field_key\": \"service_type\",\n  \"type\": \"DROPDOWN\",\n  \"label\": \"Jenis Layanan\",\n  \"required\": true,\n  \"is_core\": false,\n  \"sort_order\": 2,\n  \"options\": [\n    { \"opt_value\": \"TAX\" },\n    { \"opt_value\": \"AUDIT\" },\n    { \"opt_value\": \"LEGAL\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/form-fields",
+              "host": ["{{base_url}}"],
+              "path": ["form-fields"]
+            }
+          }
+        },
+        {
+          "name": "Update Form Field",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Updated Label\",\n  \"options\": [\n    { \"opt_value\": \"New Option 1\" },\n    { \"opt_value\": \"New Option 2\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/form-fields/{{form_field_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["form-fields", "{{form_field_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Form Field",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/form-fields/{{form_field_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["form-fields", "{{form_field_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Campaign Forms",
+      "item": [
+        {
+          "name": "Get All Campaign Forms",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaign-forms?campaign_id={{campaign_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["campaign-forms"],
+              "query": [
+                {
+                  "key": "campaign_id",
+                  "value": "{{campaign_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Campaign Form",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"campaign_id\": \"{{campaign_id}}\",\n  \"form_id\": \"{{form_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/campaign-forms",
+              "host": ["{{base_url}}"],
+              "path": ["campaign-forms"]
+            }
+          }
+        },
+        {
+          "name": "Delete Campaign Form",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaign-forms/{{campaign_id}}/{{form_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["campaign-forms", "{{campaign_id}}", "{{form_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bank Data Entries",
+      "item": [
+        {
+          "name": "Get All Bank Data Entries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/bank-data-entries",
+              "host": ["{{base_url}}"],
+              "path": ["bank-data-entries"]
+            }
+          }
+        },
+        {
+          "name": "Get Bank Data Entries (Filtered)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/bank-data-entries?campaign_id={{campaign_id}}&triage_status=RAW_NEW&limit=10&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["bank-data-entries"],
+              "query": [
+                {
+                  "key": "campaign_id",
+                  "value": "{{campaign_id}}"
+                },
+                {
+                  "key": "triage_status",
+                  "value": "RAW_NEW"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Bank Data Entry by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/bank-data-entries/{{bank_data_entry_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["bank-data-entries", "{{bank_data_entry_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Bank Data Entry",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.id) {",
+                  "        pm.collectionVariables.set('bank_data_entry_id', jsonData.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"campaign_id\": \"{{campaign_id}}\",\n  \"form_id\": \"{{form_id}}\",\n  \"client_name\": \"PT Test Company\",\n  \"pic_name\": \"Budi Santoso\",\n  \"email\": \"budi@testcompany.com\",\n  \"phone\": \"081234567890\",\n  \"source_channel\": \"INSTAGRAM\",\n  \"campaign_name\": \"Test Campaign 2025\",\n  \"topic_tag\": \"TAX\",\n  \"triage_status\": \"RAW_NEW\",\n  \"extra_answers\": {\n    \"company_size\": \"Medium\",\n    \"industry\": \"Technology\",\n    \"budget\": \"25000000\"\n  },\n  \"notes\": \"Test entry\",\n  \"submitted_at\": \"2025-01-15T10:30:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/bank-data-entries",
+              "host": ["{{base_url}}"],
+              "path": ["bank-data-entries"]
+            }
+          }
+        },
+        {
+          "name": "Update Bank Data Entry (Promote to Lead)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"triage_status\": \"PROMOTED_TO_LEAD\",\n  \"promoted_by\": \"superadmin\",\n  \"promoted_at\": \"2025-01-16T09:00:00.000Z\",\n  \"promoted_to_lead_id\": \"lead-uuid-here\",\n  \"notes\": \"Promoted to lead\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/bank-data-entries/{{bank_data_entry_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["bank-data-entries", "{{bank_data_entry_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Bank Data Entry (Reject)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"triage_status\": \"REJECTED\",\n  \"rejected_by\": \"superadmin\",\n  \"rejected_at\": \"2025-01-16T09:00:00.000Z\",\n  \"rejected_reason\": \"Invalid email format\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/bank-data-entries/{{bank_data_entry_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["bank-data-entries", "{{bank_data_entry_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Bank Data Entry (Clean)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cleaned_by\": \"superadmin\",\n  \"cleaned_at\": \"2025-01-16T10:00:00.000Z\",\n  \"notes\": \"Data sudah dibersihkan dan divalidasi\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/bank-data-entries/{{bank_data_entry_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["bank-data-entries", "{{bank_data_entry_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Bank Data Entry",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/bank-data-entries/{{bank_data_entry_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["bank-data-entries", "{{bank_data_entry_id}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+
