@@ -27,6 +27,11 @@ const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const roleRoutes = require('./routes/role.routes');
 const departmentRoutes = require('./routes/department.routes');
+const campaignRoutes = require('./routes/campaign.routes');
+const formRoutes = require('./routes/form.routes');
+const formFieldRoutes = require('./routes/form_field.routes');
+const campaignFormRoutes = require('./routes/campaign_form.routes');
+const bankDataEntryRoutes = require('./routes/bank_data_entry.routes');
 
 // Auth (tanpa JWT)
 app.use('/auth', authRoutes);
@@ -35,6 +40,11 @@ app.use('/auth', authRoutes);
 app.use('/users', authenticate, userRoutes);
 app.use('/roles', authenticate, roleRoutes);
 app.use('/departments', authenticate, departmentRoutes);
+app.use('/campaigns', authenticate, campaignRoutes);
+app.use('/forms', authenticate, formRoutes);
+app.use('/form-fields', authenticate, formFieldRoutes);
+app.use('/campaign-forms', authenticate, campaignFormRoutes);
+app.use('/bank-data-entries', authenticate, bankDataEntryRoutes);
 
 app.get('/testing', (req, res) => {
   res.json({ status: 'ok' });
