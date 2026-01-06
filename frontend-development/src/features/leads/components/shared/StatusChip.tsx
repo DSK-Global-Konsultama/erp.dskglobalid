@@ -38,6 +38,7 @@ export function StatusChip({ status }: StatusChipProps) {
         return 'bg-red-100 text-red-700';
       case 'SENT':
       case 'Sent':
+      case 'SENT_TO_PM':
         return 'bg-blue-100 text-blue-700';
       case 'ACCEPTED':
         return 'bg-green-100 text-green-700';

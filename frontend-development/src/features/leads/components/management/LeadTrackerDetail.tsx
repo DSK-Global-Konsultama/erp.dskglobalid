@@ -3,7 +3,8 @@ import { LeadInfoTab } from '../tabs/LeadInfoTab';
 import { MeetingNotulensiTab } from '../tabs/MeetingNotulensiTab';
 import { ProposalTab } from '../tabs/ProposalTab';
 import { EngagementLetterTab } from '../tabs/EngagementLetterTab';
-import type { Lead, Meeting, Notulensi, Proposal, EngagementLetter } from '../../../../lib/mock-data';
+import { HandoverMemoTab } from '../tabs/HandoverMemoTab';
+import type { Lead, Meeting, Notulensi, Proposal, EngagementLetter, Handover } from '../../../../lib/mock-data';
 
 export type LeadStatus = 'NEW' | 'TO_BE_MEET' | 'MEETING_SCHEDULED' | 'NEED_NOTULEN' | 'NEED_PROPOSAL' | 'IN_PROPOSAL' | 'PROPOSAL_EXPIRED' | 'DEAL_WON' | 'ON_HOLD' | 'DROP';
 
@@ -15,6 +16,7 @@ interface LeadTrackerDetailProps {
   notulensi: Notulensi[];
   proposals: Proposal[];
   engagementLetters: EngagementLetter[];
+  handovers: Handover[];
   onAddMeeting: (meeting: Meeting) => void;
   onUpdateMeeting?: (id: string, updates: Partial<Meeting>) => void;
   onDeleteMeeting?: (id: string) => void;
@@ -24,6 +26,8 @@ interface LeadTrackerDetailProps {
   onUpdateProposal: (id: string, updates: Partial<Proposal>) => void;
   onAddEngagementLetter: (el: EngagementLetter) => void;
   onUpdateEngagementLetter: (id: string, updates: Partial<EngagementLetter>) => void;
+  onAddHandover: (handover: Handover) => void;
+  onUpdateHandover: (id: string, updates: Partial<Handover>) => void;
   onUpdateLeadStatus: (leadId: string, status: LeadStatus) => void;
 }
 
@@ -35,6 +39,7 @@ export function LeadTrackerDetail({
   notulensi,
   proposals,
   engagementLetters,
+  handovers,
   onAddMeeting,
   onUpdateMeeting,
   onDeleteMeeting,
@@ -44,9 +49,11 @@ export function LeadTrackerDetail({
   onUpdateProposal,
   onAddEngagementLetter,
   onUpdateEngagementLetter,
+  onAddHandover,
+  onUpdateHandover,
   onUpdateLeadStatus
 }: LeadTrackerDetailProps) {
-  const [activeTab, setActiveTab] = useState<'info' | 'meeting' | 'proposal' | 'engagement-letter'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'meeting' | 'proposal' | 'engagement-letter' | 'handover-memo'>('info');
   
   const lead = leads.find(l => l.id === leadId);
   
@@ -59,6 +66,7 @@ export function LeadTrackerDetail({
     { id: 'meeting', label: 'Meeting & Notulensi' },
     { id: 'proposal', label: 'Proposal' },
     { id: 'engagement-letter', label: 'Engagement Letter' },
+    { id: 'handover-memo', label: 'Handover Memo' },
   ];
 
   return (
@@ -117,6 +125,18 @@ export function LeadTrackerDetail({
               engagementLetters={engagementLetters}
               onAddEngagementLetter={onAddEngagementLetter}
               onUpdateEngagementLetter={onUpdateEngagementLetter}
+              onUpdateLeadStatus={onUpdateLeadStatus}
+            />
+          )}
+          {activeTab === 'handover-memo' && (
+            <HandoverMemoTab 
+              leadId={leadId}
+              leads={leads}
+              handovers={handovers}
+              proposals={proposals}
+              engagementLetters={engagementLetters}
+              onAddHandover={onAddHandover}
+              onUpdateHandover={onUpdateHandover}
               onUpdateLeadStatus={onUpdateLeadStatus}
             />
           )}

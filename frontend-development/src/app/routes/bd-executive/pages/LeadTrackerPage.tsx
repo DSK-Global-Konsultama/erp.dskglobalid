@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { LeadsManagement } from '../../../../features/leads/components/management/LeadsManagement';
 import { LeadTrackerDetail, type LeadStatus } from '../../../../features/leads/components/management/LeadTrackerDetail';
-import { generateDummyLeadsBDMEO, mockMeetings, mockNotulensi, mockProposals, type Lead, type Meeting, type Notulensi, type Proposal, type EngagementLetter } from '../../../../lib/mock-data';
+import { generateDummyLeadsBDMEO, mockMeetings, mockNotulensi, mockProposals, type Lead, type Meeting, type Notulensi, type Proposal, type EngagementLetter, type Handover } from '../../../../lib/mock-data';
 
 interface LeadTrackerPageProps {
   userName: string;
@@ -49,6 +49,7 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
   const [notulensi, setNotulensi] = useState<Notulensi[]>(mockNotulensi);
   const [proposals, setProposals] = useState<Proposal[]>(mockProposals);
   const [engagementLetters, setEngagementLetters] = useState<EngagementLetter[]>([]);
+  const [handovers, setHandovers] = useState<Handover[]>([]);
 
   // Update lead detail in header when selected lead changes
   useEffect(() => {
@@ -111,6 +112,14 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
     setEngagementLetters(engagementLetters.map(el => el.id === id ? { ...el, ...updates } : el));
   };
 
+  const handleAddHandover = (handover: Handover) => {
+    setHandovers([...handovers, handover]);
+  };
+
+  const handleUpdateHandover = (id: string, updates: Partial<Handover>) => {
+    setHandovers(handovers.map(h => h.id === id ? { ...h, ...updates } : h));
+  };
+
   const handleUpdateLeadStatus = (leadId: string, status: LeadStatus) => {
     // Update lead status in leads array
     // Note: In a real app, this would update state properly
@@ -160,6 +169,7 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
         notulensi={notulensi}
         proposals={proposals}
         engagementLetters={engagementLetters}
+        handovers={handovers}
         onAddMeeting={handleAddMeeting}
         onUpdateMeeting={handleUpdateMeeting}
         onDeleteMeeting={handleDeleteMeeting}
@@ -169,6 +179,8 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
         onUpdateProposal={handleUpdateProposal}
         onAddEngagementLetter={handleAddEngagementLetter}
         onUpdateEngagementLetter={handleUpdateEngagementLetter}
+        onAddHandover={handleAddHandover}
+        onUpdateHandover={handleUpdateHandover}
         onUpdateLeadStatus={handleUpdateLeadStatus}
       />
     );
