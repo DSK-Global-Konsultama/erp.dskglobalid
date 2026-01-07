@@ -69,7 +69,6 @@ export function ScopeOfWorkSection({
         isExpanded={isExpanded}
         isComplete={isComplete}
         hasRevision={hasRevision}
-        locked={isScopeLocked}
         showValidation={showValidation}
         onToggle={onToggle}
       />

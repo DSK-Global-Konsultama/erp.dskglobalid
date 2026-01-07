@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { 
   ArrowLeft, 
   Save, 
-  Send
+  Send,
+  ArrowRight
 } from 'lucide-react';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
@@ -42,6 +43,7 @@ interface HandoverFormProps {
   onSubmit: (handover: Partial<ExtendedHandover>) => void;
   existingHandover?: ExtendedHandover;
   readOnly?: boolean;
+  onConvertToProject?: (handoverId: string) => void;
   leadData?: {
     clientName: string;
     companyName?: string; // Nama perusahaan
@@ -67,7 +69,8 @@ export function HandoverForm({
   existingHandover,
   readOnly = false,
   leadData,
-  engagementLetter
+  engagementLetter,
+  onConvertToProject
 }: HandoverFormProps) {
   // Default: semua section terbuka
   const [expandedSections, setExpandedSections] = useState<Set<SectionId>>(
@@ -81,6 +84,12 @@ export function HandoverForm({
   // CEO Revision
   const isRevisionRequested = existingHandover?.workflowStatus === 'REVISION_REQUESTED';
   const revisionComments = existingHandover?.revisionComments || [];
+  
+  // Check if handover is approved
+  const isApproved = existingHandover?.workflowStatus === 'APPROVED_BY_CEO';
+  
+  // When approved, all sections are locked (read-only)
+  const effectiveReadOnly = readOnly || isApproved;
   
   // Section 3 Locking
   const isScopeLocked = existingHandover?.scopeLocked || false;
@@ -540,7 +549,7 @@ export function HandoverForm({
           Back to Pipeline
         </Button>
         
-        <div className={readOnly ? 'pointer-events-none' : ''}>
+        <div className={effectiveReadOnly ? 'pointer-events-none' : ''}>
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-center text-2xl mb-2">{HANDOVER_CONSTANTS.DOCUMENT_TITLE}</CardTitle>
@@ -557,8 +566,8 @@ export function HandoverForm({
                   value={documentCode}
                   onChange={(e) => setDocumentCode(e.target.value)}
                   placeholder="e.g., BD-HO-PT-MSM-2025-003"
-                  disabled={readOnly}
-                  className={`${showValidation && errors.documentCode ? 'border-red-300' : ''} ${readOnly ? 'disabled:opacity-100 disabled:text-gray-900' : ''}`}
+                  disabled={effectiveReadOnly}
+                  className={`${showValidation && errors.documentCode ? 'border-red-300' : ''} ${effectiveReadOnly ? 'disabled:opacity-100 disabled:text-gray-900' : ''}`}
                 />
                 {showValidation && errors.documentCode && (
                   <p className="text-xs text-red-600 mt-1">{errors.documentCode}</p>
@@ -577,7 +586,7 @@ export function HandoverForm({
               </div>
             </div>
             
-            {!readOnly && (
+            {!effectiveReadOnly && !isApproved && (
               <div className="flex items-center justify-end gap-3 pt-4">
                 <Button
                   variant="outline"
@@ -592,6 +601,24 @@ export function HandoverForm({
                 >
                   <Send className="w-4 h-4" />
                   {isRevisionRequested ? 'Ajukan Ulang ke CEO' : 'Ajukan ke CEO'}
+                </Button>
+              </div>
+            )}
+            {isApproved && (
+              <div className="flex items-center justify-end gap-3 pt-4">
+                <Button
+                  onClick={() => {
+                    if (onConvertToProject && handoverId) {
+                      onConvertToProject(handoverId);
+                    } else {
+                      // TODO: Implement convert to project logic
+                      console.log('Convert to project:', handoverId);
+                    }
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <ArrowRight className="w-4 h-4 mr-2" />
+                  Convert to Project
                 </Button>
               </div>
             )}
@@ -650,7 +677,7 @@ export function HandoverForm({
         hasRevision={getHasRevision(1)}
         showValidation={showValidation}
         errors={errors}
-        readOnly={readOnly}
+        readOnly={effectiveReadOnly}
         revisionComments={revisionComments}
         onToggle={() => toggleSection(1)}
       />
@@ -665,7 +692,7 @@ export function HandoverForm({
         hasRevision={getHasRevision(2)}
         showValidation={showValidation}
         error={errors.background}
-        readOnly={readOnly}
+        readOnly={effectiveReadOnly}
         revisionComments={revisionComments}
         onToggle={() => toggleSection(2)}
       />
@@ -686,7 +713,7 @@ export function HandoverForm({
         isComplete={getSectionCompletion(3)}
         hasRevision={getHasRevision(3)}
         showValidation={showValidation}
-        readOnly={readOnly}
+        readOnly={effectiveReadOnly}
         revisionComments={revisionComments}
         onToggle={() => toggleSection(3)}
       />
@@ -702,7 +729,7 @@ export function HandoverForm({
         isComplete={getSectionCompletion(4)}
         hasRevision={getHasRevision(4)}
         showValidation={showValidation}
-        readOnly={readOnly}
+        readOnly={effectiveReadOnly}
         revisionComments={revisionComments}
         onToggle={() => toggleSection(4)}
       />
@@ -716,7 +743,7 @@ export function HandoverForm({
         isComplete={getSectionCompletion(5)}
         hasRevision={getHasRevision(5)}
         showValidation={showValidation}
-        readOnly={readOnly}
+        readOnly={effectiveReadOnly}
         revisionComments={revisionComments}
         onToggle={() => toggleSection(5)}
       />
@@ -730,7 +757,7 @@ export function HandoverForm({
         isComplete={getSectionCompletion(6)}
         hasRevision={getHasRevision(6)}
         showValidation={showValidation}
-        readOnly={readOnly}
+        readOnly={effectiveReadOnly}
         revisionComments={revisionComments}
         onToggle={() => toggleSection(6)}
       />
@@ -744,7 +771,7 @@ export function HandoverForm({
         isComplete={getSectionCompletion(7)}
         hasRevision={getHasRevision(7)}
         showValidation={showValidation}
-        readOnly={readOnly}
+        readOnly={effectiveReadOnly}
         revisionComments={revisionComments}
         onToggle={() => toggleSection(7)}
       />
@@ -763,7 +790,7 @@ export function HandoverForm({
         hasRevision={getHasRevision(8)}
         showValidation={showValidation}
         error={errors.communicationInternal}
-        readOnly={readOnly}
+        readOnly={effectiveReadOnly}
         revisionComments={revisionComments}
         onToggle={() => toggleSection(8)}
       />
@@ -777,7 +804,7 @@ export function HandoverForm({
         isComplete={getSectionCompletion(9)}
         hasRevision={getHasRevision(9)}
         showValidation={showValidation}
-        readOnly={readOnly}
+        readOnly={effectiveReadOnly}
         revisionComments={revisionComments}
         onToggle={() => toggleSection(9)}
       />
@@ -791,7 +818,7 @@ export function HandoverForm({
         isComplete={getSectionCompletion(10)}
         hasRevision={getHasRevision(10)}
         showValidation={showValidation}
-        readOnly={readOnly}
+        readOnly={effectiveReadOnly}
         revisionComments={revisionComments}
         onToggle={() => toggleSection(10)}
       />
@@ -805,7 +832,7 @@ export function HandoverForm({
         isComplete={getSectionCompletion(11)}
         hasRevision={getHasRevision(11)}
         showValidation={showValidation}
-        readOnly={readOnly}
+        readOnly={effectiveReadOnly}
         revisionComments={revisionComments}
         onToggle={() => toggleSection(11)}
       />

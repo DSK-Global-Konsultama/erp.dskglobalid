@@ -327,6 +327,7 @@ export function NotulensiDetailModal({
                 type="button"
                 variant="outline"
                 onClick={handleClose}
+                className="bg-white text-gray-900 border border-gray-300 hover:bg-gray-50"
               >
                 Close
               </Button>
@@ -350,6 +351,7 @@ export function NotulensiDetailModal({
             <Button
               type="button"
               onClick={handleClose}
+              className="bg-white text-gray-900 border border-gray-300 hover:bg-gray-50"
             >
               Close
             </Button>

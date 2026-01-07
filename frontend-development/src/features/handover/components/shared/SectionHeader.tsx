@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Lock, AlertCircle, CheckCircle } from 'lucide-react';
+import { ChevronDown, ChevronRight, AlertCircle, CheckCircle } from 'lucide-react';
 import type { SectionId } from '../../types';
 
 interface SectionHeaderProps {
@@ -7,7 +7,6 @@ interface SectionHeaderProps {
   isExpanded: boolean;
   isComplete: boolean;
   hasRevision: boolean;
-  locked?: boolean;
   showValidation: boolean;
   onToggle: () => void;
 }
@@ -18,7 +17,6 @@ export function SectionHeader({
   isExpanded,
   isComplete,
   hasRevision,
-  locked,
   showValidation,
   onToggle
 }: SectionHeaderProps) {
@@ -38,12 +36,6 @@ export function SectionHeader({
         <span className="font-semibold text-gray-900">
           {sectionId}. {title}
         </span>
-        {locked && (
-          <div className="flex items-center gap-1 text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
-            <Lock className="w-3 h-3" />
-            Locked by CEO approval
-          </div>
-        )}
         {hasRevision && (
           <div className="flex items-center gap-1 text-xs text-orange-700 bg-orange-100 px-2.5 py-1 rounded border border-orange-200">
             <AlertCircle className="w-3 h-3" />

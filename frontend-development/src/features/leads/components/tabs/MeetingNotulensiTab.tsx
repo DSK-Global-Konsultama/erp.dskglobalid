@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { Plus, Calendar, FileText, Edit, X } from 'lucide-react';
+import { Plus, Calendar, FileText, Edit, X, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { StatusChip } from '../shared/StatusChip';
 import { ScheduleMeetingModal } from '../modals/ScheduleMeetingModal';
 import { NotulensiFormModal } from '../modals/NotulensiFormModal';
 import { NotulensiDetailModal } from '../modals/NotulensiDetailModal';
-import { Button } from '../../../../components/ui/button';
 import type { Meeting, Notulensi, Lead } from '../../../../lib/mock-data';
 import type { LeadStatus } from '../management/LeadTrackerDetail';
 
@@ -162,113 +161,129 @@ export function MeetingNotulensiTab({
           <h3>Meetings</h3>
           <button
             onClick={() => setShowScheduleModal(true)}
-            className="flex items-center gap-2 px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors font-medium"
+            className="flex items-center gap-2 px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors font-medium cursor-pointer"
           >
             <Plus className="w-5 h-5" />
             Jadwalkan Meeting
           </button>
         </div>
         {leadMeetings.length === 0 ? (
-          <div className="text-center py-8 bg-gray-50 rounded-lg">
+          <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg">
             <Calendar className="w-6 h-6 mx-auto text-gray-400 mb-2" />
             <p className="text-gray-600">Belum ada meeting dijadwalkan</p>
             <p className="text-sm text-gray-500 mt-1">Segera buat jadwal meeting untuk follow up dengan klien</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border border-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm text-gray-600">Nama Meeting</th>
-                  <th className="px-4 py-3 text-left text-sm text-gray-600">Date & Time</th>
-                  <th className="px-4 py-3 text-left text-sm text-gray-600">Platform/Location</th>
-                  <th className="px-4 py-3 text-left text-sm text-gray-600">Notes</th>
-                  <th className="px-4 py-3 text-left text-sm text-gray-600">Status</th>
-                  <th className="px-4 py-3 text-left text-sm text-gray-600">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {leadMeetings.map((meeting) => (
-                  <tr key={meeting.id}>
-                    <td className="px-4 py-3 max-w-[200px]">
-                      <span className="truncate block" title={meeting.name || '-'}>
-                        {meeting.name || '-'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-sm">{formatDateTime(meeting.dateTime)}</span>
-                    </td>
-                    <td className="px-4 py-3 max-w-[300px]">
+          <div className="space-y-3">
+            {leadMeetings.map((meeting) => (
+              <div 
+                key={meeting.id} 
+                className="border rounded-lg p-4 border-gray-200 hover:border-gray-300 transition-all"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4>{meeting.name || 'Meeting'}</h4>
+                      <StatusChip status={meeting.status} />
+                    </div>
+                    <p className="text-sm text-gray-600">{formatDateTime(meeting.dateTime)}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-sm mb-4">
+                  <div>
+                    <p className="text-gray-600">Platform/Location</p>
+                    <p className="font-medium">
                       {isUrl(meeting.location) ? (
                         <a
                           href={ensureProtocol(meeting.location)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 hover:underline truncate block"
+                          className="text-blue-600 hover:text-blue-800 hover:underline break-words"
                           title={meeting.location}
                         >
                           {formatUrl(meeting.location)}
                         </a>
                       ) : (
-                        <span className="truncate block" title={meeting.location}>{meeting.location}</span>
+                        <span className="break-words" title={meeting.location}>{meeting.location || '-'}</span>
                       )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-sm text-gray-600">{meeting.notes || '-'}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusChip status={meeting.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {meeting.status === 'SCHEDULED' && (
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-gray-600">Notes</p>
+                    <p className="font-medium break-words whitespace-pre-wrap">{meeting.notes || '-'}</p>
+                  </div>
+                </div>
+                {(() => {
+                  const hasNotulensi = leadNotulensi.find(n => n.meetingId === meeting.id);
+                  const isScheduled = meeting.status === 'SCHEDULED';
+                  const showCreateNotulensi = meeting.status === 'DONE' && !hasNotulensi;
+                  const showEditDelete = meeting.status !== 'DONE' && meeting.status !== 'SCHEDULED';
+                  const showFooter = isScheduled || showCreateNotulensi || showEditDelete;
+                  
+                  if (!showFooter) return null;
+                  
+                  return (
+                    <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
+                      {isScheduled && (
+                        <>
+                          <button
+                            onClick={() => setEditingMeeting(meeting)}
+                            className="flex-1 px-3 py-2 rounded-lg text-sm cursor-pointer border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 flex items-center justify-center gap-2"
+                          >
+                            <Edit className="w-4 h-4" />
+                            Edit
+                          </button>
                           <button
                             onClick={() => {
                               if (onUpdateMeeting) {
                                 onUpdateMeeting(meeting.id, { status: 'DONE' });
-                                // Update lead status to NEED_NOTULEN when meeting is marked as done
                                 onUpdateLeadStatus(leadId, 'NEED_NOTULEN');
                               }
                             }}
-                            className="px-3 py-1.5 bg-black text-white rounded-lg hover:bg-gray-900 text-sm transition-colors cursor-pointer"
+                            className="flex-1 px-3 py-2 rounded-lg text-sm cursor-pointer border border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
                           >
-                            Selesai
+                            Mark as Done
                           </button>
-                        )}
-                        {meeting.status === 'DONE' && !leadNotulensi.find(n => n.meetingId === meeting.id) && (
                           <button
-                            onClick={() => handleCreateNotulensi(meeting.id)}
-                            className="text-blue-600 hover:text-black text-sm cursor-pointer"
+                            onClick={() => handleDeleteMeeting(meeting.id, meeting.name || 'Meeting')}
+                            className="px-3 py-2 rounded-lg text-sm cursor-pointer border border-red-300 bg-white text-red-600 hover:bg-red-50 flex items-center justify-center"
+                            title="Hapus Meeting"
                           >
-                            Buat Notulensi
+                            <X className="w-4 h-4" />
                           </button>
-                        )}
-                        {meeting.status !== 'DONE' && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setEditingMeeting(meeting)}
-                              className="flex items-center gap-2"
-                            >
-                              <Edit className="w-4 h-4" />
-                              Edit
-                            </Button>
-                            <button
-                              onClick={() => handleDeleteMeeting(meeting.id, meeting.name || 'Meeting')}
-                              className="p-1.5 hover:bg-red-50 rounded-lg transition-colors cursor-pointer text-red-600 hover:text-red-700"
-                              title="Hapus Meeting"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        </>
+                      )}
+                      {showCreateNotulensi && (
+                        <button
+                          onClick={() => handleCreateNotulensi(meeting.id)}
+                          className="flex-1 px-3 py-2 rounded-lg text-sm cursor-pointer border border-blue-600 bg-blue-600 text-white hover:bg-blue-700"
+                        >
+                          Buat Notulensi
+                        </button>
+                      )}
+                      {showEditDelete && (
+                        <>
+                          <button
+                            onClick={() => setEditingMeeting(meeting)}
+                            className="flex-1 px-3 py-2 rounded-lg text-sm cursor-pointer border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 flex items-center justify-center gap-2"
+                          >
+                            <Edit className="w-4 h-4" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteMeeting(meeting.id, meeting.name || 'Meeting')}
+                            className="px-3 py-2 rounded-lg text-sm cursor-pointer border border-red-300 bg-white text-red-600 hover:bg-red-50 flex items-center justify-center"
+                            title="Hapus Meeting"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -279,22 +294,25 @@ export function MeetingNotulensiTab({
           <h3>Notulensi</h3>
         </div>
         {leadNotulensi.length === 0 ? (
-          <div className="text-center py-8 bg-gray-50 rounded-lg">
+          <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg">
             <FileText className="w-6 h-6 mx-auto text-gray-400 mb-2" />
             <p className="text-gray-600">Belum ada notulensi dibuat</p>
             <p className="text-sm text-gray-500 mt-1">Setelah meeting selesai, buat notulensi untuk dokumentasi</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {leadNotulensi.map((notulensi) => (
-              <div key={notulensi.id} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-start justify-between">
+              <div 
+                key={notulensi.id} 
+                className="border rounded-lg p-4 border-gray-200 hover:border-gray-300 transition-all"
+              >
+                <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h4>Meeting {notulensi.meetingInfo.date}</h4>
                       <StatusChip status={notulensi.status} />
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">
+                    <p className="text-sm text-gray-600">
                       {isUrl(notulensi.meetingInfo.location) ? (
                         <a
                           href={ensureProtocol(notulensi.meetingInfo.location)}
@@ -308,12 +326,36 @@ export function MeetingNotulensiTab({
                         <span>{notulensi.meetingInfo.location}</span>
                       )} • {notulensi.meetingInfo.time}
                     </p>
-                    <p className="text-sm text-gray-700">{notulensi.objectives}</p>
                   </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-sm mb-4">
+                  <div>
+                    <p className="text-gray-600">Objectives</p>
+                    <p className="font-medium">{notulensi.objectives || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Created By</p>
+                    <p className="font-medium">{notulensi.createdBy || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Created</p>
+                    <p className="font-medium">
+                      {notulensi.createdAt 
+                        ? new Date(notulensi.createdAt).toLocaleDateString('id-ID', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })
+                        : '-'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
                   <button 
                     onClick={() => handleViewDetails(notulensi)}
-                    className="text-blue-600 hover:text-black text-sm cursor-pointer"
+                    className="flex-1 px-3 py-2 rounded-lg text-sm cursor-pointer border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 flex items-center justify-center gap-2"
                   >
+                    <Eye className="w-4 h-4" />
                     View Details
                   </button>
                 </div>

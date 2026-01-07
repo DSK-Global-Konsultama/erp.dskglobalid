@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Eye } from 'lucide-react';
 import { StatusChip } from '../shared/StatusChip';
 import { EngagementLetterUploadModal } from '../modals/EngagementLetterUploadModal';
 import type { EngagementLetter, Lead, Proposal } from '../../../../lib/mock-data';
@@ -153,8 +154,9 @@ export function EngagementLetterTab({
                     setSelectedEL(el);
                     setShowELUpload(true);
                   }}
-                  className="flex-1 px-3 py-2 rounded-lg text-sm cursor-pointer border border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
+                  className="flex-1 px-3 py-2 rounded-lg text-sm cursor-pointer border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 flex items-center justify-center gap-2"
                 >
+                  {el.createdAt && <Eye className="w-4 h-4" />}
                   {el.createdAt ? 'View Details' : 'Upload Engagement Letter'}
                 </button>
               </div>

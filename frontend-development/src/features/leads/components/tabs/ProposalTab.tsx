@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Eye } from 'lucide-react';
 import { StatusChip } from '../shared/StatusChip';
 import { ProposalFormModal } from '../modals/ProposalFormModal';
 import { ProposalDetailModal } from '../modals/ProposalDetailModal';
@@ -65,7 +65,7 @@ export function ProposalTab({ leadId, leads, proposals, onAddProposal, onUpdateP
             setEditingProposal(null);
             setShowProposalForm(true);
           }}
-          className="flex items-center gap-2 px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors font-medium"
+          className="flex items-center gap-2 px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors font-medium cursor-pointer"
         >
           <Plus className="w-5 h-5" />
           Buat Proposal
@@ -174,8 +174,9 @@ export function ProposalTab({ leadId, leads, proposals, onAddProposal, onUpdateP
                     setSelectedProposal(proposal);
                     setShowProposalDetail(true);
                   }}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm flex items-center justify-center gap-2 cursor-pointer"
                 >
+                  <Eye className="w-4 h-4" />
                   View Details
                 </button>
               </div>

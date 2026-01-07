@@ -2076,12 +2076,12 @@ export function generateDummyLeadsBDMEO(userName: string): (Lead & { service?: s
       email: 'ahmad@teknusantara.com',
       phone: '083456789012',
       source: 'Referral',
-      status: 'MEETING_SCHEDULED' as any,
+      status: 'IN_HANDOVER' as any,
       createdDate: '2025-01-08',
-      notes: 'Meeting dijadwalkan tanggal 20 Januari 2025',
+      notes: 'Handover memo telah disetujui CEO dan siap untuk diserahkan ke PM',
       createdBy: userName,
-      service: 'Audit Services',
-      lastActivity: 'Meeting scheduled for 2025-01-20',
+      service: 'Transfer Pricing Documentation',
+      lastActivity: 'Handover approved - 2025-02-15',
     },
     {
       id: 'L104',
@@ -2535,12 +2535,12 @@ export function generateDummyLeadsBDMEO(userName: string): (Lead & { service?: s
 export const mockMeetings: Meeting[] = [
   {
     id: 'M001',
-    leadId: 'L103', // Ahmad Fauzi - MEETING_SCHEDULED
+    leadId: 'L103', // Ahmad Fauzi - IN_HANDOVER
     name: 'Initial Consultation Meeting',
     dateTime: '2025-01-20T10:00:00',
     location: 'https://zoom.us/j/123456789',
-    status: 'SCHEDULED',
-    notes: 'Meeting untuk diskusi kebutuhan Audit Services',
+    status: 'DONE',
+    notes: 'Meeting untuk diskusi kebutuhan Transfer Pricing Documentation',
   },
   {
     id: 'M002',
@@ -2852,6 +2852,52 @@ export const mockNotulensi: Notulensi[] = [
     createdBy: 'Andi Wijaya',
     createdAt: '2025-01-30T16:30:00',
   },
+  // Notulensi untuk PT Teknologi Nusantara (L103) - APPROVED
+  {
+    id: 'N008',
+    leadId: 'L103', // Ahmad Fauzi - PT Teknologi Nusantara - IN_HANDOVER
+    meetingId: 'M001',
+    clientName: 'Ahmad Fauzi',
+    meetingInfo: {
+      date: '2025-01-20',
+      time: '10:00 - 12:00',
+      location: 'https://zoom.us/j/123456789',
+    },
+    participants: {
+      internal: ['Andi Wijaya', 'Rina Kusuma'],
+      client: ['Ahmad Fauzi', 'Budi Santoso'],
+    },
+    objectives: 'Diskusi kebutuhan Transfer Pricing Documentation untuk compliance dengan regulasi perpajakan',
+    discussionSummary: {
+      background: 'PT Teknologi Nusantara adalah perusahaan teknologi yang memiliki transaksi related party dengan perusahaan afiliasi di luar negeri. Perusahaan perlu menyiapkan Transfer Pricing Documentation untuk memenuhi kewajiban perpajakan dan menghindari risiko koreksi fiskal.',
+      issuesDiscussed: 'Membahas struktur transaksi related party, metode transfer pricing yang sesuai, dan dokumen yang diperlukan untuk compliance',
+      clientInfo: 'PT Teknologi Nusantara memiliki transaksi jasa teknologi dan lisensi dengan perusahaan afiliasi di Singapura dan Malaysia. Omset tahunan sekitar 80 miliar rupiah dengan 150 karyawan.',
+      firmInfo: 'Kami menawarkan layanan Transfer Pricing Documentation yang komprehensif termasuk analisis comparability, penyusunan dokumentasi, dan pendampingan saat pemeriksaan pajak',
+      risks: 'Risiko koreksi fiskal jika dokumentasi tidak lengkap atau tidak sesuai dengan regulasi terbaru',
+    },
+    agreements: [
+      {
+        item: 'Project Scope',
+        details: 'Transfer Pricing Documentation meliputi analisis comparability, penyusunan Master File dan Local File, serta pendampingan saat pemeriksaan pajak',
+      },
+      {
+        item: 'Timeline',
+        details: 'Project akan dimulai setelah Engagement Letter ditandatangani, estimasi selesai dalam 3 bulan',
+      },
+    ],
+    actionItems: [
+      {
+        action: 'Buat proposal Transfer Pricing Documentation dengan detail scope dan pricing',
+        pic: 'Andi Wijaya',
+        deadline: '2025-01-25',
+      },
+    ],
+    nextSteps: 'Proposal akan dikirim dan menunggu feedback dari client, kemudian proceed ke tahap EL dan kick-off meeting',
+    notes: 'Client sangat tertarik dan meminta proposal segera. Meeting berjalan dengan baik dan semua pihak puas',
+    status: 'APPROVED',
+    createdBy: 'Andi Wijaya',
+    createdAt: '2025-01-20T12:00:00',
+  },
   // Notulensi untuk Dina Kartika (L114) - sudah approved
   {
     id: 'N007',
@@ -3087,6 +3133,22 @@ export const mockNotulensi: Notulensi[] = [
 // Mock data for proposals
 export const mockProposals: Proposal[] = [
   {
+    id: 'P108',
+    leadId: 'L103', // Ahmad Fauzi - PT Teknologi Nusantara - IN_HANDOVER
+    service: 'Transfer Pricing Documentation',
+    proposalFee: 65000000,
+    agreeFee: 65000000,
+    paymentType: 'Termin 1: 50% (IDR 32.5M) - DP saat EL signed | Termin 2: 50% (IDR 32.5M) - Pelunasan saat project selesai',
+    paymentTypeFinal: 'Termin 1: 50% (IDR 32.5M) - DP saat EL signed | Termin 2: 50% (IDR 32.5M) - Pelunasan saat project selesai',
+    dealDate: '2025-02-05',
+    hasSubcon: false,
+    sentAt: '2025-01-26',
+    status: 'ACCEPTED',
+    createdAt: '2025-01-25',
+    createdBy: 'Andi Wijaya',
+    clientName: 'Ahmad Fauzi',
+  },
+  {
     id: 'P001',
     leadId: 'L105', // Rudi Hartono - IN_PROPOSAL
     service: 'Web Development',
@@ -3233,6 +3295,22 @@ export const mockProposals: Proposal[] = [
 
 // Mock data for engagement letters
 export const mockEngagementLetters: EngagementLetter[] = [
+  // Engagement Letter untuk PT Teknologi Nusantara (L103) - Transfer Pricing Documentation - SIGNED
+  {
+    id: 'EL-L103-001',
+    leadId: 'L103',
+    service: 'Transfer Pricing Documentation',
+    agreeFee: 65000000,
+    hasSubcon: false,
+    paymentType: 'Termin 1: 50% (IDR 32.5M) - DP saat EL signed | Termin 2: 50% (IDR 32.5M) - Pelunasan saat project selesai',
+    paymentTypeFinal: 'Termin 1: 50% (IDR 32.5M) - DP saat EL signed | Termin 2: 50% (IDR 32.5M) - Pelunasan saat project selesai',
+    status: 'SIGNED',
+    clientName: 'Ahmad Fauzi',
+    createdAt: '2025-02-05',
+    approvedDate: '2025-02-07',
+    sentAt: '2025-02-08',
+    signedDate: '2025-02-10',
+  },
   // Engagement Letter untuk PT Cahaya Abadi (L105) - Proposal P001 sudah ACCEPTED
   {
     id: 'EL-L105-001',
@@ -3269,6 +3347,198 @@ export const mockEngagementLetters: EngagementLetter[] = [
 
 // Mock data for handover memos
 export const mockHandovers: Handover[] = [
+  // Handover Memo untuk PT Teknologi Nusantara (L103) - Transfer Pricing Documentation - Complete and APPROVED
+  {
+    id: 'HO-L103-001',
+    leadId: 'L103',
+    clientName: 'PT Teknologi Nusantara',
+    projectTitle: 'Transfer Pricing Documentation - PT Teknologi Nusantara',
+    pm: 'Diana Putri',
+    status: 'APPROVED' as any,
+    createdBy: 'Andi Wijaya',
+    createdAt: '2025-02-12',
+    summary: 'PT Teknologi Nusantara membutuhkan Transfer Pricing Documentation untuk compliance dengan regulasi perpajakan. Perusahaan memiliki transaksi related party dengan perusahaan afiliasi di Singapura dan Malaysia. Project ini akan mencakup analisis comparability, penyusunan Master File dan Local File, serta pendampingan saat pemeriksaan pajak.',
+    deliverables: [
+      'Transfer Pricing Master File',
+      'Transfer Pricing Local File',
+      'Comparability Analysis Report',
+      'Transfer Pricing Documentation Summary',
+      'Supporting Documentation Package'
+    ],
+    notes: 'Handover memo lengkap dengan semua informasi project. Proposal sudah accepted, Engagement Letter sudah signed. Handover telah disetujui CEO dan siap untuk diserahkan ke PM.',
+    // Extended fields untuk data lengkap 11 sections
+    documentCode: 'BD-HO-PT-TN-2025-001',
+    classification: 'Strictly Confidential – Internal Use Only',
+    projectName: 'Transfer Pricing Documentation - PT Teknologi Nusantara',
+    companyGroup: 'Teknologi Nusantara Group',
+    serviceLine: 'Transfer Pricing Documentation',
+    projectPeriod: '2025-02-15 – 2025-05-15',
+    clientPic: 'Ahmad Fauzi',
+    clientEmail: 'ahmad@teknusantara.com',
+    clientPhone: '083456789012',
+    engagementLetterStatus: 'Signed on 10 February 2025',
+    proposalReference: 'P108',
+    background: 'PT Teknologi Nusantara adalah perusahaan teknologi yang telah beroperasi selama 12 tahun dengan omset tahunan sekitar 80 miliar rupiah. Perusahaan memiliki 150 karyawan dan memiliki transaksi related party dengan perusahaan afiliasi di Singapura dan Malaysia, termasuk transaksi jasa teknologi, lisensi, dan transfer teknologi. Dalam rangka compliance dengan regulasi perpajakan dan menghindari risiko koreksi fiskal, perusahaan membutuhkan Transfer Pricing Documentation yang komprehensif sesuai dengan ketentuan Peraturan Menteri Keuangan dan OECD Guidelines.',
+    scopeIncluded: [
+      'Analisis struktur transaksi related party dan identifikasi controlled transactions',
+      'Penyusunan Transfer Pricing Master File sesuai dengan format yang ditentukan',
+      'Penyusunan Transfer Pricing Local File dengan analisis detail untuk setiap controlled transaction',
+      'Analisis comparability dengan mencari comparable companies dan melakukan comparability analysis',
+      'Penentuan transfer pricing method yang sesuai (CUP, TNMM, atau Profit Split Method)',
+      'Penyusunan supporting documentation dan working papers',
+      'Pendampingan saat pemeriksaan pajak dan penyiapan response untuk permintaan data dari DJP'
+    ],
+    scopeExclusions: [
+      'Audit keuangan atau verifikasi data historis',
+      'Layanan konsultasi perpajakan umum atau tax planning',
+      'Representasi di pengadilan atau proses banding',
+      'Layanan legal atau corporate action',
+      'Update dokumentasi untuk tahun fiskal berikutnya (diluar scope project ini)'
+    ],
+    deliverablesExtended: [
+      { id: 'DEL-001', name: 'Transfer Pricing Master File', description: 'PDF & Word', quantity: 1, dueDate: '2025-03-15', assignedTo: 'Senior Tax Advisor' },
+      { id: 'DEL-002', name: 'Transfer Pricing Local File', description: 'PDF & Word', quantity: 1, dueDate: '2025-04-15', assignedTo: 'Tax Advisor' },
+      { id: 'DEL-003', name: 'Comparability Analysis Report', description: 'Excel + PDF', quantity: 1, dueDate: '2025-04-20', assignedTo: 'Tax Analyst' },
+      { id: 'DEL-004', name: 'Transfer Pricing Documentation Summary', description: 'PDF & Word', quantity: 1, dueDate: '2025-04-25', assignedTo: 'Senior Tax Advisor' },
+      { id: 'DEL-005', name: 'Supporting Documentation Package', description: 'PDF + Excel', quantity: 1, dueDate: '2025-05-05', assignedTo: 'Tax Advisor' }
+    ],
+    milestones: [
+      { id: 'MS-001', name: 'Kick-Off Meeting', targetDate: '2025-02-20', description: 'Setelah DP diterima dan data awal dikumpulkan' },
+      { id: 'MS-002', name: 'Data Collection Completed', targetDate: '2025-03-05', description: 'Bergantung kelengkapan data dari klien' },
+      { id: 'MS-003', name: 'Draft Master File', targetDate: '2025-03-20', description: 'Draf awal untuk review internal' },
+      { id: 'MS-004', name: 'Draft Local File', targetDate: '2025-04-10', description: 'Draf awal untuk review internal' },
+      { id: 'MS-005', name: 'Final Deliverables', targetDate: '2025-05-10', description: 'Semua deliverables final diserahkan' }
+    ],
+    feeStructure: [
+      { id: 'FEE-001', description: 'Professional Fee', amount: 65000000, percentage: 100, status: 'Pending' },
+      { id: 'FEE-002', description: 'DP / Initial Payment', amount: 32500000, percentage: 50, dueDate: '2025-02-10', status: 'Pending' },
+      { id: 'FEE-003', description: 'Final Payment', amount: 32500000, percentage: 50, dueDate: '2025-05-15', status: 'Pending' }
+    ],
+    paymentTermsText: 'Invoice DP telah diterbitkan 10 Februari 2025. Pekerjaan dimulai setelah DP diterima (estimasi 15-20 Februari 2025). Pelunasan dilakukan setelah semua deliverables final diserahkan dan mendapat approval dari management klien.',
+    documentsReceived: [
+      { 
+        fileName: 'Financial statements FY 2022-2024', 
+        receivedDate: '2025-02-08',
+        fileUrl: '/uploads/PT-Teknologi-Nusantara/Financial-statements-FY-2022-2024.pdf',
+        uploadedBy: 'Andi Wijaya',
+        uploadDate: '2025-02-08T10:30:00.000Z'
+      },
+      { 
+        fileName: 'Intercompany transaction details', 
+        receivedDate: '2025-02-09',
+        fileUrl: '/uploads/PT-Teknologi-Nusantara/Intercompany-transaction-details.xlsx',
+        uploadedBy: 'Andi Wijaya',
+        uploadDate: '2025-02-09T14:20:00.000Z'
+      },
+      { 
+        fileName: 'Organizational structure and group chart', 
+        receivedDate: '2025-02-10',
+        fileUrl: '/uploads/PT-Teknologi-Nusantara/Organizational-structure-group-chart.pdf',
+        uploadedBy: 'Andi Wijaya',
+        uploadDate: '2025-02-10T09:15:00.000Z'
+      },
+      { 
+        fileName: 'Related party agreements', 
+        receivedDate: '2025-02-11',
+        fileUrl: '/uploads/PT-Teknologi-Nusantara/Related-party-agreements.pdf',
+        uploadedBy: 'Andi Wijaya',
+        uploadDate: '2025-02-11T11:45:00.000Z'
+      },
+      { 
+        fileName: 'Tax returns and supporting documents', 
+        receivedDate: '2025-02-12',
+        fileUrl: '/uploads/PT-Teknologi-Nusantara/Tax-returns-supporting-documents.pdf',
+        uploadedBy: 'Andi Wijaya',
+        uploadDate: '2025-02-12T16:30:00.000Z'
+      }
+    ],
+    storageLocation: '/DSK Global/Clients/PT Teknologi Nusantara/Project Files/Transfer Pricing Documentation 2025/',
+    dataRequirements: [
+      { itemName: 'Complete intercompany transaction data for FY 2024', status: 'Received' },
+      { itemName: 'Financial statements of related parties (Singapore & Malaysia)', status: 'Pending' },
+      { itemName: 'Market analysis and industry data', status: 'Received' },
+      { itemName: 'Functional analysis documentation', status: 'Pending' },
+      { itemName: 'Previous transfer pricing documentation (if any)', status: 'Received' }
+    ],
+    risks: [
+      { id: 'RISK-001', description: 'Data financial statements dari related parties di Singapura dan Malaysia mungkin belum lengkap, dapat mempengaruhi analisis comparability', impact: 'High', mitigation: 'Koordinasi intensif dengan klien untuk mendapatkan data terbaru, jika belum tersedia akan menggunakan data yang tersedia dan melakukan estimasi berdasarkan historical data' },
+      { id: 'RISK-002', description: 'Regulasi transfer pricing dapat berubah di tengah project, memerlukan update dokumentasi', impact: 'Medium', mitigation: 'Memantau update regulasi secara berkala, menjaga fleksibilitas dalam dokumentasi untuk mengakomodasi perubahan regulasi' },
+      { id: 'RISK-003', description: 'Timeline project cukup ketat dengan deadline final deliverables 10 Mei 2025', impact: 'Medium', mitigation: 'Memastikan data collection selesai sebelum 5 Maret 2025, melakukan parallel work untuk deliverables yang tidak dependent, dan melakukan regular check-in dengan klien' }
+    ],
+    communicationInternal: 'Semua komunikasi dilakukan melalui grup internal proyek di WhatsApp Business dan email internal. CEO harus di-cc untuk isu strategis atau risiko material. Weekly update meeting setiap Kamis pagi dengan tim project.',
+    communicationExternal: 'Semua komunikasi eksternal harus diarsipkan oleh Business Strategist. Primary contact: Ahmad Fauzi (ahmad@teknusantara.com, 083456789012). Secondary contact: Budi Santoso (budi@teknusantara.com).',
+    externalContacts: [
+      { id: 'CONT-001', role: 'Primary PIC', name: 'Ahmad Fauzi', email: 'ahmad@teknusantara.com', phone: '083456789012', company: 'PT Teknologi Nusantara' },
+      { id: 'CONT-002', role: 'Secondary PIC', name: 'Budi Santoso', email: 'budi@teknusantara.com', phone: '083456789013', company: 'PT Teknologi Nusantara' },
+      { id: 'CONT-003', role: 'Finance Manager', name: 'Siti Nurhaliza', email: 'siti@teknusantara.com', phone: '083456789014', company: 'PT Teknologi Nusantara' }
+    ],
+    preliminaryTeam: [
+      { id: 'TM-001', role: 'Project Lead', name: 'Senior Tax Advisor', allocation: 'Koordinasi teknis, analisis utama, dan presentasi ke management' },
+      { id: 'TM-002', role: 'Tax Advisor', name: 'Tax Advisor Specialist', allocation: 'Penyusunan Master File dan Local File, analisis comparability' },
+      { id: 'TM-003', role: 'Tax Analyst', name: 'Tax Analyst', allocation: 'Data collection, comparability analysis, dan supporting documentation' },
+      { id: 'TM-004', role: 'Reviewer', name: 'Manager Tax Services', allocation: 'Review teknis & kualitas semua deliverables' },
+      { id: 'TM-005', role: 'Admin Support', name: 'Admin DSK', allocation: 'Invoice, dokumen, folder management' },
+      { id: 'TM-006', role: 'BD Contact', name: 'Business Strategist', allocation: 'Koordinasi klien & eskalasi' }
+    ],
+    handoverChecklist: [
+      { id: 'CHK-001', description: 'Proposal final tersimpan', status: 'Completed' },
+      { id: 'CHK-002', description: 'Engagement Letter ditandatangani', status: 'Completed' },
+      { id: 'CHK-003', description: 'DP sudah diterima', status: 'Pending' },
+      { id: 'CHK-004', description: 'Folder project dibuat', status: 'Completed' },
+      { id: 'CHK-005', description: 'Dokumen klien diterima', status: 'Completed' },
+      { id: 'CHK-006', description: 'Data request disiapkan', status: 'Completed' },
+      { id: 'CHK-007', description: 'Kick-off meeting dijadwalkan', status: 'Completed' },
+      { id: 'CHK-008', description: 'Tim project ditugaskan', status: 'Completed' }
+    ],
+    signOffs: [
+      { id: 'SIGN-001', role: 'Chief Executive Officer', name: 'Galih Gumilang', signedAt: '2025-02-15', notes: '' },
+      { id: 'SIGN-002', role: 'Business Strategist', name: 'Andi Wijaya', signedAt: '2025-02-12', notes: '' },
+      { id: 'SIGN-003', role: 'Project Lead', name: 'Senior Tax Advisor', signedAt: '', notes: '' }
+    ],
+    workflowStatus: 'APPROVED_BY_CEO',
+    submittedToCeoAt: '2025-02-12T10:00:00',
+    lastModifiedAt: '2025-02-15T14:00:00',
+    scopeLocked: true,
+    proposalId: 'P108'
+  } as any as Handover & {
+    serviceLine?: string;
+    projectPeriod?: string;
+    documentCode?: string;
+    classification?: string;
+    projectName?: string;
+    companyGroup?: string;
+    clientPic?: string;
+    clientEmail?: string;
+    clientPhone?: string;
+    engagementLetterStatus?: string;
+    proposalReference?: string;
+    background?: string;
+    scopeIncluded?: string[];
+    scopeExclusions?: string[];
+    deliverables?: Array<{ id: string; name: string; description?: string; quantity?: number; dueDate?: string; assignedTo?: string; }>;
+    milestones?: Array<{ id: string; name: string; targetDate: string; description?: string; }>;
+    feeStructure?: Array<{ id: string; description: string; amount: number; percentage?: number; dueDate?: string; status?: string; }>;
+    paymentTermsText?: string;
+    documentsReceived?: Array<{ 
+      fileName: string; 
+      fileUrl?: string;
+      receivedDate?: string;
+      uploadedBy?: string;
+      uploadDate?: string;
+    }>;
+    storageLocation?: string;
+    dataRequirements?: Array<{ itemName: string; status?: string; }>;
+    risks?: Array<{ id: string; description: string; impact: string; mitigation?: string; }>;
+    communicationInternal?: string;
+    communicationExternal?: string;
+    externalContacts?: Array<{ id: string; role: string; name: string; email?: string; phone?: string; company?: string; }>;
+    preliminaryTeam?: Array<{ id: string; role: string; name: string; allocation?: string; }>;
+    handoverChecklist?: Array<{ id: string; description: string; status: string; }>;
+    signOffs?: Array<{ id: string; role: string; name: string; signedAt?: string; notes?: string; }>;
+    workflowStatus?: string;
+    revisionComments?: Array<{ id: string; sectionName: string; comment: string; requestedBy: string; requestedAt: string; }>;
+    scopeLocked?: boolean;
+  },
   // Handover Memo untuk PT Global Mandiri (L104) - Financial Advisory - Complete and WAITING_CEO_APPROVAL
   {
     id: 'HO-L104-001',
