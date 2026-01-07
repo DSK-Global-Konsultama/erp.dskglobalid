@@ -15,6 +15,12 @@ export function StatusChip({ status }: StatusChipProps) {
         return 'bg-amber-100 text-amber-700';
       case 'NEED_PROPOSAL':
         return 'bg-orange-100 text-orange-700';
+      case 'NEED_ENGAGEMENT_LETTER':
+        return 'bg-cyan-100 text-cyan-700';
+      case 'NEED_HANDOVER':
+        return 'bg-violet-100 text-violet-700';
+      case 'IN_HANDOVER':
+        return 'bg-violet-200 text-violet-800';
       case 'IN_PROPOSAL':
         return 'bg-indigo-100 text-indigo-700';
       case 'WAITING_APPROVAL':
@@ -30,6 +36,8 @@ export function StatusChip({ status }: StatusChipProps) {
       case 'WAITING_CEO_APPROVAL':
       case 'Waiting':
         return 'bg-yellow-100 text-yellow-700';
+      case 'REVISION_REQUESTED':
+        return 'bg-yellow-100 text-yellow-700';
       case 'APPROVED':
       case 'Approved':
         return 'bg-green-100 text-green-700';
@@ -40,6 +48,9 @@ export function StatusChip({ status }: StatusChipProps) {
       case 'Sent':
       case 'SENT_TO_PM':
         return 'bg-blue-100 text-blue-700';
+      case 'SIGNED':
+      case 'Signed':
+        return 'bg-green-100 text-green-700';
       case 'ACCEPTED':
         return 'bg-green-100 text-green-700';
       case 'PROPOSAL_EXPIRED':

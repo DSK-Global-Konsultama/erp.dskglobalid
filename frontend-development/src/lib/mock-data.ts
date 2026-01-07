@@ -152,8 +152,6 @@ export interface Proposal {
   dealDate?: string;
   hasSubcon: boolean;
   sentAt?: string;
-  elStatus?: 'DRAFT' | 'WAITING_CEO_APPROVAL' | 'SENT' | 'SIGNED' | 'REJECTED' | 'APPROVED';
-  elSignedDate?: string;
   status: 'DRAFT' | 'WAITING_APPROVAL' | 'WAITING_CEO_APPROVAL' | 'APPROVED' | 'SENT' | 'REJECTED' | 'ACCEPTED' | 'PROPOSAL_EXPIRED';
   createdAt: string;
   createdBy?: string;
@@ -166,13 +164,16 @@ export interface EngagementLetter {
   service: string;
   agreeFee?: number;
   hasSubcon: boolean;
-  signedDate?: string;
-  paymentType?: string;
+  paymentType: string;
   paymentTypeFinal?: string;
-  status: 'DRAFT' | 'WAITING_APPROVAL' | 'WAITING_CEO_APPROVAL' | 'APPROVED' | 'SENT' | 'REJECTED' | 'SIGNED';
-  createdAt?: string; // Only filled when document is uploaded
-  createdBy?: string;
-  clientName?: string;
+  status: 'DRAFT' | 'WAITING_APPROVAL' | 'APPROVED' | 'SENT' | 'SIGNED' | 'REJECTED';
+  clientName: string;
+  createdAt?: string;
+  signedDate?: string;
+  sentAt?: string;
+  fileUrl?: string;
+  submittedDate?: string;
+  approvedDate?: string;
 }
 
 export interface Handover {
@@ -2089,12 +2090,12 @@ export function generateDummyLeadsBDMEO(userName: string): (Lead & { service?: s
       email: 'dewi@globalmandiri.com',
       phone: '084567890123',
       source: 'Facebook',
-      status: 'NEED_PROPOSAL' as any,
+      status: 'IN_HANDOVER' as any,
       createdDate: '2025-01-05',
-      notes: 'Setelah meeting, client meminta proposal untuk Financial Advisory',
+      notes: 'Proposal accepted, Engagement Letter signed, Handover memo waiting approval',
       createdBy: userName,
       service: 'Financial Advisory',
-      lastActivity: 'Notulensi approved by CEO - 2025-01-10',
+      lastActivity: 'Handover memo submitted - waiting CEO approval',
     },
     {
       id: 'L105',
@@ -2103,12 +2104,12 @@ export function generateDummyLeadsBDMEO(userName: string): (Lead & { service?: s
       email: 'rudi@cahayaabadi.com',
       phone: '085678901234',
       source: 'Instagram',
-      status: 'IN_PROPOSAL' as any,
+      status: 'IN_HANDOVER' as any,
       createdDate: '2025-01-28',
-      notes: 'Proposal sedang dalam proses review oleh client',
+      notes: 'Proposal accepted, Engagement Letter signed, Handover memo submitted for CEO approval',
       createdBy: userName,
       service: 'Web Development',
-      lastActivity: 'Proposal sent to client - 2025-02-05',
+      lastActivity: 'Handover memo submitted - 2025-02-20',
     },
     {
       id: 'L106',
@@ -3180,7 +3181,7 @@ export const mockProposals: Proposal[] = [
     createdBy: 'Fitri Handayani',
     clientName: 'Rudi Kurniawan',
   },
-  // Dummy data untuk CEO Approval - Proposal dengan elStatus WAITING_CEO_APPROVAL
+  // Dummy data untuk CEO Approval - Proposal yang sudah ACCEPTED
   {
     id: 'P105',
     leadId: 'L205',
@@ -3191,8 +3192,7 @@ export const mockProposals: Proposal[] = [
     paymentTypeFinal: 'Termin 1: 50% (IDR 37.5M) - DP saat EL signed | Termin 2: 50% (IDR 37.5M) - Pelunasan saat project selesai',
     dealDate: '2025-11-10',
     hasSubcon: false,
-    status: 'APPROVED',
-    elStatus: 'WAITING_CEO_APPROVAL',
+    status: 'ACCEPTED',
     createdAt: '2025-11-05T09:00:00',
     createdBy: 'Andi Wijaya',
     clientName: 'Hendra Gunawan',
@@ -3207,11 +3207,484 @@ export const mockProposals: Proposal[] = [
     paymentTypeFinal: 'Retainer bulanan: IDR 9.58M per bulan untuk periode 12 bulan (Jan 2025 - Des 2025); Penagihan: Awal bulan',
     dealDate: '2025-11-12',
     hasSubcon: false,
-    status: 'APPROVED',
-    elStatus: 'WAITING_CEO_APPROVAL',
+    status: 'ACCEPTED',
     createdAt: '2025-11-08T10:00:00',
     createdBy: 'Rina Kusuma',
     clientName: 'Linda Wijayanti',
+  },
+  // Proposal untuk PT Global Mandiri (L104) - Financial Advisory - ACCEPTED
+  {
+    id: 'P107',
+    leadId: 'L104',
+    service: 'Financial Advisory',
+    proposalFee: 75000000,
+    agreeFee: 75000000,
+    paymentType: 'Termin 1: 50% (IDR 37.5M) - DP saat EL signed | Termin 2: 50% (IDR 37.5M) - Pelunasan saat project selesai',
+    paymentTypeFinal: 'Termin 1: 50% (IDR 37.5M) - DP saat EL signed | Termin 2: 50% (IDR 37.5M) - Pelunasan saat project selesai',
+    dealDate: '2025-01-20',
+    hasSubcon: false,
+    sentAt: '2025-01-15',
+    status: 'ACCEPTED',
+    createdAt: '2025-01-12T10:00:00',
+    createdBy: 'Andi Wijaya',
+    clientName: 'Dewi Lestari',
+  },
+];
+
+// Mock data for engagement letters
+export const mockEngagementLetters: EngagementLetter[] = [
+  // Engagement Letter untuk PT Cahaya Abadi (L105) - Proposal P001 sudah ACCEPTED
+  {
+    id: 'EL-L105-001',
+    leadId: 'L105',
+    service: 'Web Development',
+    agreeFee: 55000000,
+    hasSubcon: false,
+    paymentType: 'Termin 1: 50% (IDR 25M) - DP saat EL signed | Termin 2: 50% (IDR 25M) - Pelunasan saat project selesai',
+    paymentTypeFinal: 'Termin 1: 50% (IDR 25M) - DP saat EL signed | Termin 2: 50% (IDR 25M) - Pelunasan saat project selesai',
+    status: 'SIGNED',
+    clientName: 'Rudi Hartono',
+    createdAt: '2025-02-10',
+    approvedDate: '2025-02-12',
+    sentAt: '2025-02-15',
+    signedDate: '2025-02-18',
+  },
+  // Engagement Letter untuk PT Global Mandiri (L104) - Financial Advisory - SIGNED
+  {
+    id: 'EL-L104-001',
+    leadId: 'L104',
+    service: 'Financial Advisory',
+    agreeFee: 75000000,
+    hasSubcon: false,
+    paymentType: 'Termin 1: 50% (IDR 37.5M) - DP saat EL signed | Termin 2: 50% (IDR 37.5M) - Pelunasan saat project selesai',
+    paymentTypeFinal: 'Termin 1: 50% (IDR 37.5M) - DP saat EL signed | Termin 2: 50% (IDR 37.5M) - Pelunasan saat project selesai',
+    status: 'SIGNED',
+    clientName: 'Dewi Lestari',
+    createdAt: '2025-01-22',
+    approvedDate: '2025-01-24',
+    sentAt: '2025-01-25',
+    signedDate: '2025-01-28',
+  },
+];
+
+// Mock data for handover memos
+export const mockHandovers: Handover[] = [
+  // Handover Memo untuk PT Global Mandiri (L104) - Financial Advisory - Complete and WAITING_CEO_APPROVAL
+  {
+    id: 'HO-L104-001',
+    leadId: 'L104',
+    clientName: 'PT Global Mandiri',
+    projectTitle: 'Financial Advisory - PT Global Mandiri',
+    pm: 'Diana Putri',
+    status: 'WAITING_CEO_APPROVAL',
+    createdBy: 'Andi Wijaya',
+    createdAt: '2025-01-30',
+    summary: 'PT Global Mandiri membutuhkan konsultasi financial advisory untuk optimasi keuangan dan strategi investasi. Perusahaan adalah manufaktur dengan omset 50M per tahun, memiliki 3 cabang. Project ini akan fokus pada financial planning, cash flow management, dan investment strategy untuk mendukung pertumbuhan bisnis.',
+    deliverables: [
+      'Financial Planning Report',
+      'Cash Flow Management Strategy',
+      'Investment Strategy Document',
+      'Financial Advisory Presentation',
+      'Implementation Roadmap'
+    ],
+    notes: 'Handover memo lengkap dengan semua informasi project. Proposal sudah accepted, Engagement Letter sudah signed. Siap untuk diserahkan ke PM setelah CEO approval.',
+    // Extended fields untuk data lengkap 11 sections
+    documentCode: 'BD-HO-PT-GM-2025-001',
+    classification: 'Strictly Confidential – Internal Use Only',
+    projectName: 'Financial Advisory - PT Global Mandiri',
+    companyGroup: 'Global Mandiri Group',
+    serviceLine: 'Financial Advisory',
+    projectPeriod: '2025-02-01 – 2025-04-30',
+    clientPic: 'Dewi Lestari',
+    clientEmail: 'dewi@globalmandiri.com',
+    clientPhone: '084567890123',
+    engagementLetterStatus: 'Signed on 28 Januari 2025',
+    proposalReference: 'P107',
+    background: 'PT Global Mandiri adalah perusahaan manufaktur yang telah beroperasi selama 15 tahun dengan omset tahunan mencapai 50 miliar rupiah. Perusahaan memiliki 3 cabang di Jakarta, Bandung, dan Surabaya dengan total karyawan 250 orang. Dalam 2 tahun terakhir, perusahaan mengalami pertumbuhan yang signifikan namun menghadapi tantangan dalam pengelolaan cash flow dan perencanaan investasi untuk ekspansi bisnis. Management membutuhkan konsultasi financial advisory untuk mengoptimalkan struktur keuangan, meningkatkan efisiensi cash flow, dan merancang strategi investasi yang tepat untuk mendukung pertumbuhan bisnis jangka panjang.',
+    scopeIncluded: [
+      'Analisis struktur keuangan perusahaan dan identifikasi area improvement',
+      'Penyusunan financial planning comprehensive untuk 3 tahun ke depan',
+      'Pengembangan cash flow management strategy dengan forecasting bulanan',
+      'Perancangan investment strategy untuk ekspansi bisnis dan diversifikasi',
+      'Penyusunan financial advisory report dengan rekomendasi implementasi',
+      'Sesi presentasi dan diskusi dengan management untuk alignment strategi'
+    ],
+    scopeExclusions: [
+      'Audit keuangan atau verifikasi data historis',
+      'Implementasi sistem akuntansi atau software keuangan',
+      'Layanan konsultasi pajak atau compliance',
+      'Layanan legal atau corporate action'
+    ],
+    deliverablesExtended: [
+      { id: 'DEL-001', name: 'Financial Planning Report', description: 'PDF & Word', quantity: 1, dueDate: '2025-03-15', assignedTo: 'Senior Financial Advisor' },
+      { id: 'DEL-002', name: 'Cash Flow Management Strategy', description: 'Excel + PDF', quantity: 1, dueDate: '2025-03-20', assignedTo: 'Financial Analyst' },
+      { id: 'DEL-003', name: 'Investment Strategy Document', description: 'PDF & Word', quantity: 1, dueDate: '2025-03-25', assignedTo: 'Senior Financial Advisor' },
+      { id: 'DEL-004', name: 'Financial Advisory Presentation', description: 'PPT', quantity: 1, dueDate: '2025-04-05', assignedTo: 'Senior Financial Advisor' },
+      { id: 'DEL-005', name: 'Implementation Roadmap', description: 'Excel + PDF', quantity: 1, dueDate: '2025-04-10', assignedTo: 'Project Lead' }
+    ],
+    milestones: [
+      { id: 'MS-001', name: 'Kick-Off Meeting', targetDate: '2025-02-05', description: 'Setelah DP diterima dan data awal dikumpulkan' },
+      { id: 'MS-002', name: 'Data Collection Completed', targetDate: '2025-02-15', description: 'Bergantung kelengkapan data dari klien' },
+      { id: 'MS-003', name: 'Draft Financial Planning Report', targetDate: '2025-03-10', description: 'Draf awal untuk review internal' },
+      { id: 'MS-004', name: 'Review Session dengan Management', targetDate: '2025-03-25', description: 'Presentasi dan diskusi dengan management klien' },
+      { id: 'MS-005', name: 'Final Deliverables', targetDate: '2025-04-15', description: 'Semua deliverables final diserahkan' }
+    ],
+    feeStructure: [
+      { id: 'FEE-001', description: 'Professional Fee', amount: 75000000, percentage: 100, status: 'Pending' },
+      { id: 'FEE-002', description: 'DP / Initial Payment', amount: 37500000, percentage: 50, dueDate: '2025-01-28', status: 'Pending' },
+      { id: 'FEE-003', description: 'Final Payment', amount: 37500000, percentage: 50, dueDate: '2025-04-30', status: 'Pending' }
+    ],
+    paymentTermsText: 'Invoice DP telah diterbitkan 28 Januari 2025. Pekerjaan dimulai setelah DP diterima (estimasi 1-3 Februari 2025). Pelunasan dilakukan setelah semua deliverables final diserahkan dan mendapat approval dari management klien.',
+    documentsReceived: [
+      { 
+        fileName: 'Financial statements FY 2022-2024', 
+        receivedDate: '2025-01-25',
+        fileUrl: '/uploads/PT-Global-Mandiri/Financial-statements-FY-2022-2024.pdf',
+        uploadedBy: 'Andi Wijaya',
+        uploadDate: '2025-01-25T14:30:00.000Z'
+      },
+      { 
+        fileName: 'Trial balance FY 2024', 
+        receivedDate: '2025-01-25',
+        fileUrl: '/uploads/PT-Global-Mandiri/Trial-balance-FY-2024.xlsx',
+        uploadedBy: 'Andi Wijaya',
+        uploadDate: '2025-01-25T15:00:00.000Z'
+      },
+      { 
+        fileName: 'Organizational structure', 
+        receivedDate: '2025-01-26',
+        fileUrl: '/uploads/PT-Global-Mandiri/Organizational-structure.pdf',
+        uploadedBy: 'Andi Wijaya',
+        uploadDate: '2025-01-26T09:15:00.000Z'
+      },
+      { 
+        fileName: 'Business plan 2025-2027', 
+        receivedDate: '2025-01-27',
+        fileUrl: '/uploads/PT-Global-Mandiri/Business-plan-2025-2027.pdf',
+        uploadedBy: 'Andi Wijaya',
+        uploadDate: '2025-01-27T11:20:00.000Z'
+      },
+      { 
+        fileName: 'Investment proposals internal', 
+        receivedDate: '2025-01-28',
+        fileUrl: '/uploads/PT-Global-Mandiri/Investment-proposals-internal.pdf',
+        uploadedBy: 'Andi Wijaya',
+        uploadDate: '2025-01-28T16:45:00.000Z'
+      }
+    ],
+    storageLocation: '/DSK Global/Clients/PT Global Mandiri/Project Files/Financial Advisory 2025/',
+    dataRequirements: [
+      { itemName: 'Audited financial statements FY 2024', status: 'Received' },
+      { itemName: 'Cash flow statement detail bulanan 2024', status: 'Received' },
+      { itemName: 'Budget dan forecast 2025-2027', status: 'Pending' },
+      { itemName: 'Detail investasi yang direncanakan', status: 'Received' },
+      { itemName: 'Struktur permodalan dan debt schedule', status: 'Pending' }
+    ],
+    risks: [
+      { id: 'RISK-001', description: 'Data budget dan forecast 2025-2027 belum lengkap dari klien, dapat mempengaruhi akurasi financial planning', impact: 'Medium', mitigation: 'Koordinasi intensif dengan klien untuk mendapatkan data terbaru, jika belum tersedia akan menggunakan estimasi berdasarkan historical data' },
+      { id: 'RISK-002', description: 'Timeline project cukup ketat dengan deadline final deliverables 15 April 2025', impact: 'High', mitigation: 'Memastikan data collection selesai sebelum 15 Februari, melakukan parallel work untuk deliverables yang tidak dependent' },
+      { id: 'RISK-003', description: 'Potensi perubahan strategi bisnis klien di tengah project dapat mempengaruhi investment strategy yang direkomendasikan', impact: 'Medium', mitigation: 'Melakukan regular check-in dengan management untuk update perubahan strategi, menjaga fleksibilitas dalam rekomendasi' }
+    ],
+    communicationInternal: 'Semua komunikasi dilakukan melalui grup internal proyek di WhatsApp Business dan email internal. CEO harus di-cc untuk isu strategis atau risiko material. Weekly update meeting setiap Senin pagi dengan tim project.',
+    communicationExternal: 'Semua komunikasi eksternal harus diarsipkan oleh Business Strategist. Primary contact: Dewi Lestari (dewi@globalmandiri.com, 084567890123). Secondary contact: Hendra Gunawan (hendra@globalmandiri.com).',
+    externalContacts: [
+      { id: 'CONT-001', role: 'Primary PIC', name: 'Dewi Lestari', email: 'dewi@globalmandiri.com', phone: '084567890123', company: 'PT Global Mandiri' },
+      { id: 'CONT-002', role: 'Secondary PIC', name: 'Hendra Gunawan', email: 'hendra@globalmandiri.com', phone: '085678901234', company: 'PT Global Mandiri' },
+      { id: 'CONT-003', role: 'Finance Manager', name: 'Budi Santoso', email: 'budi@globalmandiri.com', phone: '086789012345', company: 'PT Global Mandiri' }
+    ],
+    preliminaryTeam: [
+      { id: 'TM-001', role: 'Project Lead', name: 'Senior Financial Advisor', allocation: 'Koordinasi teknis, analisis utama, dan presentasi ke management' },
+      { id: 'TM-002', role: 'Financial Analyst', name: 'Financial Analyst Specialist', allocation: 'Analisis cash flow, financial modeling, dan penyusunan deliverables' },
+      { id: 'TM-003', role: 'Reviewer', name: 'Manager Financial Advisory', allocation: 'Review teknis & kualitas semua deliverables' },
+      { id: 'TM-004', role: 'Admin Support', name: 'Admin DSK', allocation: 'Invoice, dokumen, folder management' },
+      { id: 'TM-005', role: 'BD Contact', name: 'Business Strategist', allocation: 'Koordinasi klien & eskalasi' }
+    ],
+    handoverChecklist: [
+      { id: 'CHK-001', description: 'Proposal final tersimpan', status: 'Completed' },
+      { id: 'CHK-002', description: 'Engagement Letter ditandatangani', status: 'Completed' },
+      { id: 'CHK-003', description: 'DP sudah diterima', status: 'Pending' },
+      { id: 'CHK-004', description: 'Folder project dibuat', status: 'Completed' },
+      { id: 'CHK-005', description: 'Dokumen klien diterima', status: 'Completed' },
+      { id: 'CHK-006', description: 'Data request disiapkan', status: 'Completed' },
+      { id: 'CHK-007', description: 'Kick-off meeting dijadwalkan', status: 'Completed' },
+      { id: 'CHK-008', description: 'Tim project ditugaskan', status: 'Completed' }
+    ],
+    signOffs: [
+      { id: 'SIGN-001', role: 'Chief Executive Officer', name: 'Galih Gumilang', signedAt: '2025-01-30', notes: '' },
+      { id: 'SIGN-002', role: 'Business Strategist', name: 'Andi Wijaya', signedAt: '2025-01-30', notes: '' },
+      { id: 'SIGN-003', role: 'Project Lead', name: 'Senior Financial Advisor', signedAt: '', notes: '' }
+    ],
+    workflowStatus: 'SUBMITTED_TO_CEO',
+    submittedToCeoAt: '2025-01-30T10:00:00',
+    lastModifiedAt: '2025-01-30T10:00:00',
+    scopeLocked: false,
+    proposalId: 'P107'
+  } as any as Handover & {
+    serviceLine?: string;
+    projectPeriod?: string;
+    documentCode?: string;
+    classification?: string;
+    projectName?: string;
+    companyGroup?: string;
+    clientPic?: string;
+    clientEmail?: string;
+    clientPhone?: string;
+    engagementLetterStatus?: string;
+    proposalReference?: string;
+    background?: string;
+    scopeIncluded?: string[];
+    scopeExclusions?: string[];
+    deliverables?: Array<{ id: string; name: string; description?: string; quantity?: number; dueDate?: string; assignedTo?: string; }>;
+    milestones?: Array<{ id: string; name: string; targetDate: string; description?: string; }>;
+    feeStructure?: Array<{ id: string; description: string; amount: number; percentage?: number; dueDate?: string; status?: string; }>;
+    paymentTermsText?: string;
+    documentsReceived?: Array<{ 
+      fileName: string; 
+      fileUrl?: string;
+      receivedDate?: string;
+      uploadedBy?: string;
+      uploadDate?: string;
+    }>;
+    storageLocation?: string;
+    dataRequirements?: Array<{ itemName: string; status?: string; }>;
+    risks?: Array<{ id: string; description: string; impact: string; mitigation?: string; }>;
+    communicationInternal?: string;
+    communicationExternal?: string;
+    externalContacts?: Array<{ id: string; role: string; name: string; email?: string; phone?: string; company?: string; }>;
+    preliminaryTeam?: Array<{ id: string; role: string; name: string; allocation?: string; }>;
+    handoverChecklist?: Array<{ id: string; description: string; status: string; }>;
+    signOffs?: Array<{ id: string; role: string; name: string; signedAt?: string; notes?: string; }>;
+    workflowStatus?: string;
+    revisionComments?: Array<{ id: string; sectionName: string; comment: string; requestedBy: string; requestedAt: string; }>;
+    scopeLocked?: boolean;
+  },
+  // Handover Memo untuk PT Cahaya Abadi (L105) - Web Development - Complete with REVISION_REQUESTED
+  {
+    id: 'HO-L105-001',
+    leadId: 'L105',
+    clientName: 'PT Cahaya Abadi',
+    projectTitle: 'Web Development - PT Cahaya Abadi',
+    pm: 'Diana Putri',
+    status: 'REVISION_REQUESTED' as any,
+    createdBy: 'Andi Wijaya',
+    createdAt: '2025-02-20',
+    summary: 'PT Cahaya Abadi membutuhkan website company profile dan platform e-commerce untuk bisnis fashion retail mereka. Perusahaan memiliki 5 store offline dan ingin mengembangkan online presence. Project ini akan mencakup pembuatan website responsive, integrasi payment gateway, dan sistem manajemen produk.',
+    deliverables: [
+      'Company Profile Website',
+      'E-commerce Platform',
+      'Product Management System',
+      'Payment Gateway Integration',
+      'Admin Dashboard'
+    ],
+    notes: 'Handover memo lengkap dengan semua informasi project. Proposal sudah accepted, Engagement Letter sudah signed. Handover telah disubmit ke CEO namun memerlukan revisi pada beberapa section.',
+    // Extended fields untuk data lengkap 11 sections
+    documentCode: 'BD-HO-PT-CA-2025-001',
+    classification: 'Strictly Confidential – Internal Use Only',
+    projectName: 'Web Development - PT Cahaya Abadi',
+    companyGroup: 'Cahaya Abadi Group',
+    serviceLine: 'Web Development',
+    projectPeriod: '2025-02-25 – 2025-05-25',
+    clientPic: 'Rudi Hartono',
+    clientEmail: 'rudi@cahayaabadi.com',
+    clientPhone: '085678901234',
+    engagementLetterStatus: 'Signed on 18 February 2025',
+    proposalReference: 'P001',
+    background: 'PT Cahaya Abadi adalah perusahaan retail fashion yang telah beroperasi selama 8 tahun dengan 5 store offline di Jakarta, Bandung, Surabaya, Medan, dan Yogyakarta. Perusahaan memiliki omset tahunan sekitar 30 miliar rupiah dengan total karyawan 120 orang. Dalam 2 tahun terakhir, perusahaan melihat potensi besar dalam e-commerce dan ingin mengembangkan online presence untuk memperluas jangkauan pasar. Management membutuhkan website company profile yang profesional dan platform e-commerce yang terintegrasi untuk mendukung pertumbuhan bisnis online.',
+    scopeIncluded: [
+      'Pembuatan website company profile responsive dengan desain modern',
+      'Pengembangan platform e-commerce dengan fitur lengkap (product catalog, shopping cart, checkout)',
+      'Integrasi payment gateway (Midtrans/OVO/GoPay) untuk transaksi online',
+      'Sistem manajemen produk dan inventory untuk admin',
+      'Admin dashboard untuk monitoring penjualan dan analytics',
+      'SEO optimization dan integrasi social media',
+      'Mobile responsive design untuk semua device'
+    ],
+    scopeExclusions: [
+      'Aplikasi mobile native (iOS/Android)',
+      'Integrasi dengan sistem ERP atau accounting software',
+      'Layanan maintenance setelah project selesai (diluar scope)',
+      'Content creation atau copywriting untuk produk',
+      'Photography atau video production untuk produk'
+    ],
+    deliverablesExtended: [
+      { id: 'DEL-001', name: 'Company Profile Website', description: 'HTML/CSS/JS + CMS', quantity: 1, dueDate: '2025-03-20', assignedTo: 'Senior Web Developer' },
+      { id: 'DEL-002', name: 'E-commerce Platform', description: 'Full Stack Web App', quantity: 1, dueDate: '2025-04-15', assignedTo: 'Full Stack Developer' },
+      { id: 'DEL-003', name: 'Product Management System', description: 'Admin Panel', quantity: 1, dueDate: '2025-04-20', assignedTo: 'Backend Developer' },
+      { id: 'DEL-004', name: 'Payment Gateway Integration', description: 'API Integration', quantity: 1, dueDate: '2025-04-25', assignedTo: 'Backend Developer' },
+      { id: 'DEL-005', name: 'Admin Dashboard', description: 'Analytics & Reports', quantity: 1, dueDate: '2025-05-10', assignedTo: 'Full Stack Developer' }
+    ],
+    milestones: [
+      { id: 'MS-001', name: 'Kick-Off Meeting', targetDate: '2025-02-28', description: 'Setelah DP diterima dan requirements final dikonfirmasi' },
+      { id: 'MS-002', name: 'Design Mockup Approved', targetDate: '2025-03-10', description: 'UI/UX design untuk website dan e-commerce platform' },
+      { id: 'MS-003', name: 'Company Profile Website Live', targetDate: '2025-03-25', description: 'Website company profile siap digunakan' },
+      { id: 'MS-004', name: 'E-commerce Platform Beta', targetDate: '2025-04-30', description: 'Platform e-commerce siap untuk testing' },
+      { id: 'MS-005', name: 'Final Deliverables & Go Live', targetDate: '2025-05-20', description: 'Semua deliverables final dan platform siap production' }
+    ],
+    feeStructure: [
+      { id: 'FEE-001', description: 'Professional Fee', amount: 55000000, percentage: 100, status: 'Pending' },
+      { id: 'FEE-002', description: 'DP / Initial Payment', amount: 27500000, percentage: 50, dueDate: '2025-02-18', status: 'Pending' },
+      { id: 'FEE-003', description: 'Final Payment', amount: 27500000, percentage: 50, dueDate: '2025-05-25', status: 'Pending' }
+    ],
+    paymentTermsText: 'Invoice DP telah diterbitkan 18 Februari 2025. Pekerjaan dimulai setelah DP diterima (estimasi 25-28 Februari 2025). Pelunasan dilakukan setelah semua deliverables final diserahkan dan mendapat approval dari management klien.',
+    documentsReceived: [
+      { 
+        fileName: 'Company profile and brand guidelines', 
+        receivedDate: '2025-02-15',
+        fileUrl: '/uploads/PT-Cahaya-Abadi/Company-profile-brand-guidelines.pdf',
+        uploadedBy: 'Andi Wijaya',
+        uploadDate: '2025-02-15T10:30:00.000Z'
+      },
+      { 
+        fileName: 'Product catalog and images', 
+        receivedDate: '2025-02-16',
+        fileUrl: '/uploads/PT-Cahaya-Abadi/Product-catalog-images.zip',
+        uploadedBy: 'Andi Wijaya',
+        uploadDate: '2025-02-16T14:20:00.000Z'
+      },
+      { 
+        fileName: 'Business requirements document', 
+        receivedDate: '2025-02-17',
+        fileUrl: '/uploads/PT-Cahaya-Abadi/Business-requirements-document.pdf',
+        uploadedBy: 'Andi Wijaya',
+        uploadDate: '2025-02-17T09:15:00.000Z'
+      },
+      { 
+        fileName: 'Logo and brand assets', 
+        receivedDate: '2025-02-18',
+        fileUrl: '/uploads/PT-Cahaya-Abadi/Logo-brand-assets.zip',
+        uploadedBy: 'Andi Wijaya',
+        uploadDate: '2025-02-18T11:45:00.000Z'
+      }
+    ],
+    storageLocation: '/DSK Global/Clients/PT Cahaya Abadi/Project Files/Web Development 2025/',
+    dataRequirements: [
+      { itemName: 'Complete product catalog with images and descriptions', status: 'Received' },
+      { itemName: 'Company profile and brand guidelines', status: 'Received' },
+      { itemName: 'Payment gateway account credentials', status: 'Pending' },
+      { itemName: 'Domain and hosting information', status: 'Pending' },
+      { itemName: 'Social media accounts for integration', status: 'Pending' }
+    ],
+    risks: [
+      { id: 'RISK-001', description: 'Payment gateway account credentials belum disediakan klien, dapat mempengaruhi timeline integrasi payment', impact: 'Medium', mitigation: 'Koordinasi dengan klien untuk mendapatkan credentials sebelum milestone payment integration, jika belum tersedia akan menggunakan sandbox environment untuk development' },
+      { id: 'RISK-002', description: 'Product catalog dan images mungkin belum lengkap, dapat mempengaruhi timeline development e-commerce platform', impact: 'High', mitigation: 'Memastikan product catalog lengkap sebelum 10 Maret 2025, melakukan parallel work untuk fitur yang tidak dependent pada product data' },
+      { id: 'RISK-003', description: 'Perubahan requirements di tengah project dapat mempengaruhi timeline dan scope', impact: 'Medium', mitigation: 'Melakukan regular check-in dengan klien untuk konfirmasi requirements, menjaga fleksibilitas dalam development namun dengan change request process yang jelas' }
+    ],
+    communicationInternal: 'Semua komunikasi dilakukan melalui grup internal proyek di WhatsApp Business dan email internal. CEO harus di-cc untuk isu strategis atau perubahan scope. Weekly update meeting setiap Rabu pagi dengan tim project.',
+    communicationExternal: 'Semua komunikasi eksternal harus diarsipkan oleh Business Strategist. Primary contact: Rudi Hartono (rudi@cahayaabadi.com, 085678901234). Secondary contact: Siti Rahayu (siti@cahayaabadi.com).',
+    externalContacts: [
+      { id: 'CONT-001', role: 'Primary PIC', name: 'Rudi Hartono', email: 'rudi@cahayaabadi.com', phone: '085678901234', company: 'PT Cahaya Abadi' },
+      { id: 'CONT-002', role: 'Secondary PIC', name: 'Siti Rahayu', email: 'siti@cahayaabadi.com', phone: '085678901235', company: 'PT Cahaya Abadi' },
+      { id: 'CONT-003', role: 'IT Manager', name: 'Budi Santoso', email: 'budi@cahayaabadi.com', phone: '085678901236', company: 'PT Cahaya Abadi' }
+    ],
+    preliminaryTeam: [
+      { id: 'TM-001', role: 'Project Lead', name: 'Senior Web Developer', allocation: 'Koordinasi teknis, development utama, dan presentasi ke klien' },
+      { id: 'TM-002', role: 'Full Stack Developer', name: 'Full Stack Developer Specialist', allocation: 'Development e-commerce platform, payment integration, dan admin dashboard' },
+      { id: 'TM-003', role: 'UI/UX Designer', name: 'UI/UX Designer', allocation: 'Design mockup, user experience, dan visual design' },
+      { id: 'TM-004', role: 'Backend Developer', name: 'Backend Developer', allocation: 'API development, database design, dan system integration' },
+      { id: 'TM-005', role: 'Reviewer', name: 'Manager Web Development', allocation: 'Review teknis & kualitas semua deliverables' },
+      { id: 'TM-006', role: 'Admin Support', name: 'Admin DSK', allocation: 'Invoice, dokumen, folder management' },
+      { id: 'TM-007', role: 'BD Contact', name: 'Business Strategist', allocation: 'Koordinasi klien & eskalasi' }
+    ],
+    handoverChecklist: [
+      { id: 'CHK-001', description: 'Proposal final tersimpan', status: 'Completed' },
+      { id: 'CHK-002', description: 'Engagement Letter ditandatangani', status: 'Completed' },
+      { id: 'CHK-003', description: 'DP sudah diterima', status: 'Pending' },
+      { id: 'CHK-004', description: 'Folder project dibuat', status: 'Completed' },
+      { id: 'CHK-005', description: 'Dokumen klien diterima', status: 'Completed' },
+      { id: 'CHK-006', description: 'Data request disiapkan', status: 'Completed' },
+      { id: 'CHK-007', description: 'Kick-off meeting dijadwalkan', status: 'Completed' },
+      { id: 'CHK-008', description: 'Tim project ditugaskan', status: 'Completed' }
+    ],
+    signOffs: [
+      { id: 'SIGN-001', role: 'Chief Executive Officer', name: 'Galih Gumilang', signedAt: '', notes: '' },
+      { id: 'SIGN-002', role: 'Business Strategist', name: 'Andi Wijaya', signedAt: '2025-02-20', notes: '' },
+      { id: 'SIGN-003', role: 'Project Lead', name: 'Senior Web Developer', signedAt: '', notes: '' }
+    ],
+    workflowStatus: 'REVISION_REQUESTED',
+    submittedToCeoAt: '2025-02-20T10:00:00',
+    lastModifiedAt: '2025-02-20T11:30:00',
+    scopeLocked: false,
+    proposalId: 'P001',
+    revisionComments: [
+      {
+        id: 'REV-001',
+        sectionName: 'FINALIZED SCOPE OF WORK',
+        comment: 'Deliverables kurang spesifik. Tolong detailkan output untuk setiap fase development, termasuk format file, teknologi yang digunakan, dan dokumentasi yang akan diserahkan. Untuk e-commerce platform, perlu disebutkan fitur-fitur detail seperti user registration, product search & filter, shopping cart, checkout process, order tracking, dan customer account management.',
+        requestedBy: 'Galih Gumilang',
+        role: 'CEO',
+        requestedAt: '2025-02-20T11:00:00'
+      },
+      {
+        id: 'REV-002',
+        sectionName: 'FEE STRUCTURE & PAYMENT TERMS',
+        comment: 'Syarat pembayaran final perlu lebih jelas. Apakah pembayaran dilakukan setelah semua deliverables selesai atau setelah client acceptance? Juga perlu disebutkan proses jika ada change request di tengah development - apakah akan ada additional fee atau termasuk dalam scope? Tolong tambahkan juga timeline untuk invoice dan payment processing.',
+        requestedBy: 'Galih Gumilang',
+        role: 'CEO',
+        requestedAt: '2025-02-20T11:15:00'
+      },
+      {
+        id: 'REV-003',
+        sectionName: 'KEY RISKS / RED FLAGS',
+        comment: 'Strategi mitigasi risiko perlu lebih actionable. Untuk setiap risiko, tolong sebutkan: (1) indikator early warning yang akan dipantau, (2) langkah konkret yang akan diambil jika risiko terjadi, (3) timeline adjustment yang mungkin diperlukan, dan (4) resource backup plan. Khusus untuk risiko payment gateway credentials, perlu disebutkan alternatif payment gateway yang bisa digunakan.',
+        requestedBy: 'Galih Gumilang',
+        role: 'CEO',
+        requestedAt: '2025-02-20T11:30:00'
+      },
+      {
+        id: 'REV-004',
+        sectionName: 'PROJECT TEAM ASSIGNMENT',
+        comment: 'Alokasi tim terlalu umum. Tolong detailkan untuk setiap team member: (1) tugas spesifik per deliverable, (2) estimasi jam kerja atau persentase alokasi waktu, (3) dependencies antar team member, dan (4) escalation path jika ada blocker. Khusus untuk UI/UX Designer, perlu disebutkan deliverables design yang akan dibuat (wireframes, mockups, style guide, dll).',
+        requestedBy: 'Galih Gumilang',
+        role: 'CEO',
+        requestedAt: '2025-02-20T11:45:00'
+      },
+      {
+        id: 'REV-005',
+        sectionName: 'CLIENT-PROVIDED DOCUMENTS',
+        comment: 'Perlu ditambahkan informasi tentang format dan kualitas dokumen yang diterima. Apakah semua dokumen sudah dalam format digital yang siap digunakan? Apakah ada dokumen yang masih perlu dikonversi atau diolah terlebih dahulu? Juga perlu disebutkan jika ada dokumen yang masih pending dan timeline untuk mendapatkannya.',
+        requestedBy: 'Galih Gumilang',
+        role: 'CEO',
+        requestedAt: '2025-02-20T12:00:00'
+      }
+    ]
+  } as any as Handover & {
+    serviceLine?: string;
+    projectPeriod?: string;
+    documentCode?: string;
+    classification?: string;
+    projectName?: string;
+    companyGroup?: string;
+    clientPic?: string;
+    clientEmail?: string;
+    clientPhone?: string;
+    engagementLetterStatus?: string;
+    proposalReference?: string;
+    background?: string;
+    scopeIncluded?: string[];
+    scopeExclusions?: string[];
+    deliverables?: Array<{ id: string; name: string; description?: string; quantity?: number; dueDate?: string; assignedTo?: string; }>;
+    milestones?: Array<{ id: string; name: string; targetDate: string; description?: string; }>;
+    feeStructure?: Array<{ id: string; description: string; amount: number; percentage?: number; dueDate?: string; status?: string; }>;
+    paymentTermsText?: string;
+    documentsReceived?: Array<{ 
+      fileName: string; 
+      fileUrl?: string;
+      receivedDate?: string;
+      uploadedBy?: string;
+      uploadDate?: string;
+    }>;
+    storageLocation?: string;
+    dataRequirements?: Array<{ itemName: string; status?: string; }>;
+    risks?: Array<{ id: string; description: string; impact: string; mitigation?: string; }>;
+    communicationInternal?: string;
+    communicationExternal?: string;
+    externalContacts?: Array<{ id: string; role: string; name: string; email?: string; phone?: string; company?: string; }>;
+    preliminaryTeam?: Array<{ id: string; role: string; name: string; allocation?: string; }>;
+    handoverChecklist?: Array<{ id: string; description: string; status: string; }>;
+    signOffs?: Array<{ id: string; role: string; name: string; signedAt?: string; notes?: string; }>;
+    workflowStatus?: string;
+    revisionComments?: Array<{ id: string; sectionName: string; comment: string; requestedBy: string; requestedAt: string; }>;
+    scopeLocked?: boolean;
   },
 ];
 

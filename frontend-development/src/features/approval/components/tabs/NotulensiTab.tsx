@@ -49,7 +49,7 @@ export function NotulensiTab({ notulensi, onUpdateNotulensi }: NotulensiTabProps
                     </Badge>
                     <Button
                       onClick={() => setSelectedNotulensi(notulensiItem)}
-                      className="px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors font-medium"
+                      className="px-5 py-2 bg-white text-gray-900 border border-gray-300 text-sm rounded-lg hover:bg-gray-50 transition-colors font-medium"
                     >
                       <Eye className="w-4 h-4 mr-2" />
                       Review

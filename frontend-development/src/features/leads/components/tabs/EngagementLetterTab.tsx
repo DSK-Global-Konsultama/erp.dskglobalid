@@ -71,11 +71,11 @@ export function EngagementLetterTab({
           <p className="text-sm text-gray-500 mt-1">Engagement Letter akan otomatis dibuat ketika proposal sudah diterima (Accepted)</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {leadELs.map((el) => (
             <div 
               key={el.id} 
-              className="border rounded-lg p-4 border-gray-200"
+              className="border rounded-lg p-4 border-gray-200 hover:border-gray-300 transition-all"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -95,7 +95,7 @@ export function EngagementLetterTab({
                   </p>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-4 text-sm mb-4">
+              <div className="grid grid-cols-4 gap-4 text-sm mb-4">
                 <div>
                   <p className="text-gray-600">Payment Type Final</p>
                   <p className="font-medium text-green-600">{el.paymentTypeFinal || '-'}</p>
@@ -121,6 +121,19 @@ export function EngagementLetterTab({
                   )}
                 </div>
                 <div>
+                  <p className="text-gray-600">Sent At</p>
+                  <p className="font-medium text-blue-600">
+                    {el.sentAt 
+                      ? new Date(el.sentAt).toLocaleDateString('id-ID', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })
+                      : '-'
+                    }
+                  </p>
+                </div>
+                <div>
                   <p className="text-gray-600">Signed Date</p>
                   <p className="font-medium text-green-600">
                     {el.signedDate 
@@ -140,11 +153,7 @@ export function EngagementLetterTab({
                     setSelectedEL(el);
                     setShowELUpload(true);
                   }}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm cursor-pointer ${
-                    el.createdAt 
-                      ? 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-                      : 'bg-black text-white hover:bg-gray-800'
-                  }`}
+                  className="flex-1 px-3 py-2 rounded-lg text-sm cursor-pointer border border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
                 >
                   {el.createdAt ? 'View Details' : 'Upload Engagement Letter'}
                 </button>
@@ -170,6 +179,10 @@ export function EngagementLetterTab({
             const updatedEL = engagementLetters.find(el => el.id === id);
             if (updatedEL) {
               setSelectedEL({ ...updatedEL, ...updates });
+            }
+            // Update lead status to NEED_HANDOVER when EL is signed
+            if (updates.status === 'SIGNED') {
+              onUpdateLeadStatus(leadId, 'NEED_HANDOVER');
             }
           }}
         />

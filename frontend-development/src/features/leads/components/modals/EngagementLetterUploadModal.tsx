@@ -12,6 +12,7 @@ interface EngagementLetterUploadModalProps {
   open: boolean;
   onClose: () => void;
   onUpdateEngagementLetter?: (id: string, updates: Partial<EngagementLetter>) => void;
+  isCEOView?: boolean;
 }
 
 export function EngagementLetterUploadModal({
@@ -19,7 +20,8 @@ export function EngagementLetterUploadModal({
   lead,
   open,
   onClose,
-  onUpdateEngagementLetter
+  onUpdateEngagementLetter,
+  isCEOView = false
 }: EngagementLetterUploadModalProps) {
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -170,6 +172,71 @@ export function EngagementLetterUploadModal({
       });
       setSelectedFile(null);
       toast.success('Engagement Letter uploaded successfully!');
+    }
+  };
+
+  const handleApprove = () => {
+    if (currentEL && onUpdateEngagementLetter) {
+      const approvedDate = new Date().toISOString().split('T')[0];
+      onUpdateEngagementLetter(currentEL.id, {
+        status: 'APPROVED',
+        approvedDate: approvedDate
+      });
+      setCurrentEL({
+        ...currentEL,
+        status: 'APPROVED',
+        approvedDate: approvedDate
+      });
+      toast.success('Engagement Letter approved!');
+      handleClose();
+    }
+  };
+
+  const handleReject = () => {
+    if (currentEL && onUpdateEngagementLetter) {
+      onUpdateEngagementLetter(currentEL.id, {
+        status: 'REJECTED'
+      });
+      setCurrentEL({
+        ...currentEL,
+        status: 'REJECTED'
+      });
+      toast.success('Engagement Letter rejected!');
+      handleClose();
+    }
+  };
+
+  const handleSendToClient = () => {
+    if (currentEL && onUpdateEngagementLetter) {
+      const sentDate = new Date().toISOString();
+      onUpdateEngagementLetter(currentEL.id, {
+        status: 'SENT',
+        sentAt: sentDate
+      });
+      setCurrentEL({
+        ...currentEL,
+        status: 'SENT',
+        sentAt: sentDate
+      });
+      toast.success('Engagement Letter sent to client!');
+      handleClose();
+    }
+  };
+
+  const handleMarkAsSigned = () => {
+    if (currentEL && onUpdateEngagementLetter) {
+      const signedDate = new Date().toISOString().split('T')[0];
+      onUpdateEngagementLetter(currentEL.id, {
+        status: 'SIGNED',
+        signedDate: signedDate
+      });
+      setCurrentEL({
+        ...currentEL,
+        status: 'SIGNED',
+        signedDate: signedDate
+      });
+      toast.success('Engagement Letter marked as signed!');
+      handleClose();
     }
   };
 
@@ -345,21 +412,61 @@ export function EngagementLetterUploadModal({
 
           {/* Actions */}
           <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex gap-3 justify-end flex-shrink-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-            >
-              Cancel
-            </Button>
-            {!isUploaded && (
-              <Button
-                type="button"
-                onClick={handleUpload}
-                disabled={!selectedFile}
-              >
-                Upload
-              </Button>
+            {isCEOView && currentEL.status === 'WAITING_APPROVAL' ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleReject}
+                  className="border-red-300 text-red-700 hover:bg-red-50"
+                >
+                  Reject
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleApprove}
+                  className="bg-gray-900 hover:bg-gray-800 text-white"
+                >
+                  Approve
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleClose}
+                >
+                  Cancel
+                </Button>
+                {!isUploaded && (
+                  <Button
+                    type="button"
+                    onClick={handleUpload}
+                    disabled={!selectedFile}
+                  >
+                    Upload
+                  </Button>
+                )}
+                {currentEL.status === 'APPROVED' && (
+                  <Button
+                    type="button"
+                    onClick={handleSendToClient}
+                    className="bg-gray-900 hover:bg-gray-800 text-white"
+                  >
+                    Send to Client
+                  </Button>
+                )}
+                {currentEL.status === 'SENT' && (
+                  <Button
+                    type="button"
+                    onClick={handleMarkAsSigned}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    Mark as Signed
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </div>

@@ -66,6 +66,7 @@ export interface RevisionComment {
   comment: string;
   requestedBy: string;
   requestedAt: string;
+  role?: string; // Optional role (e.g., "CEO", "COO")
 }
 
 export interface ExtendedHandover {
@@ -91,7 +92,13 @@ export interface ExtendedHandover {
   milestones?: Milestone[];
   feeStructure?: FeeStructureItem[];
   paymentTermsText?: string;
-  documentsReceived?: Array<{ fileName: string; receivedDate?: string }>;
+  documentsReceived?: Array<{ 
+    fileName: string; 
+    fileUrl?: string;
+    receivedDate?: string;
+    uploadedBy?: string; // User ID or name who uploaded the document
+    uploadDate?: string; // ISO date string when document was uploaded
+  }>;
   storageLocation?: string;
   dataRequirements?: Array<{ itemName: string; status?: string }>;
   risks?: Risk[];

@@ -38,11 +38,6 @@ export function LeadInfoTab({ lead }: LeadInfoTabProps) {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Service</label>
-            <p className="font-medium">{(lead as any).service || '-'}</p>
-          </div>
-
-          <div>
             <label className="block text-sm text-gray-600 mb-1">Source</label>
             <p className="font-medium">{lead.source}</p>
           </div>

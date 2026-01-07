@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Edit, Eye } from 'lucide-react';
+import { Button } from '../../../../components/ui/button';
 import { StatusChip } from '../shared/StatusChip';
-import { BdHandoverForm } from '../modals/BdHandoverForm';
+import { HandoverForm } from '../../../handover/components/forms/HandoverForm';
 import type { Handover, Lead, Proposal, EngagementLetter } from '../../../../lib/mock-data';
 import type { ExtendedHandover } from '../../../../lib/projectWorkflowTypes';
 import type { LeadStatus } from '../management/LeadTrackerDetail';
@@ -28,17 +29,15 @@ export function HandoverMemoTab({
   onUpdateLeadStatus 
 }: HandoverMemoTabProps) {
   const [showHandoverForm, setShowHandoverForm] = useState(false);
-  const [showHandoverDetail, setShowHandoverDetail] = useState(false);
-  const [selectedHandover, setSelectedHandover] = useState<Handover | null>(null);
   const [editingHandover, setEditingHandover] = useState<ExtendedHandover | undefined>(undefined);
   const leadHandovers = handovers.filter(h => h.leadId === leadId);
   const lead = leads.find(l => l.id === leadId);
   const leadProposal = proposals.find(p => p.leadId === leadId);
-  const leadEL = engagementLetters.find(el => el.leadId === leadId);
+  const leadEngagementLetter = engagementLetters.find(el => el.leadId === leadId && el.signedDate);
 
   const handleSaveDraft = (handoverData: Partial<ExtendedHandover>) => {
     // Convert ExtendedHandover to Handover format for storage
-    const handover: Handover = {
+    const handover: Handover & { serviceLine?: string; projectPeriod?: string } = {
       id: handoverData.id || `ho-${Date.now()}`,
       leadId: leadId,
       clientName: handoverData.clientName || lead?.clientName || '',
@@ -49,7 +48,9 @@ export function HandoverMemoTab({
       createdAt: handoverData.createdAt || new Date().toISOString().split('T')[0],
       summary: handoverData.background,
       deliverables: handoverData.deliverables?.map(d => d.name) || [],
-      notes: handoverData.background
+      notes: handoverData.background,
+      serviceLine: handoverData.serviceLine || leadProposal?.service || '',
+      projectPeriod: handoverData.projectPeriod || ''
     };
     
     if (editingHandover) {
@@ -62,8 +63,19 @@ export function HandoverMemoTab({
   };
 
   const handleSubmit = (handoverData: Partial<ExtendedHandover>) => {
+    // Map deliverables to string array
+    const deliverablesArray: string[] = Array.isArray(handoverData.deliverables) 
+      ? (handoverData.deliverables as any[]).map((d: any) => typeof d === 'string' ? d : (d?.name || '')).filter(Boolean)
+      : [];
+    
     // Convert ExtendedHandover to Handover format for storage
-    const handover: Handover = {
+    const handover: Handover & { 
+      serviceLine?: string; 
+      projectPeriod?: string;
+      workflowStatus?: string;
+      revisionComments?: any[];
+      [key: string]: any; // Allow other extended fields
+    } = {
       id: handoverData.id || `ho-${Date.now()}`,
       leadId: leadId,
       clientName: handoverData.clientName || lead?.clientName || '',
@@ -73,8 +85,21 @@ export function HandoverMemoTab({
       createdBy: 'Current User',
       createdAt: handoverData.createdAt || new Date().toISOString().split('T')[0],
       summary: handoverData.background,
-      deliverables: handoverData.deliverables?.map(d => d.name) || [],
-      notes: handoverData.background
+      deliverables: deliverablesArray,
+      notes: handoverData.background,
+      serviceLine: handoverData.serviceLine || leadProposal?.service || '',
+      projectPeriod: handoverData.projectPeriod || '',
+      // Include all extended fields from handoverData (excluding deliverables which is already mapped)
+      ...(Object.fromEntries(
+        Object.entries(handoverData).filter(([key]) => key !== 'deliverables')
+      ) as any),
+      // Override workflowStatus to SUBMITTED_TO_CEO when resubmitting (clears REVISION_REQUESTED)
+      workflowStatus: 'SUBMITTED_TO_CEO',
+      // Clear revision comments when resubmitted (they will be re-added if CEO requests revision again)
+      revisionComments: [],
+      // Update submittedToCeoAt timestamp
+      submittedToCeoAt: new Date().toISOString(),
+      lastModifiedAt: new Date().toISOString()
     };
     
     if (editingHandover) {
@@ -89,7 +114,7 @@ export function HandoverMemoTab({
 
   if (showHandoverForm) {
     return (
-      <BdHandoverForm
+      <HandoverForm
         handoverId={editingHandover?.id}
         proposalId={leadProposal?.id}
         leadId={leadId}
@@ -100,14 +125,20 @@ export function HandoverMemoTab({
         onSaveDraft={handleSaveDraft}
         onSubmit={handleSubmit}
         existingHandover={editingHandover}
+        readOnly={editingHandover ? (editingHandover.workflowStatus === 'SUBMITTED_TO_CEO' || (handovers.find(h => h.id === editingHandover.id)?.status === 'WAITING_CEO_APPROVAL' && editingHandover.workflowStatus !== 'REVISION_REQUESTED')) : false}
         leadData={{
           clientName: lead?.clientName || '',
+          companyName: lead?.company || '',
           service: leadProposal?.service || (lead as any)?.service || '',
           picName: lead?.clientName || '',
           picEmail: lead?.email || '',
           picPhone: lead?.phone || '',
           source: lead?.source || 'Other'
         }}
+        engagementLetter={leadEngagementLetter ? {
+          signedDate: leadEngagementLetter.signedDate,
+          status: leadEngagementLetter.status
+        } : undefined}
       />
     );
   }
@@ -116,172 +147,185 @@ export function HandoverMemoTab({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3>Handover Memo</h3>
-        <button 
+        <Button
           onClick={() => {
             setEditingHandover(undefined);
             setShowHandoverForm(true);
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition-colors"
+          className="flex items-center gap-2 px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors font-medium"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4" />
           Buat Handover Memo
-        </button>
+        </Button>
       </div>
+      
       {leadHandovers.length === 0 ? (
-        <div className="text-center py-8 bg-gray-50 rounded-lg">
+        <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg">
           <p className="text-gray-600">Belum ada Handover Memo</p>
           <p className="text-sm text-gray-500 mt-1">Handover Memo dibuat setelah Engagement Letter ditandatangani</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {leadHandovers.map((handover) => (
-            <div 
-              key={handover.id} 
-              className="border rounded-lg p-4 border-gray-200"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h4>{handover.projectTitle}</h4>
-                    <StatusChip status={handover.status} />
+        <div className="space-y-3">
+          {leadHandovers.map((handover) => {
+            // Get ExtendedHandover data from handover (stored as additional fields)
+            const handoverWithExtras = handover as Handover & { serviceLine?: string; projectPeriod?: string };
+            const serviceLine = handoverWithExtras.serviceLine || leadProposal?.service || '';
+            const projectPeriod = handoverWithExtras.projectPeriod || '';
+            
+            return (
+              <div 
+                key={handover.id} 
+                className="border rounded-lg p-4 border-gray-200 hover:border-gray-300 transition-all"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4>{handover.projectTitle}</h4>
+                      <StatusChip status={handover.status} />
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {lead?.company || handover.clientName}
+                      {serviceLine && ` • ${serviceLine}`}
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-600">Client: {handover.clientName}</p>
-                  {handover.pm && (
-                    <p className="text-sm text-gray-600">PM: {handover.pm}</p>
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-sm mb-4">
+                  <div>
+                    <p className="text-gray-600">Project Period</p>
+                    <p className="font-medium">{projectPeriod || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Created By</p>
+                    <p className="font-medium">{handover.createdBy}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Created</p>
+                    <p className="font-medium">
+                      {handover.createdAt 
+                        ? new Date(handover.createdAt).toLocaleDateString('id-ID', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })
+                        : '-'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
+                  {handover.status === 'WAITING_CEO_APPROVAL' && (handover as any).workflowStatus !== 'REVISION_REQUESTED' ? (
+                    <button 
+                      onClick={() => {
+                        // Convert Handover to ExtendedHandover for viewing
+                        const handoverWithExtras = handover as any;
+                        const extendedHandover: ExtendedHandover = {
+                          id: handover.id,
+                          leadId: handover.leadId,
+                          documentCode: handoverWithExtras.documentCode,
+                          classification: handoverWithExtras.classification,
+                          projectName: handoverWithExtras.projectName || handover.projectTitle,
+                          clientName: handover.clientName,
+                          companyGroup: handoverWithExtras.companyGroup,
+                          serviceLine: handoverWithExtras.serviceLine || serviceLine,
+                          projectPeriod: handoverWithExtras.projectPeriod || projectPeriod,
+                          clientPic: handoverWithExtras.clientPic,
+                          clientEmail: handoverWithExtras.clientEmail,
+                          clientPhone: handoverWithExtras.clientPhone,
+                          engagementLetterStatus: handoverWithExtras.engagementLetterStatus,
+                          proposalReference: handoverWithExtras.proposalReference,
+                          background: handoverWithExtras.background || handover.summary || handover.notes,
+                          scopeIncluded: handoverWithExtras.scopeIncluded,
+                          scopeExclusions: handoverWithExtras.scopeExclusions,
+                          deliverables: handoverWithExtras.deliverablesExtended,
+                          milestones: handoverWithExtras.milestones,
+                          feeStructure: handoverWithExtras.feeStructure,
+                          paymentTermsText: handoverWithExtras.paymentTermsText,
+                          documentsReceived: handoverWithExtras.documentsReceived,
+                          storageLocation: handoverWithExtras.storageLocation,
+                          dataRequirements: handoverWithExtras.dataRequirements,
+                          risks: handoverWithExtras.risks,
+                          communicationInternal: handoverWithExtras.communicationInternal,
+                          communicationExternal: handoverWithExtras.communicationExternal,
+                          externalContacts: handoverWithExtras.externalContacts,
+                          preliminaryTeam: handoverWithExtras.preliminaryTeam,
+                          handoverChecklist: handoverWithExtras.handoverChecklist,
+                          signOffs: handoverWithExtras.signOffs,
+                          workflowStatus: handoverWithExtras.workflowStatus || 'SUBMITTED_TO_CEO',
+                          submittedToCeoAt: handoverWithExtras.submittedToCeoAt,
+                          createdAt: handover.createdAt,
+                          lastModifiedAt: handoverWithExtras.lastModifiedAt,
+                          scopeLocked: handoverWithExtras.scopeLocked,
+                          proposalId: handoverWithExtras.proposalId,
+                          revisionComments: handoverWithExtras.revisionComments || []
+                        };
+                        setEditingHandover(extendedHandover);
+                        setShowHandoverForm(true);
+                      }}
+                      className="flex-1 px-3 py-2 rounded-lg text-sm cursor-pointer border border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
+                    >
+                      <Eye className="w-4 h-4 mr-2 inline" />
+                      View Details
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => {
+                        // Convert Handover to ExtendedHandover for editing
+                        const handoverWithExtras = handover as any;
+                        const extendedHandover: ExtendedHandover = {
+                          id: handover.id,
+                          leadId: handover.leadId,
+                          documentCode: handoverWithExtras.documentCode,
+                          classification: handoverWithExtras.classification,
+                          projectName: handoverWithExtras.projectName || handover.projectTitle,
+                          clientName: handover.clientName,
+                          companyGroup: handoverWithExtras.companyGroup,
+                          serviceLine: handoverWithExtras.serviceLine || serviceLine,
+                          projectPeriod: handoverWithExtras.projectPeriod || projectPeriod,
+                          clientPic: handoverWithExtras.clientPic,
+                          clientEmail: handoverWithExtras.clientEmail,
+                          clientPhone: handoverWithExtras.clientPhone,
+                          engagementLetterStatus: handoverWithExtras.engagementLetterStatus,
+                          proposalReference: handoverWithExtras.proposalReference,
+                          background: handoverWithExtras.background || handover.summary || handover.notes,
+                          scopeIncluded: handoverWithExtras.scopeIncluded,
+                          scopeExclusions: handoverWithExtras.scopeExclusions,
+                          deliverables: handoverWithExtras.deliverablesExtended,
+                          milestones: handoverWithExtras.milestones,
+                          feeStructure: handoverWithExtras.feeStructure,
+                          paymentTermsText: handoverWithExtras.paymentTermsText,
+                          documentsReceived: handoverWithExtras.documentsReceived,
+                          storageLocation: handoverWithExtras.storageLocation,
+                          dataRequirements: handoverWithExtras.dataRequirements,
+                          risks: handoverWithExtras.risks,
+                          communicationInternal: handoverWithExtras.communicationInternal,
+                          communicationExternal: handoverWithExtras.communicationExternal,
+                          externalContacts: handoverWithExtras.externalContacts,
+                          preliminaryTeam: handoverWithExtras.preliminaryTeam,
+                          handoverChecklist: handoverWithExtras.handoverChecklist,
+                          signOffs: handoverWithExtras.signOffs,
+                          workflowStatus: handoverWithExtras.workflowStatus || (handover.status === 'WAITING_CEO_APPROVAL' ? 'SUBMITTED_TO_CEO' : 'HANDOVER_DRAFT'),
+                          submittedToCeoAt: handoverWithExtras.submittedToCeoAt,
+                          createdAt: handover.createdAt,
+                          lastModifiedAt: handoverWithExtras.lastModifiedAt,
+                          scopeLocked: handoverWithExtras.scopeLocked,
+                          proposalId: handoverWithExtras.proposalId,
+                          revisionComments: handoverWithExtras.revisionComments || []
+                        };
+                        setEditingHandover(extendedHandover);
+                        setShowHandoverForm(true);
+                      }}
+                      className="flex-1 px-3 py-2 rounded-lg text-sm cursor-pointer border border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
+                    >
+                      <Edit className="w-4 h-4 mr-2 inline" />
+                      Edit
+                    </button>
                   )}
-                  <p className="text-sm text-gray-600">Created: {handover.createdAt}</p>
                 </div>
               </div>
-              {handover.summary && (
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-1">Summary</p>
-                  <p className="text-gray-700">{handover.summary}</p>
-                </div>
-              )}
-              {handover.deliverables && handover.deliverables.length > 0 && (
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-1">Deliverables</p>
-                  <ul className="list-disc list-inside text-gray-700">
-                    {handover.deliverables.map((deliverable, idx) => (
-                      <li key={idx}>{deliverable}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {handover.notes && (
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-1">Notes</p>
-                  <p className="text-gray-700">{handover.notes}</p>
-                </div>
-              )}
-              <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
-                <button 
-                  onClick={() => {
-                    setSelectedHandover(handover);
-                    setShowHandoverDetail(true);
-                  }}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
-                >
-                  View Details
-                </button>
-                <button 
-                  onClick={() => {
-                    // Convert Handover to ExtendedHandover for editing
-                    const extendedHandover: ExtendedHandover = {
-                      id: handover.id,
-                      leadId: handover.leadId,
-                      clientName: handover.clientName,
-                      projectName: handover.projectTitle,
-                      background: handover.summary || handover.notes,
-                      workflowStatus: handover.status === 'WAITING_CEO_APPROVAL' ? 'SUBMITTED_TO_CEO' : 'HANDOVER_DRAFT',
-                      createdAt: handover.createdAt
-                    };
-                    setEditingHandover(extendedHandover);
-                    setShowHandoverForm(true);
-                  }}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
-                >
-                  Edit
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* Handover Detail Modal */}
-      {showHandoverDetail && selectedHandover && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Handover Memo Detail</h2>
-              <button 
-                onClick={() => {
-                  setShowHandoverDetail(false);
-                  setSelectedHandover(null);
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Client Name</label>
-                <p className="font-medium">{selectedHandover.clientName}</p>
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Project Title</label>
-                <p className="font-medium">{selectedHandover.projectTitle}</p>
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Project Manager</label>
-                <p className="font-medium">{selectedHandover.pm || '-'}</p>
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Status</label>
-                <StatusChip status={selectedHandover.status} />
-              </div>
-              {selectedHandover.summary && (
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">Summary</label>
-                  <p className="font-medium">{selectedHandover.summary}</p>
-                </div>
-              )}
-              {selectedHandover.deliverables && selectedHandover.deliverables.length > 0 && (
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">Deliverables</label>
-                  <ul className="list-disc list-inside">
-                    {selectedHandover.deliverables.map((deliverable, idx) => (
-                      <li key={idx} className="font-medium">{deliverable}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {selectedHandover.notes && (
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">Notes</label>
-                  <p className="font-medium">{selectedHandover.notes}</p>
-                </div>
-              )}
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Created By</label>
-                <p className="font-medium">{selectedHandover.createdBy}</p>
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Created At</label>
-                <p className="font-medium">
-                  {new Date(selectedHandover.createdAt).toLocaleDateString('id-ID', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

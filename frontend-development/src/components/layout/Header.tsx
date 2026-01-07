@@ -1,4 +1,4 @@
-import { Bell, ArrowLeft, Building2, Tag, Mail, Phone } from 'lucide-react';
+import { Bell, ArrowLeft, Tag, Mail, Phone, User } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { StatusChip } from '../../features/leads/components/shared/StatusChip';
 
@@ -519,10 +519,10 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
                   <StatusChip status={leadDetail.status} />
                 </div>
                 <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                  {leadDetail.service && (
+                  {leadDetail.clientName && (
                     <div className="flex items-center gap-1">
-                      <Building2 className="w-4 h-4" />
-                      <span>{leadDetail.service}</span>
+                      <User className="w-4 h-4" />
+                      <span>{leadDetail.clientName}</span>
                     </div>
                   )}
                   {leadDetail.source && (

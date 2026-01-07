@@ -4,35 +4,15 @@
  */
 
 import { useState } from 'react';
-import { FileText, FileCheck } from 'lucide-react';
+import { FileText, FileCheck, Award, Share2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { mockNotulensi, mockProposals, mockLeads, type Notulensi, type Proposal } from '../../../../lib/mock-data';
-// Handover type akan ditambahkan nanti setelah konsepnya siap
-// import type { Handover } from '../../../../lib/mock-data';
+import { mockNotulensi, mockProposals, mockLeads, mockEngagementLetters, mockHandovers, type Notulensi, type Proposal, type Handover, type EngagementLetter } from '../../../../lib/mock-data';
 import { authService } from '../../../../services/authService';
 import { NotulensiTab } from '../tabs/NotulensiTab';
 import { ProposalTab } from '../tabs/ProposalTab';
-// ELTab dan HandoverTab akan ditambahkan nanti setelah konsepnya siap
-// import { ELTab } from '../tabs/ELTab';
-// import { HandoverTab } from '../tabs/HandoverTab';
+import { ELTab } from '../tabs/ELTab';
+import { HandoverTab } from '../tabs/HandoverTab';
 
-// Mock Handover data akan ditambahkan nanti setelah konsepnya siap
-// const mockHandovers: Handover[] = [
-//   {
-//     id: 'H001',
-//     leadId: 'L001',
-//     projectId: 'P001',
-//     clientName: 'Budi Santoso',
-//     projectTitle: 'Web Development Project',
-//     pm: 'Diana Putri',
-//     status: 'WAITING_CEO_APPROVAL',
-//     createdBy: 'Rina Kusuma',
-//     createdAt: '2025-10-15',
-//     summary: 'Project ready for handover to PM',
-//     deliverables: ['Website Design', 'Backend Development', 'Testing'],
-//     notes: 'All deliverables completed and ready for handover',
-//   },
-// ];
 
 export function ApprovalManagement() {
   // Check if user is CEO
@@ -48,17 +28,16 @@ export function ApprovalManagement() {
     );
   }
 
-  const [activeTab, setActiveTab] = useState<'notulensi' | 'proposal'>('notulensi');
+  const [activeTab, setActiveTab] = useState<'notulensi' | 'proposal' | 'el' | 'handover'>('notulensi');
   const [notulensi, setNotulensi] = useState<Notulensi[]>(mockNotulensi);
   const [proposals, setProposals] = useState<Proposal[]>(mockProposals);
-  // handovers state akan ditambahkan nanti setelah konsepnya siap
-  // const [handovers, setHandovers] = useState<Handover[]>(mockHandovers);
+  const [engagementLetters, setEngagementLetters] = useState<EngagementLetter[]>(mockEngagementLetters);
+  const [handovers, setHandovers] = useState<Handover[]>(mockHandovers);
 
   const waitingNotulensi = notulensi.filter(n => n.status === 'WAITING_CEO_APPROVAL');
   const waitingProposals = proposals.filter(p => p.status === 'WAITING_CEO_APPROVAL');
-  // EL dan Handover akan ditambahkan nanti setelah konsepnya siap
-  // const waitingELs = proposals.filter(p => p.elStatus === 'WAITING_CEO_APPROVAL');
-  // const waitingHandovers = handovers.filter(h => h.status === 'WAITING_CEO_APPROVAL');
+  const waitingELs = engagementLetters.filter(el => el.status === 'WAITING_APPROVAL');
+  const waitingHandovers = handovers.filter(h => h.status === 'WAITING_CEO_APPROVAL');
 
   const handleUpdateNotulensi = (id: string, updates: Partial<Notulensi>) => {
     setNotulensi(notulensi.map(n => n.id === id ? { ...n, ...updates } : n));
@@ -68,23 +47,25 @@ export function ApprovalManagement() {
     setProposals(proposals.map(p => p.id === id ? { ...p, ...updates } : p));
   };
 
-  // handleUpdateHandover akan ditambahkan nanti setelah konsepnya siap
-  // const handleUpdateHandover = (id: string, updates: Partial<Handover>) => {
-  //   setHandovers(handovers.map(h => h.id === id ? { ...h, ...updates } : h));
-  // };
+  const handleUpdateEngagementLetter = (id: string, updates: Partial<EngagementLetter>) => {
+    setEngagementLetters(engagementLetters.map(el => el.id === id ? { ...el, ...updates } : el));
+  };
+
+  const handleUpdateHandover = (id: string, updates: Partial<Handover>) => {
+    setHandovers(handovers.map(h => h.id === id ? { ...h, ...updates } : h));
+  };
 
   const tabs = [
     { id: 'notulensi', label: 'Notulensi Meeting' },
     { id: 'proposal', label: 'Proposal' },
-    // ELTab dan HandoverTab akan ditambahkan nanti setelah konsepnya siap
-    // { id: 'el', label: 'Engagement Letter' },
-    // { id: 'handover', label: 'Handover Memo' },
+    { id: 'el', label: 'Engagement Letter' },
+    { id: 'handover', label: 'Handover Memo' },
   ];
 
   return (
     <div className="space-y-6">
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <Card className="hover:border-blue-300 transition-colors">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -111,8 +92,7 @@ export function ApprovalManagement() {
           </CardContent>
         </Card>
 
-        {/* EL dan Handover summary cards akan ditambahkan nanti setelah konsepnya siap */}
-        {/* <Card className="hover:border-blue-300 transition-colors">
+        <Card className="hover:border-blue-300 transition-colors">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-gray-600">Engagement Letter</CardTitle>
@@ -136,7 +116,7 @@ export function ApprovalManagement() {
             <div className="text-3xl font-semibold text-gray-900">{waitingHandovers.length}</div>
             <div className="text-xs text-gray-500 mt-1">menunggu review</div>
           </CardContent>
-        </Card> */}
+        </Card>
       </div>
 
       {/* Tabs */}
@@ -175,21 +155,23 @@ export function ApprovalManagement() {
             />
           )}
 
-          {/* ELTab dan HandoverTab akan ditambahkan nanti setelah konsepnya siap */}
-          {/* {activeTab === 'el' && (
+          {activeTab === 'el' && (
             <ELTab
-              proposals={waitingELs}
+              engagementLetters={waitingELs}
               leads={mockLeads}
-              onUpdateProposal={handleUpdateProposal}
+              onUpdateEngagementLetter={handleUpdateEngagementLetter}
             />
           )}
 
           {activeTab === 'handover' && (
             <HandoverTab
               handovers={waitingHandovers}
+              leads={mockLeads}
+              proposals={proposals}
+              engagementLetters={engagementLetters}
               onUpdateHandover={handleUpdateHandover}
             />
-          )} */}
+          )}
         </CardContent>
       </Card>
     </div>

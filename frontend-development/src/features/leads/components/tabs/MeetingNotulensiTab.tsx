@@ -162,7 +162,7 @@ export function MeetingNotulensiTab({
           <h3>Meetings</h3>
           <button
             onClick={() => setShowScheduleModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors font-medium"
           >
             <Plus className="w-5 h-5" />
             Jadwalkan Meeting

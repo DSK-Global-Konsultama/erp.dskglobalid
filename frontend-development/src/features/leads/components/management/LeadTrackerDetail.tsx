@@ -6,7 +6,7 @@ import { EngagementLetterTab } from '../tabs/EngagementLetterTab';
 import { HandoverMemoTab } from '../tabs/HandoverMemoTab';
 import type { Lead, Meeting, Notulensi, Proposal, EngagementLetter, Handover } from '../../../../lib/mock-data';
 
-export type LeadStatus = 'NEW' | 'TO_BE_MEET' | 'MEETING_SCHEDULED' | 'NEED_NOTULEN' | 'NEED_PROPOSAL' | 'IN_PROPOSAL' | 'PROPOSAL_EXPIRED' | 'DEAL_WON' | 'ON_HOLD' | 'DROP';
+export type LeadStatus = 'NEW' | 'TO_BE_MEET' | 'MEETING_SCHEDULED' | 'NEED_NOTULEN' | 'NEED_PROPOSAL' | 'IN_PROPOSAL' | 'PROPOSAL_EXPIRED' | 'NEED_ENGAGEMENT_LETTER' | 'NEED_HANDOVER' | 'IN_HANDOVER' | 'DEAL_WON' | 'ON_HOLD' | 'DROP';
 
 interface LeadTrackerDetailProps {
   leadId: string;

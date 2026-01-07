@@ -26,7 +26,7 @@ export function LeadsManagement({ userName, mode, title, onLeadClick }: LeadsMan
   const defaultLeads = generateDummyLeadsBDMEO('Sarah Wijaya');
   
   // Status yang relevan mulai dari TO_BE_MEET
-  const relevantStatuses = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_NOTULEN', 'NOTULEN_SUBMITTED', 'NOTULEN_APPROVED', 'NEED_PROPOSAL', 'IN_PROPOSAL', 'PROPOSAL_APPROVED', 'PROPOSAL_SENT', 'PROPOSAL_ACCEPTED', 'PROPOSAL_EXPIRED', 'NEED_EL', 'EL_SUBMITTED', 'EL_APPROVED', 'EL_SENT', 'EL_SIGNED', 'NEED_HANDOVER', 'HANDOVER_SUBMITTED', 'HANDOVER_APPROVED', 'HANDOVER_SENT_TO_PM', 'DONE', 'DEAL_WON'];
+  const relevantStatuses = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_NOTULEN', 'NOTULEN_SUBMITTED', 'NOTULEN_APPROVED', 'NEED_PROPOSAL', 'IN_PROPOSAL', 'PROPOSAL_APPROVED', 'PROPOSAL_SENT', 'PROPOSAL_ACCEPTED', 'PROPOSAL_EXPIRED', 'NEED_EL', 'EL_SUBMITTED', 'EL_APPROVED', 'EL_SENT', 'EL_SIGNED', 'NEED_HANDOVER', 'IN_HANDOVER', 'HANDOVER_SUBMITTED', 'HANDOVER_APPROVED', 'HANDOVER_SENT_TO_PM', 'DONE', 'DEAL_WON'];
 
   const [leads, setLeads] = useState<Lead[]>(() => {
     if (mode === 'edit') {
@@ -182,6 +182,7 @@ export function LeadsManagement({ userName, mode, title, onLeadClick }: LeadsMan
                     <SelectItem value="EL_SENT">EL SENT</SelectItem>
                     <SelectItem value="EL_SIGNED">EL SIGNED</SelectItem>
                     <SelectItem value="NEED_HANDOVER">NEED HANDOVER</SelectItem>
+                    <SelectItem value="IN_HANDOVER">IN HANDOVER</SelectItem>
                     <SelectItem value="HANDOVER_SUBMITTED">HANDOVER SUBMITTED</SelectItem>
                     <SelectItem value="HANDOVER_APPROVED">HANDOVER APPROVED</SelectItem>
                     <SelectItem value="HANDOVER_SENT_TO_PM">HANDOVER SENT TO PM</SelectItem>
@@ -254,6 +255,7 @@ export function LeadsManagement({ userName, mode, title, onLeadClick }: LeadsMan
                     <SelectItem value="EL_SENT">EL SENT</SelectItem>
                     <SelectItem value="EL_SIGNED">EL SIGNED</SelectItem>
                     <SelectItem value="NEED_HANDOVER">NEED HANDOVER</SelectItem>
+                    <SelectItem value="IN_HANDOVER">IN HANDOVER</SelectItem>
                     <SelectItem value="HANDOVER_SUBMITTED">HANDOVER SUBMITTED</SelectItem>
                     <SelectItem value="HANDOVER_APPROVED">HANDOVER APPROVED</SelectItem>
                     <SelectItem value="HANDOVER_SENT_TO_PM">HANDOVER SENT TO PM</SelectItem>

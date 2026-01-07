@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { LeadsManagement } from '../../../../features/leads/components/management/LeadsManagement';
 import { LeadTrackerDetail, type LeadStatus } from '../../../../features/leads/components/management/LeadTrackerDetail';
-import { generateDummyLeadsBDMEO, mockMeetings, mockNotulensi, mockProposals, type Lead, type Meeting, type Notulensi, type Proposal, type EngagementLetter, type Handover } from '../../../../lib/mock-data';
+import { generateDummyLeadsBDMEO, mockMeetings, mockNotulensi, mockProposals, mockEngagementLetters, mockHandovers, type Lead, type Meeting, type Notulensi, type Proposal, type EngagementLetter, type Handover } from '../../../../lib/mock-data';
 
 interface LeadTrackerPageProps {
   userName: string;
@@ -42,14 +42,14 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
   
   const [leads] = useState<ExtendedLead[]>(() => {
     const defaultLeads = generateDummyLeadsBDMEO('Sarah Wijaya');
-    const relevantStatuses: LeadStatus[] = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_NOTULEN', 'NEED_PROPOSAL', 'IN_PROPOSAL', 'PROPOSAL_EXPIRED'];
+    const relevantStatuses: LeadStatus[] = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_NOTULEN', 'NEED_PROPOSAL', 'IN_PROPOSAL', 'PROPOSAL_EXPIRED', 'NEED_ENGAGEMENT_LETTER', 'NEED_HANDOVER', 'IN_HANDOVER'];
     return defaultLeads.filter(lead => relevantStatuses.includes(lead.status as LeadStatus)) as ExtendedLead[];
   });
   const [meetings, setMeetings] = useState<Meeting[]>(mockMeetings);
   const [notulensi, setNotulensi] = useState<Notulensi[]>(mockNotulensi);
   const [proposals, setProposals] = useState<Proposal[]>(mockProposals);
-  const [engagementLetters, setEngagementLetters] = useState<EngagementLetter[]>([]);
-  const [handovers, setHandovers] = useState<Handover[]>([]);
+  const [engagementLetters, setEngagementLetters] = useState<EngagementLetter[]>(mockEngagementLetters);
+  const [handovers, setHandovers] = useState<Handover[]>(mockHandovers);
 
   // Update lead detail in header when selected lead changes
   useEffect(() => {

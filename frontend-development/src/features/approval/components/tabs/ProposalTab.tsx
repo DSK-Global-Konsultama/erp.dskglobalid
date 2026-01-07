@@ -39,7 +39,7 @@ export function ProposalTab({ proposals, leads, onUpdateProposal }: ProposalTabP
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-base font-semibold text-gray-900">
-                        {proposal.clientName || `Proposal ${proposal.id}`}
+                        {getLeadForProposal(proposal)?.company || proposal.clientName || `Proposal ${proposal.id}`}
                       </h3>
                       <span className="text-xs text-gray-400">•</span>
                       <span className="text-xs text-gray-500">{proposal.service}</span>
@@ -70,7 +70,7 @@ export function ProposalTab({ proposals, leads, onUpdateProposal }: ProposalTabP
                     </Badge>
                     <Button
                       onClick={() => setSelectedProposal(proposal)}
-                      className="px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors font-medium"
+                      className="px-5 py-2 bg-white text-gray-900 border border-gray-300 text-sm rounded-lg hover:bg-gray-50 transition-colors font-medium"
                     >
                       <Eye className="w-4 h-4 mr-2" />
                       Review
@@ -78,9 +78,9 @@ export function ProposalTab({ proposals, leads, onUpdateProposal }: ProposalTabP
                   </div>
                 </div>
                 <div className="flex gap-8 pt-3 border-t border-gray-100">
-                  <div>
+                  <div className="max-w-[700px]">
                     <div className="text-[10px] uppercase tracking-wide text-gray-500 mb-1">Payment</div>
-                    <div className="text-sm font-medium text-gray-900">{proposal.paymentType}</div>
+                    <div className="text-sm font-medium text-gray-900 break-words">{proposal.paymentType}</div>
                   </div>
                   <div>
                     <div className="text-[10px] uppercase tracking-wide text-gray-500 mb-1">Subcon</div>
@@ -89,6 +89,18 @@ export function ProposalTab({ proposals, leads, onUpdateProposal }: ProposalTabP
                   <div>
                     <div className="text-[10px] uppercase tracking-wide text-gray-500 mb-1">Created By</div>
                     <div className="text-sm font-medium text-gray-900">{proposal.createdBy || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wide text-gray-500 mb-1">Created</div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {proposal.createdAt 
+                        ? new Date(proposal.createdAt).toLocaleDateString('id-ID', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })
+                        : 'N/A'}
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -110,6 +122,7 @@ export function ProposalTab({ proposals, leads, onUpdateProposal }: ProposalTabP
               setSelectedProposal(null);
             }
           }}
+          isCEOView={true}
         />
       )}
     </div>

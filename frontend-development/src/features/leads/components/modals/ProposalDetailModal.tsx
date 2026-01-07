@@ -15,6 +15,7 @@ interface ProposalDetailModalProps {
   onClose: () => void;
   onEdit: (proposal: Proposal) => void;
   onUpdateProposal?: (id: string, updates: Partial<Proposal>) => void;
+  isCEOView?: boolean;
 }
 
 type Tier = 'STRATEGIC_RETAINER' | 'PREMIUM_MODULAR' | 'STANDARDIZED_MODULAR';
@@ -26,7 +27,8 @@ export function ProposalDetailModal({
   open,
   onClose,
   onEdit,
-  onUpdateProposal
+  onUpdateProposal,
+  isCEOView = false
 }: ProposalDetailModalProps) {
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [showAgreeFeeModal, setShowAgreeFeeModal] = useState(false);
@@ -161,6 +163,34 @@ export function ProposalDetailModal({
         status: 'WAITING_APPROVAL'
       });
       toast.success('Proposal submitted for approval!');
+    }
+  };
+
+  const handleApprove = () => {
+    if (currentProposal && onUpdateProposal) {
+      onUpdateProposal(currentProposal.id, {
+        status: 'APPROVED'
+      });
+      setCurrentProposal({
+        ...currentProposal,
+        status: 'APPROVED'
+      });
+      toast.success('Proposal approved!');
+      handleClose();
+    }
+  };
+
+  const handleReject = () => {
+    if (currentProposal && onUpdateProposal) {
+      onUpdateProposal(currentProposal.id, {
+        status: 'REJECTED'
+      });
+      setCurrentProposal({
+        ...currentProposal,
+        status: 'REJECTED'
+      });
+      toast.success('Proposal rejected!');
+      handleClose();
     }
   };
 
@@ -852,7 +882,25 @@ export function ProposalDetailModal({
 
           {/* Actions */}
           <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex gap-3 justify-end flex-shrink-0">
-            {currentProposal.status === 'DRAFT' ? (
+            {isCEOView && currentProposal.status === 'WAITING_CEO_APPROVAL' ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleReject}
+                  className="border-red-300 text-red-700 hover:bg-red-50"
+                >
+                  Reject
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleApprove}
+                  className="bg-gray-900 hover:bg-gray-800 text-white"
+                >
+                  Approve
+                </Button>
+              </>
+            ) : currentProposal.status === 'DRAFT' ? (
               <>
                 <Button
                   type="button"

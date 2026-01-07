@@ -65,7 +65,7 @@ export function ProposalTab({ leadId, leads, proposals, onAddProposal, onUpdateP
             setEditingProposal(null);
             setShowProposalForm(true);
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition-colors"
+          className="flex items-center gap-2 px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors font-medium"
         >
           <Plus className="w-5 h-5" />
           Buat Proposal
@@ -86,7 +86,7 @@ export function ProposalTab({ leadId, leads, proposals, onAddProposal, onUpdateP
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {leadProposals.map((proposal) => {
             const expired = isProposalExpired(proposal);
             // Display PROPOSAL_EXPIRED status if proposal is expired
@@ -94,7 +94,7 @@ export function ProposalTab({ leadId, leads, proposals, onAddProposal, onUpdateP
             return (
             <div 
               key={proposal.id} 
-              className={`border rounded-lg p-4 ${expired ? 'border-red-500 border-2' : 'border-gray-200'}`}
+              className={`border rounded-lg p-4 transition-all ${expired ? 'border-red-500 border-2' : 'border-gray-200 hover:border-gray-300'}`}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -168,27 +168,6 @@ export function ProposalTab({ leadId, leads, proposals, onAddProposal, onUpdateP
                   </p>
                 </div>
               </div>
-              {/* EL Status */}
-              {proposal.elStatus && (
-                <div className="pt-4 border-t border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Engagement Letter</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <StatusChip status={proposal.elStatus} />
-                        {proposal.elSignedDate && (
-                          <span className="text-sm text-gray-600">Signed: {proposal.elSignedDate}</span>
-                        )}
-                      </div>
-                    </div>
-                    {proposal.elStatus === 'SIGNED' && (
-                      <button className="px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700">
-                        Buat Handover
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
               <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
                 <button 
                   onClick={() => {
