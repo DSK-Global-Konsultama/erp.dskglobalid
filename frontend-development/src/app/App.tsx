@@ -9,7 +9,6 @@ import { authService, type User } from '../services/authService';
 import { CEODashboard } from './routes/ceo';
 import { LeadsPage as CEOLeadsPage } from './routes/ceo/pages/LeadsPage';
 import { InboxPage as CEOInboxPage } from './routes/ceo/pages/InboxPage';
-import { DealsPage as CEODealsPage } from './routes/ceo/pages/DealsPage';
 import { ProjectsPage as CEOProjectsPage } from './routes/ceo/pages/ProjectsPage';
 import { InvoicesPage as CEOInvoicesPage } from './routes/ceo/pages/InvoicesPage';
 import { TicketingPage as CEOTicketingPage } from './routes/ceo/pages/TicketingPage';
@@ -19,11 +18,11 @@ import { ApprovalPage as CEOApprovalPage } from './routes/ceo/pages/ApprovalPage
 // COO imports
 import { COODashboard } from './routes/coo';
 import { LeadsPage as COOLeadsPage } from './routes/coo/pages/LeadsPage';
-import { DealsPage as COODealsPage } from './routes/coo/pages/DealsPage';
 import { ProjectsPage as COOProjectsPage } from './routes/coo/pages/ProjectsPage';
 import { InvoicesPage as COOInvoicesPage } from './routes/coo/pages/InvoicesPage';
 import { TicketingPage as COOTicketingPage } from './routes/coo/pages/TicketingPage';
 import { ReimbursePage as COOReimbursePage } from './routes/coo/pages/ReimbursePage';
+import { AssignPMPage as COOAssignPMPage } from './routes/coo/pages/AssignPMPage';
 
 
 // Other role imports
@@ -180,13 +179,13 @@ export default function App() {
 
   const handleNavChange = (path: string) => {
     // Reset lead detail when navigating to a different page
-    // Only keep detail if staying on leads/deals page for BD-Executive
+    // Only keep detail if staying on leads page for BD-Executive
     if (leadDetail) {
-      const isStayingOnLeadsOrDeals = currentUser?.role === 'BD-Executive' && 
-        (path === 'leads' || path === 'deals') && 
-        (activeNav === 'leads' || activeNav === 'deals');
+      const isStayingOnLeads = currentUser?.role === 'BD-Executive' && 
+        path === 'leads' && 
+        activeNav === 'leads';
       
-      if (!isStayingOnLeadsOrDeals) {
+      if (!isStayingOnLeads) {
         setLeadDetail(null);
         // Trigger reset in LeadTrackerPage
         if (resetDetailRef.current) {
@@ -207,7 +206,7 @@ export default function App() {
     
     setActiveNav(path);
     // Sync tab state for BD-Executive when clicking sidebar
-    if (currentUser?.role === 'BD-Executive' && (path === 'leads' || path === 'deals')) {
+    if (currentUser?.role === 'BD-Executive' && path === 'leads') {
       setBdExecutiveTab(path);
     }
   };
@@ -269,8 +268,6 @@ export default function App() {
               return <BODDashboard />;
             case 'leads':
               return <CEOLeadsPage />;
-            case 'deals':
-              return <CEODealsPage />;
             case 'projects':
               return <CEOProjectsPage />;
             case 'invoices':
@@ -288,8 +285,6 @@ export default function App() {
               return <CEODashboard />;
             case 'leads':
               return <CEOLeadsPage />;
-            case 'deals':
-              return <CEODealsPage />;
             case 'projects':
               return <CEOProjectsPage />;
             case 'invoices':
@@ -311,8 +306,6 @@ export default function App() {
               return <CEOApprovalPage />;
             case 'leads':
               return <CEOLeadsPage />;
-            case 'deals':
-              return <CEODealsPage />;
             case 'projects':
               return <CEOProjectsPage />;
             case 'invoices':
@@ -324,10 +317,10 @@ export default function App() {
           switch (activeNav) {
             case 'dashboard':
               return <COODashboard />;
+            case 'assign-pm':
+              return <COOAssignPMPage />;
             case 'leads':
               return <COOLeadsPage />;
-            case 'deals':
-              return <COODealsPage />;
             case 'projects':
               return <COOProjectsPage />;
             case 'invoices':
@@ -363,8 +356,8 @@ export default function App() {
           if (activeNav === 'bank-data') {
             return <BDExecutiveBankDataPage />;
           }
-          // Only show BD Executive content if on leads or deals, otherwise show dashboard
-          if (activeNav === 'leads' || activeNav === 'deals') {
+          // Only show BD Executive content if on leads, otherwise show dashboard
+          if (activeNav === 'leads') {
             return (
               <BDExecutiveDashboard 
                 userName={currentUser.name} 

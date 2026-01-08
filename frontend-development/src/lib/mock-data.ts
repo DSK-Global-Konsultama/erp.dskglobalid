@@ -3516,6 +3516,7 @@ export const mockHandovers: Handover[] = [
     scopeIncluded?: string[];
     scopeExclusions?: string[];
     deliverables?: Array<{ id: string; name: string; description?: string; quantity?: number; dueDate?: string; assignedTo?: string; }>;
+    deliverablesExtended?: Array<{ id: string; name: string; description?: string; quantity?: number; dueDate?: string; assignedTo?: string; }>;
     milestones?: Array<{ id: string; name: string; targetDate: string; description?: string; }>;
     feeStructure?: Array<{ id: string; description: string; amount: number; percentage?: number; dueDate?: string; status?: string; }>;
     paymentTermsText?: string;
@@ -3705,6 +3706,7 @@ export const mockHandovers: Handover[] = [
     scopeIncluded?: string[];
     scopeExclusions?: string[];
     deliverables?: Array<{ id: string; name: string; description?: string; quantity?: number; dueDate?: string; assignedTo?: string; }>;
+    deliverablesExtended?: Array<{ id: string; name: string; description?: string; quantity?: number; dueDate?: string; assignedTo?: string; }>;
     milestones?: Array<{ id: string; name: string; targetDate: string; description?: string; }>;
     feeStructure?: Array<{ id: string; description: string; amount: number; percentage?: number; dueDate?: string; status?: string; }>;
     paymentTermsText?: string;
@@ -3933,6 +3935,202 @@ export const mockHandovers: Handover[] = [
     scopeIncluded?: string[];
     scopeExclusions?: string[];
     deliverables?: Array<{ id: string; name: string; description?: string; quantity?: number; dueDate?: string; assignedTo?: string; }>;
+    deliverablesExtended?: Array<{ id: string; name: string; description?: string; quantity?: number; dueDate?: string; assignedTo?: string; }>;
+    milestones?: Array<{ id: string; name: string; targetDate: string; description?: string; }>;
+    feeStructure?: Array<{ id: string; description: string; amount: number; percentage?: number; dueDate?: string; status?: string; }>;
+    paymentTermsText?: string;
+    documentsReceived?: Array<{ 
+      fileName: string; 
+      fileUrl?: string;
+      receivedDate?: string;
+      uploadedBy?: string;
+      uploadDate?: string;
+    }>;
+    storageLocation?: string;
+    dataRequirements?: Array<{ itemName: string; status?: string; }>;
+    risks?: Array<{ id: string; description: string; impact: string; mitigation?: string; }>;
+    communicationInternal?: string;
+    communicationExternal?: string;
+    externalContacts?: Array<{ id: string; role: string; name: string; email?: string; phone?: string; company?: string; }>;
+    preliminaryTeam?: Array<{ id: string; role: string; name: string; allocation?: string; }>;
+    handoverChecklist?: Array<{ id: string; description: string; status: string; }>;
+    signOffs?: Array<{ id: string; role: string; name: string; signedAt?: string; notes?: string; }>;
+    workflowStatus?: string;
+    revisionComments?: Array<{ id: string; sectionName: string; comment: string; requestedBy: string; requestedAt: string; }>;
+    scopeLocked?: boolean;
+  },
+  // Handover Memo untuk PT Sejahtera Bersama (L015) - Transfer Pricing - Complete and APPROVED (waiting PM assignment)
+  {
+    id: 'HO-L015-001',
+    leadId: 'L015',
+    projectId: 'P015',
+    clientName: 'PT Sejahtera Bersama',
+    projectTitle: 'Transfer Pricing Policy Development - PT Sejahtera Bersama',
+    pm: '', // Belum di-assign, COO akan assign
+    status: 'APPROVED' as any,
+    createdBy: 'Rina Kusuma',
+    createdAt: '2025-10-12',
+    summary: 'PT Sejahtera Bersama membutuhkan transfer pricing policy development untuk group companies. Perusahaan memiliki beberapa perusahaan afiliasi dalam grup dan melakukan transaksi related party. Project ini akan mencakup penyusunan transfer pricing policy, analisis controlled transactions, dan penyusunan dokumentasi transfer pricing.',
+    deliverables: [
+      'Transfer Pricing Policy Document',
+      'Transfer Pricing Master File',
+      'Transfer Pricing Local File',
+      'Controlled Transaction Analysis',
+      'Transfer Pricing Documentation Package'
+    ],
+    notes: 'Handover memo lengkap dengan semua informasi project. Proposal sudah accepted, Engagement Letter sudah signed. Handover telah disetujui CEO dan siap untuk di-assign PM oleh COO.',
+    // Extended fields untuk data lengkap 11 sections
+    documentCode: 'BD-HO-PT-SB-2025-001',
+    classification: 'Strictly Confidential – Internal Use Only',
+    projectName: 'Transfer Pricing Policy Development - PT Sejahtera Bersama',
+    companyGroup: 'Sejahtera Bersama Group',
+    serviceLine: 'Transfer Pricing',
+    projectPeriod: '2025-10-15 – 2026-02-15',
+    clientPic: 'Dedi Kurniawan',
+    clientEmail: 'dedi@sejahterabersama.com',
+    clientPhone: '086678901234',
+    engagementLetterStatus: 'Signed on 10 October 2025',
+    proposalReference: 'P115',
+    background: 'PT Sejahtera Bersama adalah perusahaan holding yang telah beroperasi selama 8 tahun dengan omset tahunan sekitar 120 miliar rupiah. Perusahaan memiliki beberapa perusahaan afiliasi dalam grup dan melakukan berbagai transaksi related party termasuk transaksi jasa, penjualan barang, dan transaksi pendanaan. Dalam rangka compliance dengan regulasi perpajakan dan menghindari risiko koreksi fiskal, perusahaan membutuhkan Transfer Pricing Policy Development yang komprehensif sesuai dengan ketentuan Peraturan Menteri Keuangan dan OECD Guidelines.',
+    scopeIncluded: [
+      'Analisis struktur transaksi related party dan identifikasi controlled transactions',
+      'Penyusunan Transfer Pricing Policy Document untuk group companies',
+      'Penyusunan Transfer Pricing Master File sesuai dengan format yang ditentukan',
+      'Penyusunan Transfer Pricing Local File dengan analisis detail untuk setiap controlled transaction',
+      'Analisis comparability dengan mencari comparable companies dan melakukan comparability analysis',
+      'Penentuan transfer pricing method yang sesuai (CUP, TNMM, atau Profit Split Method)',
+      'Penyusunan supporting documentation dan working papers',
+      'Pendampingan dalam implementasi policy dan penyiapan response untuk permintaan data dari DJP'
+    ],
+    scopeExclusions: [
+      'Audit keuangan atau verifikasi data historis',
+      'Layanan konsultasi perpajakan umum atau tax planning untuk transaksi non-related party',
+      'Representasi di pengadilan atau proses banding',
+      'Layanan legal atau corporate action',
+      'Update dokumentasi untuk tahun fiskal berikutnya (diluar scope project ini)'
+    ],
+    deliverablesExtended: [
+      { id: 'DEL-001', name: 'Transfer Pricing Policy Document', description: 'PDF & Word', quantity: 1, dueDate: '2025-12-15', assignedTo: 'Senior Tax Advisor' },
+      { id: 'DEL-002', name: 'Transfer Pricing Master File', description: 'PDF & Word', quantity: 1, dueDate: '2026-01-15', assignedTo: 'Tax Advisor' },
+      { id: 'DEL-003', name: 'Transfer Pricing Local File', description: 'PDF & Word', quantity: 1, dueDate: '2026-01-30', assignedTo: 'Tax Advisor' },
+      { id: 'DEL-004', name: 'Controlled Transaction Analysis', description: 'Excel + PDF', quantity: 1, dueDate: '2026-01-20', assignedTo: 'Tax Analyst' },
+      { id: 'DEL-005', name: 'Transfer Pricing Documentation Package', description: 'PDF + Excel', quantity: 1, dueDate: '2026-02-05', assignedTo: 'Tax Advisor' }
+    ],
+    milestones: [
+      { id: 'MS-001', name: 'Kick-Off Meeting', targetDate: '2025-10-20', description: 'Setelah DP diterima dan data awal dikumpulkan' },
+      { id: 'MS-002', name: 'Data Collection Completed', targetDate: '2025-11-05', description: 'Bergantung kelengkapan data dari klien' },
+      { id: 'MS-003', name: 'Draft Transfer Pricing Policy', targetDate: '2025-12-05', description: 'Draf awal untuk review internal' },
+      { id: 'MS-004', name: 'Draft Master File & Local File', targetDate: '2026-01-15', description: 'Draf awal untuk review internal' },
+      { id: 'MS-005', name: 'Final Deliverables', targetDate: '2026-02-10', description: 'Semua deliverables final diserahkan' }
+    ],
+    feeStructure: [
+      { id: 'FEE-001', description: 'Professional Fee', amount: 50000000, percentage: 100, status: 'Pending' },
+      { id: 'FEE-002', description: 'DP / Initial Payment', amount: 25000000, percentage: 50, dueDate: '2025-10-10', status: 'Pending' },
+      { id: 'FEE-003', description: 'Final Payment', amount: 25000000, percentage: 50, dueDate: '2026-02-15', status: 'Pending' }
+    ],
+    paymentTermsText: 'Invoice DP telah diterbitkan 10 Oktober 2025. Pekerjaan dimulai setelah DP diterima (estimasi 15-20 Oktober 2025). Pelunasan dilakukan setelah semua deliverables final diserahkan dan mendapat approval dari management klien.',
+    documentsReceived: [
+      { 
+        fileName: 'Financial statements FY 2022-2024', 
+        receivedDate: '2025-10-08',
+        fileUrl: '/uploads/PT-Sejahtera-Bersama/Financial-statements-FY-2022-2024.pdf',
+        uploadedBy: 'Rina Kusuma',
+        uploadDate: '2025-10-08T10:30:00.000Z'
+      },
+      { 
+        fileName: 'Group structure and ownership chart', 
+        receivedDate: '2025-10-09',
+        fileUrl: '/uploads/PT-Sejahtera-Bersama/Group-structure-ownership-chart.pdf',
+        uploadedBy: 'Rina Kusuma',
+        uploadDate: '2025-10-09T14:20:00.000Z'
+      },
+      { 
+        fileName: 'Intercompany transaction details', 
+        receivedDate: '2025-10-10',
+        fileUrl: '/uploads/PT-Sejahtera-Bersama/Intercompany-transaction-details.xlsx',
+        uploadedBy: 'Rina Kusuma',
+        uploadDate: '2025-10-10T09:15:00.000Z'
+      },
+      { 
+        fileName: 'Related party agreements', 
+        receivedDate: '2025-10-11',
+        fileUrl: '/uploads/PT-Sejahtera-Bersama/Related-party-agreements.pdf',
+        uploadedBy: 'Rina Kusuma',
+        uploadDate: '2025-10-11T11:45:00.000Z'
+      },
+      { 
+        fileName: 'Tax returns and supporting documents', 
+        receivedDate: '2025-10-12',
+        fileUrl: '/uploads/PT-Sejahtera-Bersama/Tax-returns-supporting-documents.pdf',
+        uploadedBy: 'Rina Kusuma',
+        uploadDate: '2025-10-12T16:30:00.000Z'
+      }
+    ],
+    storageLocation: '/DSK Global/Clients/PT Sejahtera Bersama/Project Files/Transfer Pricing Policy Development 2025-2026/',
+    dataRequirements: [
+      { itemName: 'Complete intercompany transaction data for FY 2024', status: 'Received' },
+      { itemName: 'Financial statements of all related parties in the group', status: 'Received' },
+      { itemName: 'Market analysis and industry data', status: 'Received' },
+      { itemName: 'Functional analysis documentation', status: 'Pending' },
+      { itemName: 'Previous transfer pricing documentation (if any)', status: 'Received' }
+    ],
+    risks: [
+      { id: 'RISK-001', description: 'Data financial statements dari beberapa perusahaan afiliasi dalam grup mungkin belum lengkap, dapat mempengaruhi analisis comparability', impact: 'High', mitigation: 'Koordinasi intensif dengan klien untuk mendapatkan data terbaru dari semua perusahaan afiliasi, jika belum tersedia akan menggunakan data yang tersedia dan melakukan estimasi berdasarkan historical data' },
+      { id: 'RISK-002', description: 'Regulasi transfer pricing dapat berubah di tengah project, memerlukan update dokumentasi dan policy', impact: 'Medium', mitigation: 'Memantau update regulasi secara berkala, menjaga fleksibilitas dalam dokumentasi untuk mengakomodasi perubahan regulasi' },
+      { id: 'RISK-003', description: 'Project period cukup panjang dengan deadline final deliverables 10 Februari 2026, memerlukan koordinasi yang baik dengan klien', impact: 'Medium', mitigation: 'Memastikan data collection selesai sebelum 5 November 2025, melakukan parallel work untuk deliverables yang tidak dependent, dan melakukan regular check-in dengan klien setiap 2 minggu sekali' }
+    ],
+    communicationInternal: 'Semua komunikasi dilakukan melalui grup internal proyek di WhatsApp Business dan email internal. COO harus di-cc untuk isu strategis atau risiko material. Weekly update meeting setiap Jumat pagi dengan tim project.',
+    communicationExternal: 'Semua komunikasi eksternal harus diarsipkan oleh Business Strategist. Primary contact: Dedi Kurniawan (dedi@sejahterabersama.com, 086678901234). Secondary contact: Finance Manager (finance@sejahterabersama.com).',
+    externalContacts: [
+      { id: 'CONT-001', role: 'Primary PIC', name: 'Dedi Kurniawan', email: 'dedi@sejahterabersama.com', phone: '086678901234', company: 'PT Sejahtera Bersama' },
+      { id: 'CONT-002', role: 'Finance Manager', name: 'Finance Manager', email: 'finance@sejahterabersama.com', phone: '086678901235', company: 'PT Sejahtera Bersama' },
+      { id: 'CONT-003', role: 'Tax Manager', name: 'Tax Manager', email: 'tax@sejahterabersama.com', phone: '086678901236', company: 'PT Sejahtera Bersama' }
+    ],
+    preliminaryTeam: [
+      { id: 'TM-001', role: 'Project Lead', name: 'Senior Tax Advisor', allocation: 'Koordinasi teknis, analisis utama, dan presentasi ke management' },
+      { id: 'TM-002', role: 'Tax Advisor', name: 'Tax Advisor Specialist', allocation: 'Penyusunan Transfer Pricing Policy, Master File dan Local File' },
+      { id: 'TM-003', role: 'Tax Analyst', name: 'Tax Analyst', allocation: 'Data collection, controlled transaction analysis, dan supporting documentation' },
+      { id: 'TM-004', role: 'Reviewer', name: 'Manager Tax Services', allocation: 'Review teknis & kualitas semua deliverables' },
+      { id: 'TM-005', role: 'Admin Support', name: 'Admin DSK', allocation: 'Invoice, dokumen, folder management' },
+      { id: 'TM-006', role: 'BD Contact', name: 'Business Strategist', allocation: 'Koordinasi klien & eskalasi' }
+    ],
+    handoverChecklist: [
+      { id: 'CHK-001', description: 'Proposal final tersimpan', status: 'Completed' },
+      { id: 'CHK-002', description: 'Engagement Letter ditandatangani', status: 'Completed' },
+      { id: 'CHK-003', description: 'DP sudah diterima', status: 'Pending' },
+      { id: 'CHK-004', description: 'Folder project dibuat', status: 'Completed' },
+      { id: 'CHK-005', description: 'Dokumen klien diterima', status: 'Completed' },
+      { id: 'CHK-006', description: 'Data request disiapkan', status: 'Completed' },
+      { id: 'CHK-007', description: 'Kick-off meeting dijadwalkan', status: 'Completed' },
+      { id: 'CHK-008', description: 'Tim project ditugaskan', status: 'Pending' }
+    ],
+    signOffs: [
+      { id: 'SIGN-001', role: 'Chief Executive Officer', name: 'Galih Gumilang', signedAt: '2025-10-12', notes: '' },
+      { id: 'SIGN-002', role: 'Business Strategist', name: 'Rina Kusuma', signedAt: '2025-10-12', notes: '' },
+      { id: 'SIGN-003', role: 'Project Lead', name: 'Senior Tax Advisor', signedAt: '', notes: '' }
+    ],
+    workflowStatus: 'APPROVED_BY_CEO',
+    submittedToCeoAt: '2025-10-12T10:00:00',
+    lastModifiedAt: '2025-10-12T14:00:00',
+    scopeLocked: true,
+    proposalId: 'P115'
+  } as any as Handover & {
+    serviceLine?: string;
+    projectPeriod?: string;
+    documentCode?: string;
+    classification?: string;
+    projectName?: string;
+    companyGroup?: string;
+    clientPic?: string;
+    clientEmail?: string;
+    clientPhone?: string;
+    engagementLetterStatus?: string;
+    proposalReference?: string;
+    background?: string;
+    scopeIncluded?: string[];
+    scopeExclusions?: string[];
+    deliverables?: Array<{ id: string; name: string; description?: string; quantity?: number; dueDate?: string; assignedTo?: string; }>;
+    deliverablesExtended?: Array<{ id: string; name: string; description?: string; quantity?: number; dueDate?: string; assignedTo?: string; }>;
     milestones?: Array<{ id: string; name: string; targetDate: string; description?: string; }>;
     feeStructure?: Array<{ id: string; description: string; amount: number; percentage?: number; dueDate?: string; status?: string; }>;
     paymentTermsText?: string;

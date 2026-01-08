@@ -16,7 +16,8 @@ import {
   Inbox,
   Megaphone,
   Database,
-  FileCheck
+  FileCheck,
+  UserCheck
 } from 'lucide-react';
 
 type UserRole = 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'ITSpecialist' | 'SuperAdmin';
@@ -61,7 +62,6 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
       { id: 'inbox', label: 'Lead Inbox', icon: Inbox, path: 'inbox' },
       { id: 'approval', label: 'Approval', icon: FileCheck, path: 'approval' },
       { id: 'leads', label: 'Leads', icon: Users, path: 'leads' },
-      { id: 'deals', label: 'Deals', icon: HandshakeIcon, path: 'deals' },
       { id: 'projects', label: 'Projects', icon: FolderKanban, path: 'projects' },
       { id: 'invoices', label: 'Invoices', icon: FileText, path: 'invoices' },
       { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
@@ -71,8 +71,8 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
     // COO navigation items (without Inbox)
     const cooNavItems = [
       { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
+      { id: 'assign-pm', label: 'Assign PM', icon: UserCheck, path: 'assign-pm' },
       { id: 'leads', label: 'Leads', icon: Users, path: 'leads' },
-      { id: 'deals', label: 'Deals', icon: HandshakeIcon, path: 'deals' },
       { id: 'projects', label: 'Projects', icon: FolderKanban, path: 'projects' },
       { id: 'invoices', label: 'Invoices', icon: FileText, path: 'invoices' },
       { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
@@ -119,7 +119,6 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
         return [
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
           { id: 'leads', label: 'Leads', icon: Users, path: 'leads' },
-          { id: 'deals', label: 'Deals', icon: HandshakeIcon, path: 'deals' },
           { id: 'projects', label: 'Projects', icon: FolderKanban, path: 'projects' },
           { id: 'invoices', label: 'Invoices', icon: FileText, path: 'invoices' },
           { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },
@@ -131,7 +130,6 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
         return [
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
           { id: 'leads', label: 'Leads', icon: Users, path: 'leads' },
-          { id: 'deals', label: 'Deals', icon: HandshakeIcon, path: 'deals' },
           { id: 'projects', label: 'Projects', icon: FolderKanban, path: 'projects' },
           { id: 'invoices', label: 'Invoices', icon: FileText, path: 'invoices' },
           { id: 'ticketing', label: 'Ticketing', icon: Ticket, path: 'ticketing' },

@@ -89,6 +89,7 @@ export interface ExtendedHandover {
   scopeIncluded?: string[];
   scopeExclusions?: string[];
   deliverables?: Deliverable[];
+  deliverablesExtended?: Deliverable[];
   milestones?: Milestone[];
   feeStructure?: FeeStructureItem[];
   paymentTermsText?: string;

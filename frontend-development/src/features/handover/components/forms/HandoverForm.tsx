@@ -44,6 +44,7 @@ interface HandoverFormProps {
   existingHandover?: ExtendedHandover;
   readOnly?: boolean;
   onConvertToProject?: (handoverId: string) => void;
+  showConvertButton?: boolean; // Control visibility of Convert to Project button
   leadData?: {
     clientName: string;
     companyName?: string; // Nama perusahaan
@@ -70,7 +71,8 @@ export function HandoverForm({
   readOnly = false,
   leadData,
   engagementLetter,
-  onConvertToProject
+  onConvertToProject,
+  showConvertButton = true // Default to true to maintain existing behavior
 }: HandoverFormProps) {
   // Default: semua section terbuka
   const [expandedSections, setExpandedSections] = useState<Set<SectionId>>(
@@ -126,11 +128,34 @@ export function HandoverForm({
   const [scopeExclusions, setScopeExclusions] = useState<string[]>(
     existingHandover?.scopeExclusions || ['']
   );
-  const [deliverables, setDeliverables] = useState<Partial<Deliverable>[]>(
-    existingHandover?.deliverables || 
-    (existingHandover as any)?.deliverablesExtended || 
-    [{ name: '', description: '' }]
-  );
+  // Initialize deliverables - convert string array to object array if needed
+  const initializeDeliverables = (): Partial<Deliverable>[] => {
+    const handoverAny = existingHandover as any;
+    
+    // First check for deliverablesExtended (array of objects)
+    if (handoverAny?.deliverablesExtended && Array.isArray(handoverAny.deliverablesExtended) && handoverAny.deliverablesExtended.length > 0) {
+      return handoverAny.deliverablesExtended;
+    }
+    
+    // Check for deliverables (could be string array or object array)
+    if (handoverAny?.deliverables && Array.isArray(handoverAny.deliverables) && handoverAny.deliverables.length > 0) {
+      // If it's an array of strings, convert to array of objects
+      const firstItem = handoverAny.deliverables[0];
+      if (typeof firstItem === 'string') {
+        return (handoverAny.deliverables as string[]).map((name, index) => ({
+          id: `DEL-${index + 1}`,
+          name,
+          description: ''
+        }));
+      }
+      // If it's already an array of objects
+      return handoverAny.deliverables as Partial<Deliverable>[];
+    }
+    
+    return [{ name: '', description: '' }];
+  };
+
+  const [deliverables, setDeliverables] = useState<Partial<Deliverable>[]>(initializeDeliverables());
   const [milestones, setMilestones] = useState<Partial<Milestone>[]>(
     existingHandover?.milestones || [{ name: '', targetDate: '', description: '' }]
   );
@@ -604,7 +629,7 @@ export function HandoverForm({
                 </Button>
               </div>
             )}
-            {isApproved && (
+            {isApproved && showConvertButton && (
               <div className="flex items-center justify-end gap-3 pt-4">
                 <Button
                   onClick={() => {

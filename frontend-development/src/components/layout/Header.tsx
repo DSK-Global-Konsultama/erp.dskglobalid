@@ -108,10 +108,10 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
         return 'Kotak Masuk Lead';
       } else if (activeNav === 'approval') {
         return 'Approval';
+      } else if (activeNav === 'assign-pm') {
+        return 'Assign PM';
       } else if (activeNav === 'leads') {
         return 'Semua Lead';
-      } else if (activeNav === 'deals') {
-        return 'All Deals';
       } else if (activeNav === 'projects') {
         return 'Project Management';
       } else if (activeNav === 'invoices') {
@@ -176,8 +176,6 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
           return role === 'SuperAdmin' ? 'Dashboard Super Admin' : 'Dashboard IT';
         } else if (activeNav === 'leads') {
           return 'All Leads';
-        } else if (activeNav === 'deals') {
-          return 'All Deals';
         } else if (activeNav === 'projects') {
           return 'Project Management';
         } else if (activeNav === 'invoices') {
@@ -206,10 +204,10 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
         return 'Review and follow-up on leads promoted by BD Admin';
       } else if (activeNav === 'approval') {
         return 'Review dan approve dokumen dari BD Admin';
+      } else if (activeNav === 'assign-pm') {
+        return 'Review handover memo dan assign Project Manager untuk project';
       } else if (activeNav === 'leads') {
         return 'View dan monitor semua leads dalam pipeline';
-      } else if (activeNav === 'deals') {
-        return 'Monitor semua deals';
       } else if (activeNav === 'projects') {
         return role === 'CEO' 
           ? 'CEO assign PM untuk WEB DEV, COO assign PM sesuai layanan'
@@ -280,8 +278,6 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
           return 'Monitoring Business Development & Project Management';
         } else if (activeNav === 'leads') {
           return 'Monitor semua leads dari berbagai sumber';
-        } else if (activeNav === 'deals') {
-          return 'Monitor semua deals';
         } else if (activeNav === 'projects') {
           return 'CEO/COO assign PM, PM assign Consultant untuk setiap project';
         } else if (activeNav === 'invoices') {

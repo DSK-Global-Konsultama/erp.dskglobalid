@@ -23,6 +23,5 @@ export { SignOffSection } from './components/sections/SignOffSection';
 
 // Views (for future role-based views)
 export { CeoHandoverView } from './components/views/CeoHandoverView';
-export { CooHandoverView } from './components/views/CooHandoverView';
 export { PmHandoverView } from './components/views/PmHandoverView';
 
