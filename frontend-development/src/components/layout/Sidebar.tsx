@@ -71,7 +71,6 @@ export function Sidebar({ role, activeNav: externalActiveNav, onNavChange, onLog
     // COO navigation items (without Inbox)
     const cooNavItems = [
       { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
-      { id: 'assign-pm', label: 'Assign PM', icon: UserCheck, path: 'assign-pm' },
       { id: 'leads', label: 'Leads', icon: Users, path: 'leads' },
       { id: 'projects', label: 'Projects', icon: FolderKanban, path: 'projects' },
       { id: 'invoices', label: 'Invoices', icon: FileText, path: 'invoices' },

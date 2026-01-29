@@ -13,16 +13,28 @@ export function StatusChip({ status }: StatusChipProps) {
         return 'bg-purple-100 text-purple-700';
       case 'NEED_NOTULEN':
         return 'bg-amber-100 text-amber-700';
+      case 'IN_NOTULEN':
+        return 'bg-amber-100 text-amber-700';
       case 'NEED_PROPOSAL':
         return 'bg-orange-100 text-orange-700';
+      case 'IN_PROPOSAL':
+        return 'bg-indigo-100 text-indigo-700';
+      case 'IN_EL':
+        return 'bg-cyan-100 text-cyan-700';
+      case 'EL_SIGNED':
+        return 'bg-green-100 text-green-700';
       case 'NEED_ENGAGEMENT_LETTER':
         return 'bg-cyan-100 text-cyan-700';
       case 'NEED_HANDOVER':
         return 'bg-violet-100 text-violet-700';
       case 'IN_HANDOVER':
         return 'bg-violet-200 text-violet-800';
-      case 'IN_PROPOSAL':
-        return 'bg-indigo-100 text-indigo-700';
+      case 'NOT_STARTED':
+        return 'bg-amber-50 text-amber-600';
+      case 'WAITING_CEO':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'CEO_APPROVED':
+        return 'bg-green-100 text-green-700';
       case 'WAITING_APPROVAL':
         return 'bg-yellow-100 text-yellow-700';
       case 'DEAL_WON':
@@ -67,6 +79,41 @@ export function StatusChip({ status }: StatusChipProps) {
   };
 
   const formatStatus = (status: string) => {
+    // Commercial stages - all uppercase
+    const commercialStages = [
+      'TO_BE_MEET',
+      'MEETING_SCHEDULED',
+      'NEED_NOTULEN',
+      'IN_NOTULEN',
+      'NEED_PROPOSAL',
+      'IN_PROPOSAL',
+      'IN_EL',
+      'EL_SIGNED',
+      'ON_HOLD',
+      'DROP'
+    ];
+    
+    // Handover statuses - all uppercase
+    if (status === 'DRAFT') {
+      return 'DRAFT';
+    }
+    if (status === 'WAITING_CEO') {
+      return 'WAITING CEO APPROVAL';
+    }
+    if (status === 'CEO_APPROVED') {
+      return 'CEO APPROVED';
+    }
+    if (status === 'NOT_STARTED') {
+      return 'NOT STARTED (REQUIRED)';
+    }
+    if (status === 'LOCKED') {
+      return 'LOCKED';
+    }
+    
+    if (commercialStages.includes(status)) {
+      return status.replace(/_/g, ' ').toUpperCase();
+    }
+    
     return status.replace(/_/g, ' ');
   };
 

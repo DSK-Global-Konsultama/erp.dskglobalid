@@ -108,8 +108,6 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
         return 'Kotak Masuk Lead';
       } else if (activeNav === 'approval') {
         return 'Approval';
-      } else if (activeNav === 'assign-pm') {
-        return 'Assign PM';
       } else if (activeNav === 'leads') {
         return 'Semua Lead';
       } else if (activeNav === 'projects') {
@@ -204,8 +202,6 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
         return 'Review and follow-up on leads promoted by BD Admin';
       } else if (activeNav === 'approval') {
         return 'Review dan approve dokumen dari BD Admin';
-      } else if (activeNav === 'assign-pm') {
-        return 'Review handover memo dan assign Project Manager untuk project';
       } else if (activeNav === 'leads') {
         return 'View dan monitor semua leads dalam pipeline';
       } else if (activeNav === 'projects') {

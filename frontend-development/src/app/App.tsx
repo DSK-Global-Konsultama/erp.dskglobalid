@@ -22,7 +22,6 @@ import { ProjectsPage as COOProjectsPage } from './routes/coo/pages/ProjectsPage
 import { InvoicesPage as COOInvoicesPage } from './routes/coo/pages/InvoicesPage';
 import { TicketingPage as COOTicketingPage } from './routes/coo/pages/TicketingPage';
 import { ReimbursePage as COOReimbursePage } from './routes/coo/pages/ReimbursePage';
-import { AssignPMPage as COOAssignPMPage } from './routes/coo/pages/AssignPMPage';
 
 
 // Other role imports
@@ -317,8 +316,6 @@ export default function App() {
           switch (activeNav) {
             case 'dashboard':
               return <COODashboard />;
-            case 'assign-pm':
-              return <COOAssignPMPage />;
             case 'leads':
               return <COOLeadsPage />;
             case 'projects':
