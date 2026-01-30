@@ -79,7 +79,6 @@ export function StatusChip({ status }: StatusChipProps) {
   };
 
   const formatStatus = (status: string) => {
-    // Commercial stages - all uppercase
     const commercialStages = [
       'TO_BE_MEET',
       'MEETING_SCHEDULED',
@@ -92,8 +91,7 @@ export function StatusChip({ status }: StatusChipProps) {
       'ON_HOLD',
       'DROP'
     ];
-    
-    // Handover statuses - all uppercase
+
     if (status === 'DRAFT') {
       return 'DRAFT';
     }
@@ -109,11 +107,11 @@ export function StatusChip({ status }: StatusChipProps) {
     if (status === 'LOCKED') {
       return 'LOCKED';
     }
-    
+
     if (commercialStages.includes(status)) {
       return status.replace(/_/g, ' ').toUpperCase();
     }
-    
+
     return status.replace(/_/g, ' ');
   };
 

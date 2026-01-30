@@ -1,4 +1,4 @@
-import { LeadsManagement } from '../../../features/leads/components/management/LeadsManagement';
+import { LeadsManagementPage } from '../../../features/leads/pages/index';
 
 interface BDMEOProps {
   userName: string;
@@ -6,6 +6,6 @@ interface BDMEOProps {
 
 export function BDMEODashboard({ userName }: BDMEOProps) {
   // BD-MEO can only view leads, cannot add new leads (per CEO policy)
-  return <LeadsManagement userName={userName} mode="view" />;
+  return <LeadsManagementPage userName={userName} mode="view" />;
 }
 

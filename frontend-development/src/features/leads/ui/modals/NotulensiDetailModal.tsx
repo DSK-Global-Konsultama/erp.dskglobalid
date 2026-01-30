@@ -10,8 +10,9 @@ interface NotulensiDetailModalProps {
   notulensi: Notulensi | null;
   open: boolean;
   onClose: () => void;
-  onEdit: (notulensi: Notulensi) => void;
+  onEdit?: (notulensi: Notulensi) => void;
   onUpdateNotulensi?: (id: string, updates: Partial<Notulensi>) => void;
+  readOnly?: boolean;
 }
 
 export function NotulensiDetailModal({
@@ -19,7 +20,8 @@ export function NotulensiDetailModal({
   open,
   onClose,
   onEdit,
-  onUpdateNotulensi
+  onUpdateNotulensi,
+  readOnly = false
 }: NotulensiDetailModalProps) {
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
 
@@ -102,27 +104,23 @@ export function NotulensiDetailModal({
   }, [open, isAnimatingOut]);
 
   const handleEdit = () => {
-    if (notulensi) {
-      // Close modal with animation first
-      if (isAnimatingOut) return;
-      
-      const dialogContent = document.querySelector('[data-notulensi-detail-modal]') as HTMLElement;
-      if (dialogContent) {
-        setIsAnimatingOut(true);
-        // Open edit modal immediately while closing animation is happening
-        onEdit(notulensi);
-        animate(dialogContent, { x: '100%' }, { 
-          duration: 0.8, 
-          ease: 'easeInOut',
-          onComplete: () => {
-            setIsAnimatingOut(false);
-            onClose();
-          }
-        });
-      } else {
-        onClose();
-        onEdit(notulensi);
-      }
+    if (!notulensi || !onEdit) return;
+    if (isAnimatingOut) return;
+    const dialogContent = document.querySelector('[data-notulensi-detail-modal]') as HTMLElement;
+    if (dialogContent) {
+      setIsAnimatingOut(true);
+      onEdit(notulensi);
+      animate(dialogContent, { x: '100%' }, {
+        duration: 0.8,
+        ease: 'easeInOut',
+        onComplete: () => {
+          setIsAnimatingOut(false);
+          onClose();
+        },
+      });
+    } else {
+      onClose();
+      onEdit(notulensi);
     }
   };
 
@@ -321,7 +319,15 @@ export function NotulensiDetailModal({
 
         {/* Actions */}
         <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex gap-3 justify-end">
-          {notulensi.status === 'DRAFT' ? (
+          {readOnly ? (
+            <Button
+              type="button"
+              onClick={handleClose}
+              className="bg-white text-gray-900 border border-gray-300 hover:bg-gray-50"
+            >
+              Close
+            </Button>
+          ) : notulensi.status === 'DRAFT' ? (
             <>
               <Button
                 type="button"

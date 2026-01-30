@@ -1,6 +1,6 @@
-import { LeadInbox } from '../../../../features/leads/components/management/LeadInbox';
+import { LeadInboxPage } from '../../../../features/leads/pages/index';
 
 export function InboxPage() {
-  return <LeadInbox />;
+  return <LeadInboxPage />;
 }
 

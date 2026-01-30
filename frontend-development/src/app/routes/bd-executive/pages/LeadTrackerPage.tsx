@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { LeadsManagement } from '../../../../features/leads/components/management/LeadsManagement';
-import { LeadTrackerDetail, type LeadStatus } from '../../../../features/leads/components/management/LeadTrackerDetail';
-import { generateDummyLeadsBDMEO, mockMeetings, mockNotulensi, mockProposals, mockEngagementLetters, mockHandovers, type Lead, type Meeting, type Notulensi, type Proposal, type EngagementLetter, type Handover } from '../../../../lib/mock-data';
+import { LeadsManagementPage, LeadTrackerDetailPage, type LeadStatus } from '../../../../features/leads/pages/index';
+import { leadApi } from '../../../../features/leads/api/leadApi';
+import type { Lead, Meeting, Notulensi, Proposal, EngagementLetter, Handover } from '../../../../lib/mock-data';
 
 interface LeadTrackerPageProps {
   userName: string;
@@ -34,22 +34,18 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
     }
   }, [onResetDetail, onLeadDetailChange]);
   
-  // Initialize data from mock-data.ts
-  type ExtendedLead = Lead & { 
-    service?: string;
-    status: LeadStatus | Lead['status'];
-  };
-  
+  type ExtendedLead = Lead & { service?: string; status: LeadStatus | Lead['status'] };
+  const relevantStatuses: LeadStatus[] = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_NOTULEN', 'NEED_PROPOSAL', 'IN_PROPOSAL', 'PROPOSAL_EXPIRED', 'NEED_ENGAGEMENT_LETTER', 'NEED_HANDOVER', 'IN_HANDOVER'];
+
   const [leads] = useState<ExtendedLead[]>(() => {
-    const defaultLeads = generateDummyLeadsBDMEO('Sarah Wijaya');
-    const relevantStatuses: LeadStatus[] = ['TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_NOTULEN', 'NEED_PROPOSAL', 'IN_PROPOSAL', 'PROPOSAL_EXPIRED', 'NEED_ENGAGEMENT_LETTER', 'NEED_HANDOVER', 'IN_HANDOVER'];
+    const { leads: defaultLeads } = leadApi.getTrackerData('Sarah Wijaya');
     return defaultLeads.filter(lead => relevantStatuses.includes(lead.status as LeadStatus)) as ExtendedLead[];
   });
-  const [meetings, setMeetings] = useState<Meeting[]>(mockMeetings);
-  const [notulensi, setNotulensi] = useState<Notulensi[]>(mockNotulensi);
-  const [proposals, setProposals] = useState<Proposal[]>(mockProposals);
-  const [engagementLetters, setEngagementLetters] = useState<EngagementLetter[]>(mockEngagementLetters);
-  const [handovers, setHandovers] = useState<Handover[]>(mockHandovers);
+  const [meetings, setMeetings] = useState<Meeting[]>(() => leadApi.getTrackerData('Sarah Wijaya').meetings);
+  const [notulensi, setNotulensi] = useState<Notulensi[]>(() => leadApi.getTrackerData('Sarah Wijaya').notulensi);
+  const [proposals, setProposals] = useState<Proposal[]>(() => leadApi.getTrackerData('Sarah Wijaya').proposals);
+  const [engagementLetters, setEngagementLetters] = useState<EngagementLetter[]>(() => leadApi.getTrackerData('Sarah Wijaya').engagementLetters);
+  const [handovers, setHandovers] = useState<Handover[]>(() => leadApi.getTrackerData('Sarah Wijaya').handovers);
 
   // Update lead detail in header when selected lead changes
   useEffect(() => {
@@ -161,7 +157,7 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
 
   if (selectedLeadId) {
     return (
-      <LeadTrackerDetail
+      <LeadTrackerDetailPage
         leadId={selectedLeadId}
         onBack={handleBack}
         leads={leads}
@@ -186,6 +182,6 @@ export function LeadTrackerPage({ userName, onLeadDetailChange, onBackFromDetail
     );
   }
 
-  return <LeadsManagement userName={userName} mode="tracker" onLeadClick={setSelectedLeadId} />;
+  return <LeadsManagementPage userName={userName} mode="tracker" onLeadClick={setSelectedLeadId} />;
 }
 

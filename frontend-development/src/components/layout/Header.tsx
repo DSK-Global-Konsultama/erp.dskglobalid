@@ -1,6 +1,6 @@
-import { Bell, ArrowLeft, Tag, Mail, Phone, User } from 'lucide-react';
+import { Bell, ArrowLeft } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { StatusChip } from '../../features/leads/components/shared/StatusChip';
+import { LeadDetailHeaderBar } from '../../features/leads/ui/detail/LeadDetailHeaderBar';
 
 type UserRole = 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'ITSpecialist' | 'SuperAdmin';
 
@@ -488,57 +488,12 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
     );
   }
 
-  // If leadDetail is provided, show lead detail header
+  // If leadDetail is provided, show lead detail header (content from leads feature)
   if (leadDetail) {
     return (
       <header className="bg-gray-50 px-6 pt-3 sticky top-0 z-10">
         <div className="flex items-center justify-between">
-          {/* Lead Detail Header - Left Side */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  leadDetail.onBack();
-                }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div className="flex-1">
-                <div className="flex items-center gap-3">
-                  <h1 className="text-lg font-semibold text-gray-900">{leadDetail.company || leadDetail.clientName}</h1>
-                  <StatusChip status={leadDetail.status} />
-                </div>
-                <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                  {leadDetail.clientName && (
-                    <div className="flex items-center gap-1">
-                      <User className="w-4 h-4" />
-                      <span>{leadDetail.clientName}</span>
-                    </div>
-                  )}
-                  {leadDetail.source && (
-                    <div className="flex items-center gap-1">
-                      <Tag className="w-4 h-4" />
-                      <span className="px-2 py-0.5 bg-gray-100 rounded text-gray-700">{leadDetail.source}</span>
-                    </div>
-                  )}
-                  {leadDetail.picEmail && (
-                    <div className="flex items-center gap-1">
-                      <Mail className="w-4 h-4" />
-                      <span>{leadDetail.picEmail}</span>
-                    </div>
-                  )}
-                  {leadDetail.picPhone && (
-                    <div className="flex items-center gap-1">
-                      <Phone className="w-4 h-4" />
-                      <span>{leadDetail.picPhone}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+          <LeadDetailHeaderBar {...leadDetail} onBack={leadDetail.onBack} />
 
           {/* Right Side - Dark Card with Notification and User Section */}
           <div className="flex-shrink-0">

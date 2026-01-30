@@ -13,6 +13,7 @@ interface EngagementLetterUploadModalProps {
   onClose: () => void;
   onUpdateEngagementLetter?: (id: string, updates: Partial<EngagementLetter>) => void;
   isCEOView?: boolean;
+  readOnly?: boolean;
 }
 
 export function EngagementLetterUploadModal({
@@ -21,7 +22,8 @@ export function EngagementLetterUploadModal({
   open,
   onClose,
   onUpdateEngagementLetter,
-  isCEOView = false
+  isCEOView = false,
+  readOnly = false
 }: EngagementLetterUploadModalProps) {
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -412,7 +414,15 @@ export function EngagementLetterUploadModal({
 
           {/* Actions */}
           <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex gap-3 justify-end flex-shrink-0">
-            {isCEOView && currentEL.status === 'WAITING_APPROVAL' ? (
+            {readOnly ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+              >
+                Close
+              </Button>
+            ) : isCEOView && currentEL.status === 'WAITING_APPROVAL' ? (
               <>
                 <Button
                   type="button"

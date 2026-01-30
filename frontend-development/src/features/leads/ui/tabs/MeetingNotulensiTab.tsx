@@ -2,17 +2,19 @@ import { useState } from 'react';
 import { Plus, Calendar, FileText, Edit, X, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { StatusChip } from '../shared/StatusChip';
+import { LeadActionGuard } from '../guards/LeadActionGuard';
 import { ScheduleMeetingModal } from '../modals/ScheduleMeetingModal';
 import { NotulensiFormModal } from '../modals/NotulensiFormModal';
 import { NotulensiDetailModal } from '../modals/NotulensiDetailModal';
 import type { Meeting, Notulensi, Lead } from '../../../../lib/mock-data';
-import type { LeadStatus } from '../management/LeadTrackerDetail';
+import type { LeadStatus } from '../../model/types';
 
 interface MeetingNotulensiTabProps {
   leadId: string;
   meetings: Meeting[];
   notulensi: Notulensi[];
   leads: Lead[];
+  readOnly?: boolean;
   onAddMeeting: (meeting: Meeting) => void;
   onUpdateMeeting?: (id: string, updates: Partial<Meeting>) => void;
   onDeleteMeeting?: (id: string) => void;
@@ -21,11 +23,12 @@ interface MeetingNotulensiTabProps {
   onUpdateLeadStatus: (leadId: string, status: LeadStatus) => void;
 }
 
-export function MeetingNotulensiTab({ 
-  leadId, 
+export function MeetingNotulensiTab({
+  leadId,
   meetings,
   notulensi,
   leads,
+  readOnly = false,
   onAddMeeting,
   onUpdateMeeting,
   onDeleteMeeting,
@@ -54,10 +57,8 @@ export function MeetingNotulensiTab({
   };
 
   const handleEditNotulensi = (notulensi: Notulensi) => {
-    // Ensure detail modal is closed first
     setShowNotulensiDetailModal(false);
     setSelectedNotulensi(null);
-    // Then open edit modal
     setEditingNotulensi(notulensi);
     setSelectedMeetingId(notulensi.meetingId);
     setShowNotulensiModal(true);
@@ -69,9 +70,8 @@ export function MeetingNotulensiTab({
   };
 
   const handleDeleteMeeting = (meetingId: string, meetingName: string) => {
-    // Check if meeting has notulensi
     const hasNotulensi = leadNotulensi.some(n => n.meetingId === meetingId);
-    
+
     if (hasNotulensi) {
       toast.error('Tidak dapat menghapus meeting yang sudah memiliki notulensi');
       return;
@@ -87,85 +87,57 @@ export function MeetingNotulensiTab({
     }
   };
 
-  // Helper function to check if location is a URL
   const isUrl = (str: string): boolean => {
     if (!str || typeof str !== 'string') return false;
-    
-    // Check if it's already a valid URL with protocol
     try {
       const url = new URL(str);
       return url.protocol === 'http:' || url.protocol === 'https:';
     } catch {
-      // Check if it starts with common URL patterns (zoom, maps, www, etc.)
       const urlPattern = /^(https?:\/\/|www\.|zoom\.us\/j\/|zoom\.us\/join|meet\.google\.com|maps\.google\.com|goo\.gl|bit\.ly|maps\.app\.goo\.gl|zoom\.us\/s\/)/i;
       return urlPattern.test(str.trim());
     }
   };
 
-  // Helper function to format URL for display
   const formatUrl = (url: string): string => {
-    // Remove protocol for cleaner display
     return url.replace(/^https?:\/\//, '').replace(/^www\./, '');
   };
 
-  // Helper function to ensure URL has protocol
   const ensureProtocol = (url: string): string => {
     if (!url) return url;
     const trimmed = url.trim();
-    if (/^https?:\/\//i.test(trimmed)) {
-      return trimmed;
-    }
-    // Handle zoom.us links
-    if (/^zoom\.us/i.test(trimmed)) {
-      return `https://${trimmed}`;
-    }
-    // Handle Google Maps links
-    if (/^(maps\.google\.com|maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(trimmed)) {
-      return `https://${trimmed}`;
-    }
-    // Handle Google Meet links
-    if (/^meet\.google\.com/i.test(trimmed)) {
-      return `https://${trimmed}`;
-    }
-    // Default: add https://
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    if (/^zoom\.us/i.test(trimmed)) return `https://${trimmed}`;
+    if (/^(maps\.google\.com|maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(trimmed)) return `https://${trimmed}`;
+    if (/^meet\.google\.com/i.test(trimmed)) return `https://${trimmed}`;
     return `https://${trimmed}`;
   };
 
-  // Helper function to format date and time
   const formatDateTime = (dateTime: string): string => {
     if (!dateTime) return '-';
     try {
       const date = new Date(dateTime);
-      const dateStr = date.toLocaleDateString('id-ID', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-      });
-      const timeStr = date.toLocaleTimeString('id-ID', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false
-      });
+      const dateStr = date.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
+      const timeStr = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
       return `${dateStr}, ${timeStr}`;
     } catch {
-      // Fallback to original format if parsing fails
       return dateTime;
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Meetings Section */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3>Meetings</h3>
-          <button
-            onClick={() => setShowScheduleModal(true)}
-            className="flex items-center gap-2 px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors font-medium cursor-pointer"
-          >
-            <Plus className="w-5 h-5" />
-            Jadwalkan Meeting
-          </button>
+          <LeadActionGuard action="edit" readOnly={readOnly}>
+            <button
+              onClick={() => setShowScheduleModal(true)}
+              className="flex items-center gap-2 px-5 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors font-medium cursor-pointer"
+            >
+              <Plus className="w-5 h-5" />
+              Jadwalkan Meeting
+            </button>
+          </LeadActionGuard>
         </div>
         {leadMeetings.length === 0 ? (
           <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg">
@@ -176,8 +148,8 @@ export function MeetingNotulensiTab({
         ) : (
           <div className="space-y-3">
             {leadMeetings.map((meeting) => (
-              <div 
-                key={meeting.id} 
+              <div
+                key={meeting.id}
                 className="border rounded-lg p-4 border-gray-200 hover:border-gray-300 transition-all"
               >
                 <div className="flex items-start justify-between mb-4">
@@ -219,10 +191,11 @@ export function MeetingNotulensiTab({
                   const showCreateNotulensi = meeting.status === 'DONE' && !hasNotulensi;
                   const showEditDelete = meeting.status !== 'DONE' && meeting.status !== 'SCHEDULED';
                   const showFooter = isScheduled || showCreateNotulensi || showEditDelete;
-                  
+
                   if (!showFooter) return null;
-                  
+
                   return (
+                    <LeadActionGuard action="edit" readOnly={readOnly}>
                     <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
                       {isScheduled && (
                         <>
@@ -280,6 +253,7 @@ export function MeetingNotulensiTab({
                         </>
                       )}
                     </div>
+                    </LeadActionGuard>
                   );
                 })()}
               </div>
@@ -288,7 +262,6 @@ export function MeetingNotulensiTab({
         )}
       </div>
 
-      {/* Notulensi Section */}
       <div>
         <div className="mb-4">
           <h3>Notulensi</h3>
@@ -302,8 +275,8 @@ export function MeetingNotulensiTab({
         ) : (
           <div className="space-y-3">
             {leadNotulensi.map((notulensi) => (
-              <div 
-                key={notulensi.id} 
+              <div
+                key={notulensi.id}
                 className="border rounded-lg p-4 border-gray-200 hover:border-gray-300 transition-all"
               >
                 <div className="flex items-start justify-between mb-4">
@@ -340,7 +313,7 @@ export function MeetingNotulensiTab({
                   <div>
                     <p className="text-gray-600">Created</p>
                     <p className="font-medium">
-                      {notulensi.createdAt 
+                      {notulensi.createdAt
                         ? new Date(notulensi.createdAt).toLocaleDateString('id-ID', {
                             year: 'numeric',
                             month: 'long',
@@ -351,12 +324,12 @@ export function MeetingNotulensiTab({
                   </div>
                 </div>
                 <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
-                  <button 
+                  <button
                     onClick={() => handleViewDetails(notulensi)}
                     className="flex-1 px-3 py-2 rounded-lg text-sm cursor-pointer border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 flex items-center justify-center gap-2"
                   >
                     <Eye className="w-4 h-4" />
-                    View Details
+                    {readOnly ? 'View' : 'View Details'}
                   </button>
                 </div>
               </div>
@@ -365,6 +338,8 @@ export function MeetingNotulensiTab({
         )}
       </div>
 
+      {!readOnly && (
+      <>
       <ScheduleMeetingModal
         leadId={leadId}
         open={showScheduleModal || editingMeeting !== null}
@@ -394,14 +369,19 @@ export function MeetingNotulensiTab({
         onUpdateNotulensi={onUpdateNotulensi}
       />
 
-      <NotulensiDetailModal
-        notulensi={selectedNotulensi}
-        open={showNotulensiDetailModal}
-        onClose={handleCloseDetail}
-        onEdit={handleEditNotulensi}
-        onUpdateNotulensi={onUpdateNotulensi}
-      />
+      </>
+      )}
+
+      {showNotulensiDetailModal && selectedNotulensi && (
+        <NotulensiDetailModal
+          notulensi={selectedNotulensi}
+          open={showNotulensiDetailModal}
+          onClose={handleCloseDetail}
+          onEdit={readOnly ? undefined : handleEditNotulensi}
+          onUpdateNotulensi={onUpdateNotulensi}
+          readOnly={readOnly}
+        />
+      )}
     </div>
   );
 }
-

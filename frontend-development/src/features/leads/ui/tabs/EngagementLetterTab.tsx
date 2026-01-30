@@ -3,26 +3,28 @@ import { Eye } from 'lucide-react';
 import { StatusChip } from '../shared/StatusChip';
 import { EngagementLetterUploadModal } from '../modals/EngagementLetterUploadModal';
 import type { EngagementLetter, Lead, Proposal } from '../../../../lib/mock-data';
-import type { LeadStatus } from '../management/LeadTrackerDetail';
+import type { LeadStatus } from '../../model/types';
 
 interface EngagementLetterTabProps {
   leadId: string;
   leads: Lead[];
   proposals: Proposal[];
   engagementLetters: EngagementLetter[];
+  readOnly?: boolean;
   onAddEngagementLetter: (el: EngagementLetter) => void;
   onUpdateEngagementLetter: (id: string, updates: Partial<EngagementLetter>) => void;
   onUpdateLeadStatus: (leadId: string, status: LeadStatus) => void;
 }
 
-export function EngagementLetterTab({ 
-  leadId, 
-  leads, 
+export function EngagementLetterTab({
+  leadId,
+  leads,
   proposals,
-  engagementLetters, 
-  onAddEngagementLetter, 
+  engagementLetters,
+  readOnly = false,
+  onAddEngagementLetter,
   onUpdateEngagementLetter,
-  onUpdateLeadStatus 
+  onUpdateLeadStatus
 }: EngagementLetterTabProps) {
   const [showELUpload, setShowELUpload] = useState(false);
   const [selectedEL, setSelectedEL] = useState<EngagementLetter | null>(null);
@@ -30,18 +32,12 @@ export function EngagementLetterTab({
   const leadProposals = proposals.filter(p => p.leadId === leadId);
   const lead = leads.find(l => l.id === leadId);
 
-  // Auto-create Engagement Letter when proposal is ACCEPTED
   useEffect(() => {
-    if (!lead) return;
-
-    // Get accepted proposals that don't have an EL yet
+    if (readOnly || !lead) return;
     const acceptedProposals = leadProposals.filter(p => p.status === 'ACCEPTED');
-    const existingELServices = new Set(engagementLetters
-      .filter(el => el.leadId === leadId)
-      .map(el => el.service)
+    const existingELServices = new Set(
+      engagementLetters.filter(el => el.leadId === leadId).map(el => el.service)
     );
-
-    // Create EL for each accepted proposal that doesn't have one
     acceptedProposals.forEach((proposal) => {
       if (!existingELServices.has(proposal.service)) {
         const newEL: EngagementLetter = {
@@ -74,8 +70,8 @@ export function EngagementLetterTab({
       ) : (
         <div className="space-y-3">
           {leadELs.map((el) => (
-            <div 
-              key={el.id} 
+            <div
+              key={el.id}
               className="border rounded-lg p-4 border-gray-200 hover:border-gray-300 transition-all"
             >
               <div className="flex items-start justify-between mb-4">
@@ -89,10 +85,7 @@ export function EngagementLetterTab({
                 <div className="text-right">
                   <p className="text-sm text-green-600">Agree Fee</p>
                   <p className="text-xl text-green-600">
-                    {el.agreeFee 
-                      ? `IDR ${(el.agreeFee / 1000000).toFixed(0)}M`
-                      : '-'
-                    }
+                    {el.agreeFee ? `IDR ${(el.agreeFee / 1000000).toFixed(0)}M` : '-'}
                   </p>
                 </div>
               </div>
@@ -124,32 +117,30 @@ export function EngagementLetterTab({
                 <div>
                   <p className="text-gray-600">Sent At</p>
                   <p className="font-medium text-blue-600">
-                    {el.sentAt 
+                    {el.sentAt
                       ? new Date(el.sentAt).toLocaleDateString('id-ID', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric'
                         })
-                      : '-'
-                    }
+                      : '-'}
                   </p>
                 </div>
                 <div>
                   <p className="text-gray-600">Signed Date</p>
                   <p className="font-medium text-green-600">
-                    {el.signedDate 
+                    {el.signedDate
                       ? new Date(el.signedDate).toLocaleDateString('id-ID', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric'
                         })
-                      : '-'
-                    }
+                      : '-'}
                   </p>
                 </div>
               </div>
               <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
-                <button 
+                <button
                   onClick={() => {
                     setSelectedEL(el);
                     setShowELUpload(true);
@@ -157,7 +148,7 @@ export function EngagementLetterTab({
                   className="flex-1 px-3 py-2 rounded-lg text-sm cursor-pointer border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 flex items-center justify-center gap-2"
                 >
                   {el.createdAt && <Eye className="w-4 h-4" />}
-                  {el.createdAt ? 'View Details' : 'Upload Engagement Letter'}
+                  {readOnly ? 'View' : (el.createdAt ? 'View Details' : 'Upload Engagement Letter')}
                 </button>
               </div>
             </div>
@@ -165,7 +156,6 @@ export function EngagementLetterTab({
         </div>
       )}
 
-      {/* Engagement Letter Upload Modal */}
       {showELUpload && selectedEL && (
         <EngagementLetterUploadModal
           engagementLetter={engagementLetters.find(el => el.id === selectedEL.id) || selectedEL}
@@ -175,21 +165,15 @@ export function EngagementLetterTab({
             setShowELUpload(false);
             setSelectedEL(null);
           }}
-          onUpdateEngagementLetter={(id, updates) => {
+          onUpdateEngagementLetter={readOnly ? undefined : (id, updates) => {
             onUpdateEngagementLetter(id, updates);
-            // Update selectedEL with latest data
             const updatedEL = engagementLetters.find(el => el.id === id);
-            if (updatedEL) {
-              setSelectedEL({ ...updatedEL, ...updates });
-            }
-            // Update lead status to NEED_HANDOVER when EL is signed
-            if (updates.status === 'SIGNED') {
-              onUpdateLeadStatus(leadId, 'NEED_HANDOVER');
-            }
+            if (updatedEL) setSelectedEL({ ...updatedEL, ...updates });
+            if (updates.status === 'SIGNED') onUpdateLeadStatus(leadId, 'NEED_HANDOVER');
           }}
+          readOnly={readOnly}
         />
       )}
     </div>
   );
 }
-

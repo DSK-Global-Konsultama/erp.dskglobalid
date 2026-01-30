@@ -13,9 +13,10 @@ interface ProposalDetailModalProps {
   lead: Lead | null;
   open: boolean;
   onClose: () => void;
-  onEdit: (proposal: Proposal) => void;
+  onEdit?: (proposal: Proposal) => void;
   onUpdateProposal?: (id: string, updates: Partial<Proposal>) => void;
   isCEOView?: boolean;
+  readOnly?: boolean;
 }
 
 type Tier = 'STRATEGIC_RETAINER' | 'PREMIUM_MODULAR' | 'STANDARDIZED_MODULAR';
@@ -28,7 +29,8 @@ export function ProposalDetailModal({
   onClose,
   onEdit,
   onUpdateProposal,
-  isCEOView = false
+  isCEOView = false,
+  readOnly = false
 }: ProposalDetailModalProps) {
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [showAgreeFeeModal, setShowAgreeFeeModal] = useState(false);
@@ -99,25 +101,23 @@ export function ProposalDetailModal({
   }, [open, isAnimatingOut]);
 
   const handleEdit = () => {
-    if (proposal) {
-      if (isAnimatingOut) return;
-      
-      const dialogContent = document.querySelector('[data-proposal-detail-modal]') as HTMLElement;
-      if (dialogContent) {
-        setIsAnimatingOut(true);
-        onEdit(proposal);
-        animate(dialogContent, { x: '100%' }, { 
-          duration: 0.8, 
-          ease: 'easeInOut',
-          onComplete: () => {
-            setIsAnimatingOut(false);
-            onClose();
-          }
-        });
-      } else {
-        onClose();
-        onEdit(proposal);
-      }
+    if (!proposal || !onEdit) return;
+    if (isAnimatingOut) return;
+    const dialogContent = document.querySelector('[data-proposal-detail-modal]') as HTMLElement;
+    if (dialogContent) {
+      setIsAnimatingOut(true);
+      onEdit(proposal);
+      animate(dialogContent, { x: '100%' }, {
+        duration: 0.8,
+        ease: 'easeInOut',
+        onComplete: () => {
+          setIsAnimatingOut(false);
+          onClose();
+        },
+      });
+    } else {
+      onClose();
+      onEdit(proposal);
     }
   };
 
@@ -882,7 +882,16 @@ export function ProposalDetailModal({
 
           {/* Actions */}
           <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex gap-3 justify-end flex-shrink-0">
-            {isCEOView && currentProposal.status === 'WAITING_CEO_APPROVAL' ? (
+            {readOnly ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                className="bg-white text-gray-900 border border-gray-300 hover:bg-gray-50"
+              >
+                Close
+              </Button>
+            ) : isCEOView && currentProposal.status === 'WAITING_CEO_APPROVAL' ? (
               <>
                 <Button
                   type="button"

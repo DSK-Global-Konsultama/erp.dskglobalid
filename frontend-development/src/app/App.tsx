@@ -178,15 +178,16 @@ export default function App() {
 
   const handleNavChange = (path: string) => {
     // Reset lead detail when navigating to a different page
-    // Only keep detail if staying on leads page for BD-Executive
+    // Only keep detail if staying on leads page for BD-Executive or CEO (and roles that use CEOLeadsPage)
     if (leadDetail) {
-      const isStayingOnLeads = currentUser?.role === 'BD-Executive' && 
-        path === 'leads' && 
+      const rolesWithLeadDetail = ['BD-Executive', 'CEO', 'SuperAdmin', 'ITSpecialist'];
+      const isStayingOnLeads = currentUser && rolesWithLeadDetail.includes(currentUser.role) &&
+        path === 'leads' &&
         activeNav === 'leads';
-      
+
       if (!isStayingOnLeads) {
         setLeadDetail(null);
-        // Trigger reset in LeadTrackerPage
+        // Trigger reset in LeadTrackerPage / CEOLeadsPage
         if (resetDetailRef.current) {
           resetDetailRef.current();
         }
@@ -266,7 +267,18 @@ export default function App() {
             case 'dashboard':
               return <BODDashboard />;
             case 'leads':
-              return <CEOLeadsPage />;
+              return (
+                <CEOLeadsPage
+                  onLeadDetailChange={setLeadDetail}
+                  onBackFromDetail={() => {
+                    setLeadDetail(null);
+                    if (resetDetailRef.current) resetDetailRef.current();
+                  }}
+                  onResetDetail={(resetFn) => {
+                    resetDetailRef.current = resetFn;
+                  }}
+                />
+              );
             case 'projects':
               return <CEOProjectsPage />;
             case 'invoices':
@@ -283,7 +295,18 @@ export default function App() {
             case 'dashboard':
               return <CEODashboard />;
             case 'leads':
-              return <CEOLeadsPage />;
+              return (
+                <CEOLeadsPage
+                  onLeadDetailChange={setLeadDetail}
+                  onBackFromDetail={() => {
+                    setLeadDetail(null);
+                    if (resetDetailRef.current) resetDetailRef.current();
+                  }}
+                  onResetDetail={(resetFn) => {
+                    resetDetailRef.current = resetFn;
+                  }}
+                />
+              );
             case 'projects':
               return <CEOProjectsPage />;
             case 'invoices':
@@ -304,7 +327,18 @@ export default function App() {
             case 'approval':
               return <CEOApprovalPage />;
             case 'leads':
-              return <CEOLeadsPage />;
+              return (
+                <CEOLeadsPage
+                  onLeadDetailChange={setLeadDetail}
+                  onBackFromDetail={() => {
+                    setLeadDetail(null);
+                    if (resetDetailRef.current) resetDetailRef.current();
+                  }}
+                  onResetDetail={(resetFn) => {
+                    resetDetailRef.current = resetFn;
+                  }}
+                />
+              );
             case 'projects':
               return <CEOProjectsPage />;
             case 'invoices':
