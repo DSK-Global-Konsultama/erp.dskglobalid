@@ -3,7 +3,7 @@ import { Eye } from 'lucide-react';
 import { Card, CardContent } from '../../../../components/ui/card';
 import { Button } from '../../../../components/ui/button';
 import { StatusChip } from '../../../leads/ui/shared/StatusChip';
-import { CeoHandoverView } from '../../../handover/components/views/CeoHandoverView';
+import { CeoHandoverPage } from '../../../handover/pages/CeoHandoverPage';
 import type { Handover, Lead, Proposal, EngagementLetter } from '../../../../lib/mock-data';
 import type { ExtendedHandover } from '../../../../lib/projectWorkflowTypes';
 
@@ -25,7 +25,7 @@ export function HandoverTab({ handovers, leads = [], proposals = [], engagementL
     const engagementLetter = engagementLetters.find(el => el.leadId === viewingHandover.leadId);
     
     return (
-      <CeoHandoverView
+      <CeoHandoverPage
         handover={viewingHandover}
         lead={lead}
         proposal={proposal}

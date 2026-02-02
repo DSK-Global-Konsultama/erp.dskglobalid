@@ -3,7 +3,7 @@ import { Plus, Edit, Eye, ArrowRight } from 'lucide-react';
 import { Button } from '../../../../components/ui/button';
 import { StatusChip } from '../shared/StatusChip';
 import { LeadActionGuard } from '../guards/LeadActionGuard';
-import { HandoverForm } from '../../../handover/components/forms/HandoverForm';
+import { BdExecutiveHandoverPage } from '../../../handover/pages/BdExecutiveHandoverPage';
 import type { Handover, Lead, Proposal, EngagementLetter } from '../../../../lib/mock-data';
 import type { ExtendedHandover } from '../../../../lib/projectWorkflowTypes';
 import type { LeadStatus } from '../../model/types';
@@ -139,7 +139,7 @@ export function HandoverMemoTab({
 
   if (showHandoverForm) {
     return (
-      <HandoverForm
+      <BdExecutiveHandoverPage
         handoverId={editingHandover?.id}
         proposalId={leadProposal?.id}
         leadId={leadId}
