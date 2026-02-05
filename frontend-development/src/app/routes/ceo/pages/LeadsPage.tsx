@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LeadsManagementPage, LeadTrackerDetailPage } from '../../../../features/leads/pages/index';
-import { leadApi } from '../../../../features/leads/api/leadApi';
+import { LeadsManagementPage, LeadTrackerDetailPage, leadApi } from '../../../../features/leads';
 import type { Lead } from '../../../../lib/mock-data';
 
 const noop = (..._args: unknown[]) => {};

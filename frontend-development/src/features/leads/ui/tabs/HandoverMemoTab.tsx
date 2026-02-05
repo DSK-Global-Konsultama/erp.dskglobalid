@@ -3,7 +3,7 @@ import { Plus, Edit, Eye, ArrowRight } from 'lucide-react';
 import { Button } from '../../../../components/ui/button';
 import { StatusChip } from '../shared/StatusChip';
 import { LeadActionGuard } from '../guards/LeadActionGuard';
-import { BdExecutiveHandoverPage } from '../../../handover/pages/BdExecutiveHandoverPage';
+import { BdExecutiveHandoverPage } from '../../../handover';
 import type { Handover, Lead, Proposal, EngagementLetter } from '../../../../lib/mock-data';
 import type { ExtendedHandover } from '../../../../lib/projectWorkflowTypes';
 import type { LeadStatus } from '../../model/types';

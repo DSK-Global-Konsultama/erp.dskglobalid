@@ -1,4 +1,4 @@
-import { LeadsManagementPage } from '../../../features/leads/pages/index';
+import { LeadsManagementPage } from '../../../features/leads';
 
 interface BDMEOProps {
   userName: string;

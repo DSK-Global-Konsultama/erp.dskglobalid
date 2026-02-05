@@ -1,4 +1,4 @@
-import { LeadInboxPage } from '../../../../features/leads/pages/index';
+import { LeadInboxPage } from '../../../../features/leads';
 
 export function InboxPage() {
   return <LeadInboxPage />;

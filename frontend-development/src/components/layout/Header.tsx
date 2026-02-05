@@ -1,6 +1,6 @@
 import { Bell, ArrowLeft } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { LeadDetailHeaderBar } from '../../features/leads/ui/detail/LeadDetailHeaderBar';
+import { LeadDetailHeaderBar } from '../../features/leads';
 
 type UserRole = 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'ITSpecialist' | 'SuperAdmin';
 

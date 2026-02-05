@@ -3,7 +3,7 @@ import { Eye } from 'lucide-react';
 import { Card, CardContent } from '../../../../components/ui/card';
 import { Button } from '../../../../components/ui/button';
 import { Badge } from '../../../../components/ui/badge';
-import { EngagementLetterUploadModal } from '../../../leads/ui/modals/EngagementLetterUploadModal';
+import { EngagementLetterUploadModal } from '../../../leads';
 import type { Lead, EngagementLetter } from '../../../../lib/mock-data';
 
 interface ELTabProps {

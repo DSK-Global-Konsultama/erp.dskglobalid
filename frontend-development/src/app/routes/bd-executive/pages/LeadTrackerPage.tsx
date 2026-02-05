@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LeadsManagementPage, LeadTrackerDetailPage, type LeadStatus } from '../../../../features/leads/pages/index';
-import { leadApi } from '../../../../features/leads/api/leadApi';
+import { LeadsManagementPage, LeadTrackerDetailPage, leadApi, type LeadStatus } from '../../../../features/leads';
 import type { Lead, Meeting, Notulensi, Proposal, EngagementLetter, Handover } from '../../../../lib/mock-data';
 
 interface LeadTrackerPageProps {

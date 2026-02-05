@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Eye } from 'lucide-react';
 import { Card, CardContent } from '../../../../components/ui/card';
 import { Button } from '../../../../components/ui/button';
-import { StatusChip } from '../../../leads/ui/shared/StatusChip';
-import { CeoHandoverPage } from '../../../handover/pages/CeoHandoverPage';
+import { StatusChip } from '../../../leads';
+import { CeoHandoverPage } from '../../../handover';
 import type { Handover, Lead, Proposal, EngagementLetter } from '../../../../lib/mock-data';
 import type { ExtendedHandover } from '../../../../lib/projectWorkflowTypes';
 
