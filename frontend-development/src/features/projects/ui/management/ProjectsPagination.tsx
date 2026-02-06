@@ -1,6 +1,6 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
 
-interface ProjectPaginationProps {
+interface ProjectsPaginationProps {
   currentPage: number;
   totalPages: number;
   itemsPerPage: number;
@@ -10,7 +10,7 @@ interface ProjectPaginationProps {
   onItemsPerPageChange: (itemsPerPage: number) => void;
 }
 
-export function ProjectPagination({
+export function ProjectsPagination({
   currentPage,
   totalPages,
   itemsPerPage,
@@ -18,7 +18,7 @@ export function ProjectPagination({
   paginatedItemsCount,
   onPageChange,
   onItemsPerPageChange,
-}: ProjectPaginationProps) {
+}: ProjectsPaginationProps) {
   if (totalItems === 0) return null;
 
   return (
@@ -49,7 +49,7 @@ export function ProjectPagination({
         </div>
       </div>
       <div className="flex gap-2">
-        <button 
+        <button
           className="h-8 px-3 rounded-md border bg-background text-foreground hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-all"
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
@@ -59,7 +59,7 @@ export function ProjectPagination({
         <button className="h-8 px-3 rounded-md bg-white text-black border border-black text-sm font-medium">
           {currentPage}
         </button>
-        <button 
+        <button
           className="h-8 px-3 rounded-md border bg-background text-foreground hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-all"
           onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages}
@@ -70,4 +70,3 @@ export function ProjectPagination({
     </div>
   );
 }
-

@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { UserPlus, AlertCircle, Clock } from 'lucide-react';
 
 interface ProjectStatsCardsProps {
@@ -33,7 +33,9 @@ export function ProjectStatsCards({
           <AlertCircle className="h-4 w-4 text-orange-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold text-orange-600">{projectsWaitingPayment}</div>
+          <div className="text-2xl font-semibold text-orange-600">
+            {projectsWaitingPayment}
+          </div>
           <p className="text-xs text-gray-500 mt-1">Belum bisa dimulai</p>
         </CardContent>
       </Card>
@@ -44,7 +46,9 @@ export function ProjectStatsCards({
           <Clock className="h-4 w-4 text-blue-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold text-blue-600">{projectsInProgress}</div>
+          <div className="text-2xl font-semibold text-blue-600">
+            {projectsInProgress}
+          </div>
           <p className="text-xs text-gray-500 mt-1">Sedang dikerjakan</p>
         </CardContent>
       </Card>
@@ -55,11 +59,12 @@ export function ProjectStatsCards({
           <AlertCircle className="h-4 w-4 text-yellow-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold text-yellow-600">{projectsWaitingFinal}</div>
+          <div className="text-2xl font-semibold text-yellow-600">
+            {projectsWaitingFinal}
+          </div>
           <p className="text-xs text-gray-500 mt-1">Selesai, tagih final</p>
         </CardContent>
       </Card>
     </div>
   );
 }
-

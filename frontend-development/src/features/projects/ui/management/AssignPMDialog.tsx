@@ -1,8 +1,21 @@
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
-import { Button } from '../../../components/ui/button';
-import { Label } from '../../../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
-import { projectManagers } from '../../../lib/mock-data';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../../../components/ui/dialog';
+import { Button } from '../../../../components/ui/button';
+import { Label } from '../../../../components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../../../components/ui/select';
+import { projectManagers } from '../../../../lib/mock-data';
 
 interface AssignPMDialogProps {
   open: boolean;
@@ -27,9 +40,7 @@ export function AssignPMDialog({
         <DialogHeader>
           <DialogTitle>Assign Project Manager</DialogTitle>
           {dialogDescription && (
-            <DialogDescription>
-              {dialogDescription}
-            </DialogDescription>
+            <DialogDescription>{dialogDescription}</DialogDescription>
           )}
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -40,8 +51,10 @@ export function AssignPMDialog({
                 <SelectValue placeholder="Pilih PM" />
               </SelectTrigger>
               <SelectContent>
-                {projectManagers.map(pm => (
-                  <SelectItem key={pm} value={pm}>{pm}</SelectItem>
+                {projectManagers.map((pm) => (
+                  <SelectItem key={pm} value={pm}>
+                    {pm}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -57,4 +70,3 @@ export function AssignPMDialog({
     </Dialog>
   );
 }
-

@@ -1,10 +1,12 @@
 import type { Project } from '../../../lib/mock-data';
 import { mockProjects } from '../../../lib/mock-data';
 
-export const projectsService = {
-  getAll: (): Project[] => {
-    return mockProjects;
-  },
+/**
+ * Single entry point for project-related data (mock for now).
+ * Use this instead of importing directly from lib/mock-data.
+ */
+export const projectApi = {
+  getAll: (): Project[] => mockProjects,
 
   getByPM: (pmName: string, projects: Project[]): Project[] => {
     return projects.filter(project => project.assignedPM === pmName);
@@ -33,3 +35,4 @@ export const projectsService = {
   },
 };
 
+export type { Project };
