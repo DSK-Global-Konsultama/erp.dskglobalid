@@ -69,6 +69,19 @@ export interface RevisionComment {
   role?: string; // Optional role (e.g., "CEO", "COO")
 }
 
+/** Handover + project workflow status for WorkflowStepIndicator */
+export type HandoverWorkflowStatus =
+  | 'HANDOVER_DRAFT'
+  | 'SUBMITTED_TO_CEO'
+  | 'APPROVED_BY_CEO'
+  | 'CEO_APPROVED'
+  | 'REVISION_REQUESTED'
+  | 'REJECTED'
+  | 'SENT_TO_PM'
+  | 'PM_ASSIGNED'
+  | 'PM_ACCEPTED'
+  | 'PROJECT_ACTIVE';
+
 export interface ExtendedHandover {
   id?: string;
   documentCode?: string;
@@ -119,5 +132,26 @@ export interface ExtendedHandover {
   scopeLocked?: boolean;
   leadId?: string;
   proposalId?: string;
+}
+
+/** Requirement status: hanya Requested (awal) dan Received. */
+export type RequirementStatus = 'REQUESTED' | 'RECEIVED';
+
+export interface Requirement {
+  id: string;
+  itemName: string;
+  category?: string;
+  status: RequirementStatus;
+  notes?: string;
+  /** Document IDs linked as evidence */
+  evidenceFiles?: string[];
+}
+
+export interface ProjectDocument {
+  id: string;
+  name: string;
+  fileUrl?: string;
+  uploadedAt?: string;
+  uploadedBy?: string;
 }
 

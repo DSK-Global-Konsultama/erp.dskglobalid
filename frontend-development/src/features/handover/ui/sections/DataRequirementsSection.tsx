@@ -7,6 +7,7 @@ import type { SectionId } from '../../model/types';
 
 interface DataRequirementsSectionProps {
   sectionId: SectionId;
+  displayNumber?: number;
   dataRequirements: string[];
   onDataRequirementsChange: (requirements: string[]) => void;
   isExpanded: boolean;
@@ -20,6 +21,7 @@ interface DataRequirementsSectionProps {
 
 export function DataRequirementsSection({
   sectionId,
+  displayNumber,
   dataRequirements,
   onDataRequirementsChange,
   isExpanded,
@@ -34,6 +36,7 @@ export function DataRequirementsSection({
     <Card className="mb-6">
       <SectionHeader
         sectionId={sectionId}
+        displayNumber={displayNumber}
         title="DATA REQUIREMENTS (OUTSTANDING)"
         isExpanded={isExpanded}
         isComplete={isComplete}

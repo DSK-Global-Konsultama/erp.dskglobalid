@@ -60,6 +60,8 @@ export function StatusChip({ status }: StatusChipProps) {
       case 'Sent':
       case 'SENT_TO_PM':
         return 'bg-blue-100 text-blue-700';
+      case 'CONVERTED':
+        return 'bg-green-100 text-green-700';
       case 'SIGNED':
       case 'Signed':
         return 'bg-green-100 text-green-700';
@@ -106,6 +108,9 @@ export function StatusChip({ status }: StatusChipProps) {
     }
     if (status === 'LOCKED') {
       return 'LOCKED';
+    }
+    if (status === 'CONVERTED') {
+      return 'CONVERTED';
     }
 
     if (commercialStages.includes(status)) {

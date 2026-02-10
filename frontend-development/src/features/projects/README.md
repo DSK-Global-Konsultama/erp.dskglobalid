@@ -9,60 +9,57 @@ Struktur mengikuti pola **Leads** (api/model/pages/ui).
 ## Ringkasan Per File (Detail & Spesifik)
 
 ### `api/projectApi.ts`
-**Fungsi:** Single entry point untuk data project (mock).
+**Fungsi:** Single entry point untuk data project (mock). Mock hanya di-import di sini; pages tidak import `lib/mock-data` langsung.
 
 **Untuk apa:**
-- `getAll()`: return semua project dari `mockProjects`.
-- `getByPM(pmName, projects)`: filter project by assigned PM.
-- `getByStatus(status, projects)`: filter project by status.
-- `assignPM(projectId, pmName, projects)`: update project dengan PM baru & status `waiting-first-payment`, return array baru.
-- `assignConsultant(projectId, consultantName, projects)`: update `assignedConsultant`.
-- Export type: `Project`. Semua page hanya ambil data via `projectApi`, tidak import `mockProjects` langsung.
+- `getAll()`: return semua project dari mock.
+- `getByPM(pmName, projects)`, `getByStatus(status, projects)`, `assignPM(...)`, `assignConsultant(...)`.
+- `getProjectIdByHandoverId(handoverId)`: project id jika handover sudah jadi project; null jika belum.
+- `getHandoverIdByProjectId(projectId)`: handover id untuk project (via deal.leadId); null jika tidak ada.
+- `getProjectDetailByHandoverId(handoverId)`: return `ProjectDetailBundle | null` (handover, lead?, proposal?, engagementLetter?, workStartAllowed, paymentGateStatus, workflowDisplayStatus). Dipakai oleh ProjectDetailPage.
+- Export type: `Project`, `ProjectDetailBundle`.
 
 ---
 
 ### `model/types.ts`
-**Fungsi:** Re-export type untuk feature-internal use.
+**Fungsi:** Re-export dan type feature-internal.
 
 **Untuk apa:**
 - Re-export type `Project` dari `lib/mock-data`.
+- `ProjectWorkflowDisplayStatus`: type untuk workflow step indicator saja (HANDOVER_DRAFT, SUBMITTED_TO_CEO, CEO_APPROVED, PM_ASSIGNED, PM_ACCEPTED, PROJECT_ACTIVE). Jangan dipakai untuk list filtering/badges.
 
 ---
 
 ### `model/selectors.ts`
-**Fungsi:** Helper & derived logic untuk project.
+**Fungsi:** Helper & derived logic untuk project. Workflow display hanya untuk detail page (bukan list/badges).
 
 **Untuk apa:**
-- `formatDate(dateString)`: format tanggal ke locale Indonesia (e.g. "5 Feb 2025").
-- `getDaysUntilDue(dueDate)`: hitung sisa hari ke due date (negatif = overdue).
-- `deriveProjectFlags(project)`: return `{ daysUntilDue, isOverdue, isAtRisk, isUrgent }`.
-- `getProjectDisplayStatus(project)`: return status tampilan (overdue, waiting-assignment, in-progress, dll.).
-- `filterProjectsBySearch(projects, searchTerm)`: filter by projectName, clientName, id, assignedPM.
-- `filterProjectsByStatus(projects, filterStatus, getDisplayStatus)`: filter by status tampilan.
-- `sortProjectsByPriority(projects)`: urutan prioritas—waiting-assignment → overdue → near deadline → completed (completed paling bawah, waiting-final-payment di atas completed) → by daysUntilDue.
+- `formatDate`, `getDaysUntilDue`, `deriveProjectFlags(project)`.
+- `getProjectDisplayStatus(project)`: status tampilan list (overdue, waiting-assignment, in-progress, dll.) — pakai project.status, bukan handover.workflowStatus.
+- `mapWorkflowToDisplayStatus(handoverWorkflowStatus)`: map status API ke `ProjectWorkflowDisplayStatus` untuk WorkflowStepIndicator (REVISION_REQUESTED→SUBMITTED_TO_CEO, APPROVED_BY_CEO→CEO_APPROVED, SENT_TO_PM→PM_ASSIGNED). Jangan pakai project.status untuk indicator.
+- `getWorkflowLabel(displayStatus)`: label manusia (Draft, CEO Review, Approved, …).
+- `getWorkflowSteps()`: urutan step untuk WorkflowStepIndicator.
+- `filterProjectsBySearch`, `filterProjectsByStatus`, `sortProjectsByPriority`.
 
 ---
 
 ### `pages/index.ts`
-**Fungsi:** Barrel export pages.
+**Fungsi:** Barrel export pages & types.
 
 **Untuk apa:**
-- Export: `ProjectsManagementPage`.
+- Export: `ProjectsManagementPage`, `ProjectDetailPage`, `ProjectDetailPageProps`, `ProjectDetailTabId`.
 
 ---
 
 ### `pages/ProjectsManagementPage.tsx`
-**Fungsi:** Container utama halaman project management.
+**Fungsi:** Container utama halaman project management. Data hanya dari `projectApi` (tidak import mock).
 
 **Untuk apa:**
 - Props: `userRole`.
-- State: `projects` (dari `projectApi.getAll()`), `isAssignPMOpen`, `selectedProject`, `selectedPM`, `viewMode` (table/card), `searchTerm`, `filterStatus`.
-- Filter COO: hanya project yang bisa di-assign PM atau sudah punya PM.
-- Filter & sort via selectors: `filterProjectsBySearch`, `filterProjectsByStatus`, `sortProjectsByPriority`.
-- Handler: `handleAssignPM` (validasi `canAssignPM`, update state, toast), `completeProject` (validasi progress 100%, update ke `waiting-final-payment`).
-- Stats: `projectsWaitingPM`, `projectsWaitingPayment`, `projectsInProgress`, `projectsWaitingFinal`, `projectsAtRisk`, `projectsOverdue`.
-- Pagination via `useProjectPagination`.
-- Render: `ProjectAlerts`, `ProjectStatsCards`, `ProjectsFilters`, `ProjectsTableView` / `ProjectsCardView`, `AssignPMDialog`.
+- State: `projects` (dari `projectApi.getAll()`), `selectedHandoverId`, `isAssignPMOpen`, `selectedProject`, `selectedPM`, `viewMode`, `searchTerm`, `filterStatus`.
+- Saat user klik "See Details": `handoverId = projectApi.getHandoverIdByProjectId(project.id)`; jika ada, `setSelectedHandoverId(handoverId)` lalu render `<ProjectDetailPage handoverId={...} userRole={...} onBack={() => setSelectedHandoverId(null)} />`. Jika tidak ada handover, toast info.
+- Filter COO, filter & sort via selectors, handler assign/complete, stats, pagination.
+- Render: `ProjectAlerts`, `ProjectStatsCards`, `ProjectsFilters`, Table/Card view, `AssignPMDialog`; atau `ProjectDetailPage` bila `selectedHandoverId` tidak null.
 
 ---
 
@@ -77,6 +74,11 @@ Struktur mengikuti pola **Leads** (api/model/pages/ui).
 
 ---
 
+### `ui/management/ProjectsTableView.tsx`
+**Fungsi:** Tampilan tabel daftar project. Kolom: Project Name, Client, Status, Work Start, Payment Gate, Progress, Internal PIC, PM, Due Date, Aksi. Row styling overdue/at risk. Aksi: COO (Assign PM / See Details), PM (Selesai jika progress 100%). Pagination via `ProjectsPagination`.
+
+---
+
 ### `ui/management/ProjectsFilters.tsx`
 **Fungsi:** UI filter & search.
 
@@ -88,15 +90,14 @@ Struktur mengikuti pola **Leads** (api/model/pages/ui).
 
 ---
 
-### `ui/management/ProjectsTableView.tsx`
-**Fungsi:** Tampilan tabel daftar project.
+### `pages/ProjectDetailPage.tsx`
+**Fungsi:** Halaman detail project (akses COO & PM saja; lain dapat "Access Denied" inline).
 
 **Untuk apa:**
-- Kolom: Project Name, Client, Status, Work Start, Payment Gate, Progress, Internal PIC (BD), PM, Due Date, Aksi.
-- Resolve handover dari `mockHandovers` (by projectId atau lead+service) untuk project title, company, internal PIC, client PIC.
-- Row styling: merah (overdue), orange (at risk). Status Work Start: Allowed (hijau) / Waiting (merah). Progress bar + persentase.
-- Aksi: COO → "Review and Assign PM" / "See Details"; PM → Badge "Tunggu Payment" / Tombol "Selesai" (jika progress 100%) / Badge status lain.
-- Pagination di bawah tabel via `ProjectsPagination`.
+- Props: `handoverId`, `userRole`, `onBack`.
+- Data: `projectApi.getProjectDetailByHandoverId(handoverId)` → bundle (handover, lead, proposal, engagementLetter, workStartAllowed, paymentGateStatus, workflowDisplayStatus). Status tampilan workflow dari `mapWorkflowToDisplayStatus` + `getWorkflowLabel` (selectors).
+- UI: `ProjectDetailHeaderBar` (title, subtitle, status label, meta ID • Period, back), `WorkStartAlert` (hijau/merah + paymentGateStatus), `WorkflowStepCard` (raw workflow status), `ProjectTabs` (overview, handover, requirements, documents, progress, activity — hanya handover berisi; lain Coming Soon).
+- Jika bundle null: "Project Not Found" + Back to Projects.
 
 ---
 
@@ -192,7 +193,7 @@ Struktur mengikuti pola **Leads** (api/model/pages/ui).
 **Fungsi:** Public entry point feature projects.
 
 **Untuk apa:**
-- Export: `ProjectsManagementPage`, `projectApi`, `ProjectsPagination`, `ProjectStatusBadge`.
+- Export: pages dari `./pages` (ProjectsManagementPage, ProjectDetailPage, ProjectDetailPageProps, ProjectDetailTabId), `projectApi`, `ProjectDetailHeaderBar`, `ProjectsPagination`, `ProjectStatusBadge`.
 
 ---
 
@@ -207,7 +208,8 @@ features/projects/
 │   └── selectors.ts
 ├── pages/
 │   ├── index.ts
-│   └── ProjectsManagementPage.tsx
+│   ├── ProjectsManagementPage.tsx
+│   └── ProjectDetailPage.tsx
 ├── hooks/
 │   └── useProjectPagination.ts
 ├── ui/
@@ -219,11 +221,21 @@ features/projects/
 │   │   ├── AssignPMDialog.tsx
 │   │   ├── ProjectAlerts.tsx
 │   │   └── ProjectStatsCards.tsx
+│   ├── detail/
+│   │   ├── ProjectDetailHeaderBar.tsx
+│   │   ├── WorkStartAlert.tsx
+│   │   ├── WorkflowStepCard.tsx
+│   │   ├── WorkflowStepIndicator.tsx
+│   │   └── ProjectTabs.tsx
+│   ├── tabs/
+│   │   ├── ProjectHandoverTab.tsx
+│   │   └── ComingSoonTab.tsx
 │   ├── guards/
 │   │   ├── canProject.ts
 │   │   ├── ProjectActionGuard.tsx
 │   │   └── ProjectStateGuard.tsx
 │   └── shared/
+│       ├── AccessDenied.tsx
 │       └── ProjectStatusBadge.tsx
 ├── index.tsx
 └── README.md
@@ -248,10 +260,12 @@ features/projects/
 ## Penggunaan
 
 ```tsx
-import { ProjectsManagementPage } from '@/features/projects';
+import { ProjectsManagementPage, ProjectDetailPage, projectApi, ProjectDetailHeaderBar } from '@/features/projects';
 
 <ProjectsManagementPage userRole={currentUser?.role} />
 ```
+
+Detail page dibuka dari dalam ProjectsManagementPage saat user klik "See Details" (handoverId dari `projectApi.getHandoverIdByProjectId(project.id)`). Props: `handoverId`, `userRole`, `onBack`. Hanya COO & PM boleh akses.
 
 **Integrasi Route:** CEO & COO → `ProjectsPage.tsx` → path `projects`
 

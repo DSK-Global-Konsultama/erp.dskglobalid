@@ -17,7 +17,8 @@ export type HandoverStatus =
   | 'NOT_STARTED'
   | 'DRAFT'
   | 'WAITING_CEO'
-  | 'CEO_APPROVED';
+  | 'CEO_APPROVED'
+  | 'CONVERTED';
 
 export interface LeadTrackerRowMeta {
   commercialStage: CommercialStage;
@@ -63,6 +64,9 @@ export function deriveLeadTrackerRowMeta(
           break;
         case 'APPROVED':
           handoverStatus = 'CEO_APPROVED';
+          break;
+        case 'CONVERTED':
+          handoverStatus = 'CONVERTED';
           break;
         case 'REJECTED':
           handoverStatus = 'DRAFT';
@@ -149,6 +153,8 @@ function getHandoverSubstatusLabel(status: Handover['status']): string {
       return 'Waiting CEO Approval';
     case 'APPROVED':
       return 'CEO Approved';
+    case 'CONVERTED':
+      return 'CONVERTED';
     case 'REJECTED':
       return 'Revision Requested';
     case 'SENT_TO_PM':

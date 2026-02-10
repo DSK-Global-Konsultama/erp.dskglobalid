@@ -20,6 +20,7 @@ type ExternalContact = {
 
 interface CommunicationProtocolSectionProps {
   sectionId: SectionId;
+  displayNumber?: number;
   communicationInternal: string;
   communicationExternal: string;
   externalContacts: ExternalContact[];
@@ -38,6 +39,7 @@ interface CommunicationProtocolSectionProps {
 
 export function CommunicationProtocolSection({
   sectionId,
+  displayNumber,
   communicationInternal,
   communicationExternal,
   externalContacts,
@@ -57,6 +59,7 @@ export function CommunicationProtocolSection({
     <Card className="mb-6">
       <SectionHeader
         sectionId={sectionId}
+        displayNumber={displayNumber}
         title="COMMUNICATION PROTOCOL"
         isExpanded={isExpanded}
         isComplete={isComplete}

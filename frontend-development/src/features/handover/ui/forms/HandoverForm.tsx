@@ -35,6 +35,8 @@ export interface HandoverFormProps {
   onBack?: () => void;
   /** Optional action buttons (e.g. Save Draft, Submit, Convert) rendered inside the document card */
   actionButtons?: React.ReactNode;
+  /** When false, hide the Form Completion progress card (e.g. on project detail Handover tab). Default true. */
+  showFormCompletion?: boolean;
 }
 
 const VISIBLE_SECTIONS = ALL_SECTIONS;
@@ -51,13 +53,16 @@ export function HandoverForm({
   revisionComments = [],
   hiddenSections = [],
   onBack,
-  actionButtons
+  actionButtons,
+  showFormCompletion = true
 }: HandoverFormProps) {
   const isApproved = existingHandover?.workflowStatus === 'APPROVED_BY_CEO';
   const effectiveReadOnly = readOnly || isApproved;
   const isScopeLocked = existingHandover?.scopeLocked ?? false;
 
   const visibleIds = VISIBLE_SECTIONS.filter(id => !hiddenSections.includes(id));
+  /** Nomor urut tampilan 1–8 agar tidak loncat (1,2,3,7,8,9,10,11 → 1,2,3,4,5,6,7,8) */
+  const getDisplayNumber = useCallback((sectionId: SectionId) => visibleIds.indexOf(sectionId) + 1, [visibleIds]);
 
   const updateDraft = useCallback(<K extends keyof HandoverDraft>(key: K, value: HandoverDraft[K]) => {
     onDraftChange({ ...draft, [key]: value });
@@ -120,28 +125,31 @@ export function HandoverForm({
         </div>
       </div>
 
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">Form Completion</span>
-            <span className="text-sm font-medium text-gray-900">
-              {visibleIds.filter(id => getSectionCompletion(draft, id)).length} / {visibleIds.length} Sections
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-blue-600 h-2 rounded-full transition-all"
-              style={{
-                width: `${(visibleIds.filter(id => getSectionCompletion(draft, id)).length / Math.max(visibleIds.length, 1)) * 100}%`
-              }}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {showFormCompletion && (
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">Form Completion</span>
+              <span className="text-sm font-medium text-gray-900">
+                {visibleIds.filter(id => getSectionCompletion(draft, id)).length} / {visibleIds.length} Sections
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-blue-600 h-2 rounded-full transition-all"
+                style={{
+                  width: `${(visibleIds.filter(id => getSectionCompletion(draft, id)).length / Math.max(visibleIds.length, 1)) * 100}%`
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {!hiddenSections.includes(1) && (
         <ProjectInformationSection
           sectionId={1}
+          displayNumber={getDisplayNumber(1)}
           projectName={draft.projectName}
           clientName={draft.clientName}
           companyGroup={draft.companyGroup}
@@ -178,6 +186,7 @@ export function HandoverForm({
       {!hiddenSections.includes(2) && (
         <BackgroundSummarySection
           sectionId={2}
+          displayNumber={getDisplayNumber(2)}
           background={draft.background}
           onBackgroundChange={(v) => updateDraft('background', v)}
           isExpanded={expandedSections.has(2)}
@@ -194,6 +203,7 @@ export function HandoverForm({
       {!hiddenSections.includes(3) && (
         <ScopeOfWorkSection
           sectionId={3}
+          displayNumber={getDisplayNumber(3)}
           scopeIncluded={draft.scopeIncluded}
           scopeExclusions={draft.scopeExclusions}
           deliverables={draft.deliverables}
@@ -216,6 +226,7 @@ export function HandoverForm({
       {!hiddenSections.includes(4) && (
         <FeeStructureSection
           sectionId={4}
+          displayNumber={getDisplayNumber(4)}
           feeStructure={draft.feeStructure}
           paymentTermsText={draft.paymentTermsText}
           onFeeStructureChange={(v) => updateDraft('feeStructure', v)}
@@ -233,6 +244,7 @@ export function HandoverForm({
       {!hiddenSections.includes(5) && (
         <ClientDocumentsSection
           sectionId={5}
+          displayNumber={getDisplayNumber(5)}
           documentsReceived={draft.documentsReceived}
           onDocumentsReceivedChange={(v) => updateDraft('documentsReceived', v)}
           isExpanded={expandedSections.has(5)}
@@ -248,6 +260,7 @@ export function HandoverForm({
       {!hiddenSections.includes(6) && (
         <DataRequirementsSection
           sectionId={6}
+          displayNumber={getDisplayNumber(6)}
           dataRequirements={draft.dataRequirements}
           onDataRequirementsChange={(v) => updateDraft('dataRequirements', v)}
           isExpanded={expandedSections.has(6)}
@@ -263,6 +276,7 @@ export function HandoverForm({
       {!hiddenSections.includes(7) && (
         <RisksSection
           sectionId={7}
+          displayNumber={getDisplayNumber(7)}
           risks={draft.risks}
           onRisksChange={(v) => updateDraft('risks', v)}
           isExpanded={expandedSections.has(7)}
@@ -278,6 +292,7 @@ export function HandoverForm({
       {!hiddenSections.includes(8) && (
         <CommunicationProtocolSection
           sectionId={8}
+          displayNumber={getDisplayNumber(8)}
           communicationInternal={draft.communicationInternal}
           communicationExternal={draft.communicationExternal}
           externalContacts={draft.externalContacts}
@@ -298,6 +313,7 @@ export function HandoverForm({
       {!hiddenSections.includes(9) && (
         <TeamAssignmentSection
           sectionId={9}
+          displayNumber={getDisplayNumber(9)}
           preliminaryTeam={draft.preliminaryTeam}
           onPreliminaryTeamChange={(v) => updateDraft('preliminaryTeam', v)}
           isExpanded={expandedSections.has(9)}
@@ -313,6 +329,7 @@ export function HandoverForm({
       {!hiddenSections.includes(10) && (
         <HandoverChecklistSection
           sectionId={10}
+          displayNumber={getDisplayNumber(10)}
           handoverChecklist={draft.handoverChecklist}
           onHandoverChecklistChange={(v) => updateDraft('handoverChecklist', v)}
           isExpanded={expandedSections.has(10)}
@@ -328,6 +345,7 @@ export function HandoverForm({
       {!hiddenSections.includes(11) && (
         <SignOffSection
           sectionId={11}
+          displayNumber={getDisplayNumber(11)}
           signOffs={draft.signOffs}
           onSignOffsChange={(v) => updateDraft('signOffs', v)}
           isExpanded={expandedSections.has(11)}

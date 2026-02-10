@@ -17,6 +17,7 @@ type SignOff = {
 
 interface SignOffSectionProps {
   sectionId: SectionId;
+  displayNumber?: number;
   signOffs: SignOff[];
   onSignOffsChange: (signOffs: SignOff[]) => void;
   isExpanded: boolean;
@@ -30,6 +31,7 @@ interface SignOffSectionProps {
 
 export function SignOffSection({
   sectionId,
+  displayNumber,
   signOffs,
   onSignOffsChange,
   isExpanded,
@@ -44,6 +46,7 @@ export function SignOffSection({
     <Card className="mb-6">
       <SectionHeader
         sectionId={sectionId}
+        displayNumber={displayNumber}
         title="SIGN-OFF"
         isExpanded={isExpanded}
         isComplete={isComplete}

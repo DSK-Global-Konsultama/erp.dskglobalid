@@ -7,6 +7,7 @@ import type { SectionId } from '../../model/types';
 
 interface ProjectInformationSectionProps {
   sectionId: SectionId;
+  displayNumber?: number;
   projectName: string;
   clientName: string;
   companyGroup: string;
@@ -41,6 +42,7 @@ interface ProjectInformationSectionProps {
 
 export function ProjectInformationSection({
   sectionId,
+  displayNumber,
   projectName,
   clientName,
   companyGroup,
@@ -76,6 +78,7 @@ export function ProjectInformationSection({
     <Card className="mb-6">
       <SectionHeader
         sectionId={sectionId}
+        displayNumber={displayNumber}
         title="PROJECT INFORMATION"
         isExpanded={isExpanded}
         isComplete={isComplete}

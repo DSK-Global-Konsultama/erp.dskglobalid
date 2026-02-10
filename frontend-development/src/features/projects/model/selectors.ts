@@ -1,4 +1,59 @@
 import type { Project } from '../../../lib/mock-data';
+import type { ProjectWorkflowDisplayStatus } from './types';
+
+/** Ordered steps for WorkflowStepIndicator (do not use project.status). */
+const WORKFLOW_STEPS: { key: ProjectWorkflowDisplayStatus; label: string }[] = [
+  { key: 'HANDOVER_DRAFT', label: 'Draft' },
+  { key: 'SUBMITTED_TO_CEO', label: 'CEO Review' },
+  { key: 'CEO_APPROVED', label: 'Approved' },
+  { key: 'PM_ASSIGNED', label: 'PM Assigned' },
+  { key: 'PM_ACCEPTED', label: 'PM Accepted' },
+  { key: 'PROJECT_ACTIVE', label: 'Active' },
+];
+
+/**
+ * Map API handover workflow status to display status for WorkflowStepIndicator.
+ * Do NOT use project.status for WorkflowStepIndicator.
+ */
+export function mapWorkflowToDisplayStatus(
+  handoverWorkflowStatus: string
+): ProjectWorkflowDisplayStatus {
+  switch (handoverWorkflowStatus) {
+    case 'REVISION_REQUESTED':
+      return 'SUBMITTED_TO_CEO';
+    case 'APPROVED_BY_CEO':
+      return 'CEO_APPROVED';
+    case 'SENT_TO_PM':
+      return 'PM_ASSIGNED';
+    default:
+      if (
+        handoverWorkflowStatus === 'HANDOVER_DRAFT' ||
+        handoverWorkflowStatus === 'SUBMITTED_TO_CEO' ||
+        handoverWorkflowStatus === 'CEO_APPROVED' ||
+        handoverWorkflowStatus === 'PM_ASSIGNED' ||
+        handoverWorkflowStatus === 'PM_ACCEPTED' ||
+        handoverWorkflowStatus === 'PROJECT_ACTIVE'
+      ) {
+        return handoverWorkflowStatus as ProjectWorkflowDisplayStatus;
+      }
+      return 'HANDOVER_DRAFT';
+  }
+}
+
+/**
+ * Human-readable label for workflow display status (for header badge / step label).
+ */
+export function getWorkflowLabel(displayStatus: ProjectWorkflowDisplayStatus | string): string {
+  const step = WORKFLOW_STEPS.find((s) => s.key === displayStatus);
+  return step?.label ?? displayStatus.replace(/_/g, ' ') ?? '';
+}
+
+/**
+ * Ordered workflow steps for WorkflowStepIndicator.
+ */
+export function getWorkflowSteps(): { key: ProjectWorkflowDisplayStatus; label: string }[] {
+  return [...WORKFLOW_STEPS];
+}
 
 /**
  * Format date to Indonesian locale

@@ -70,6 +70,30 @@ const TOKEN_KEY = 'erp_auth_token';
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
 const REMEMBER_ME_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
+/** Demo accounts untuk development / preview (login tanpa backend). Password: demo123 */
+const DEMO_ACCOUNTS: Record<string, { password: string; user: User }> = {
+  'diana@dskglobal.com': {
+    password: 'demo123',
+    user: {
+      id: 'U009',
+      username: 'diana@dskglobal.com',
+      name: 'Diana Putri',
+      role: 'PM',
+      email: 'diana@dskglobal.com',
+    },
+  },
+  'diana.putri': {
+    password: 'demo123',
+    user: {
+      id: 'U009',
+      username: 'diana.putri',
+      name: 'Diana Putri',
+      role: 'PM',
+      email: 'diana@dskglobal.com',
+    },
+  },
+};
+
 interface SessionData {
   user: User;
   token?: string;
@@ -131,8 +155,23 @@ const mapBackendUserToFrontend = (beUser: BackendUser): User => {
 };
 
 export const authService = {
-  // Login function with remember me support (calls backend API)
+  // Login function with remember me support (calls backend API; demo accounts skip API)
   login: async (credentials: LoginCredentials, rememberMe: boolean = false): Promise<User> => {
+    const identifier = (credentials.username || '').trim().toLowerCase();
+    const demo = DEMO_ACCOUNTS[identifier] || DEMO_ACCOUNTS[credentials.username?.trim() ?? ''];
+    if (demo && demo.password === credentials.password) {
+      const sessionData: SessionData = {
+        user: demo.user,
+        token: undefined,
+        timestamp: Date.now(),
+        rememberMe,
+      };
+      localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+      const expiryTime = Date.now() + (rememberMe ? REMEMBER_ME_DURATION : SESSION_TIMEOUT);
+      localStorage.setItem(SESSION_EXPIRY_KEY, expiryTime.toString());
+      return demo.user;
+    }
+
     const base = getApiBase();
 
     let response: Response;

@@ -22,6 +22,7 @@ type Milestone = {
 
 interface ScopeOfWorkSectionProps {
   sectionId: SectionId;
+  displayNumber?: number;
   scopeIncluded: string[];
   scopeExclusions: string[];
   deliverables: Deliverable[];
@@ -42,6 +43,7 @@ interface ScopeOfWorkSectionProps {
 
 export function ScopeOfWorkSection({
   sectionId,
+  displayNumber,
   scopeIncluded,
   scopeExclusions,
   deliverables,
@@ -65,6 +67,7 @@ export function ScopeOfWorkSection({
     <Card className="mb-6">
       <SectionHeader
         sectionId={sectionId}
+        displayNumber={displayNumber}
         title="FINALIZED SCOPE OF WORK"
         isExpanded={isExpanded}
         isComplete={isComplete}

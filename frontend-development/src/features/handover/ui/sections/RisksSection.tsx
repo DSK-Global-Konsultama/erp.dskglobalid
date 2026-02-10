@@ -7,6 +7,7 @@ import type { SectionId } from '../../model/types';
 
 interface RisksSectionProps {
   sectionId: SectionId;
+  displayNumber?: number;
   risks: string[];
   onRisksChange: (risks: string[]) => void;
   isExpanded: boolean;
@@ -20,6 +21,7 @@ interface RisksSectionProps {
 
 export function RisksSection({
   sectionId,
+  displayNumber,
   risks,
   onRisksChange,
   isExpanded,
@@ -34,6 +36,7 @@ export function RisksSection({
     <Card className="mb-6">
       <SectionHeader
         sectionId={sectionId}
+        displayNumber={displayNumber}
         title="KEY RISKS / RED FLAGS"
         isExpanded={isExpanded}
         isComplete={isComplete}

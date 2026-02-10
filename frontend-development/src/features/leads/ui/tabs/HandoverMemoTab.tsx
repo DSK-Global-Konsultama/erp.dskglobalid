@@ -4,6 +4,7 @@ import { Button } from '../../../../components/ui/button';
 import { StatusChip } from '../shared/StatusChip';
 import { LeadActionGuard } from '../guards/LeadActionGuard';
 import { BdExecutiveHandoverPage } from '../../../handover';
+import { projectApi } from '../../../projects/api/projectApi';
 import type { Handover, Lead, Proposal, EngagementLetter } from '../../../../lib/mock-data';
 import type { ExtendedHandover } from '../../../../lib/projectWorkflowTypes';
 import type { LeadStatus } from '../../model/types';
@@ -74,7 +75,7 @@ export function HandoverMemoTab({
       preliminaryTeam: handoverWithExtras.preliminaryTeam,
       handoverChecklist: handoverWithExtras.handoverChecklist,
       signOffs: handoverWithExtras.signOffs,
-      workflowStatus: handoverWithExtras.workflowStatus || (handover.status === 'WAITING_CEO_APPROVAL' ? 'SUBMITTED_TO_CEO' : handover.status === 'APPROVED' ? 'APPROVED_BY_CEO' : 'HANDOVER_DRAFT'),
+      workflowStatus: handoverWithExtras.workflowStatus || (handover.status === 'WAITING_CEO_APPROVAL' ? 'SUBMITTED_TO_CEO' : handover.status === 'APPROVED' || handover.status === 'CONVERTED' ? 'APPROVED_BY_CEO' : 'HANDOVER_DRAFT'),
       submittedToCeoAt: handoverWithExtras.submittedToCeoAt,
       createdAt: handover.createdAt,
       lastModifiedAt: handoverWithExtras.lastModifiedAt,
@@ -137,6 +138,10 @@ export function HandoverMemoTab({
     onUpdateLeadStatus(leadId, 'HANDOVER_SUBMITTED' as LeadStatus);
   };
 
+  const isEditingHandoverConverted = editingHandover?.id
+    ? !!projectApi.getProjectIdByHandoverId(editingHandover.id)
+    : false;
+
   if (showHandoverForm) {
     return (
       <BdExecutiveHandoverPage
@@ -162,6 +167,7 @@ export function HandoverMemoTab({
         }}
         engagementLetter={leadEngagementLetter ? { signedDate: leadEngagementLetter.signedDate, status: leadEngagementLetter.status } : undefined}
         onConvertToProject={onConvertToProject}
+        showConvertButton={!isEditingHandoverConverted}
       />
     );
   }
@@ -195,6 +201,7 @@ export function HandoverMemoTab({
             const handoverWithExtras = handover as Handover & { serviceLine?: string; projectPeriod?: string };
             const serviceLine = handoverWithExtras.serviceLine || leadProposal?.service || '';
             const projectPeriod = handoverWithExtras.projectPeriod || '';
+            const isConverted = !!projectApi.getProjectIdByHandoverId(handover.id);
             return (
               <div
                 key={handover.id}
@@ -204,7 +211,7 @@ export function HandoverMemoTab({
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h4>{handover.projectTitle}</h4>
-                      <StatusChip status={handover.status} />
+                      <StatusChip status={isConverted ? 'CONVERTED' : handover.status} />
                     </div>
                     <p className="text-sm text-gray-600">
                       {lead?.company || handover.clientName}
@@ -248,7 +255,7 @@ export function HandoverMemoTab({
                     </button>
                   ) : (
                   <LeadActionGuard action="edit" readOnly={readOnly}>
-                  {handover.status === 'APPROVED' ? (
+                  {(handover.status === 'APPROVED' || handover.status === 'CONVERTED') ? (
                     <>
                       <button
                         onClick={() => {
@@ -260,16 +267,18 @@ export function HandoverMemoTab({
                         <Eye className="w-4 h-4 mr-2" />
                         View Details
                       </button>
-                      <button
-                        onClick={() => {
-                          if (onConvertToProject) onConvertToProject(handover.id);
-                          else console.log('Convert to project:', handover.id);
-                        }}
-                        className="flex-1 px-3 py-2 rounded-lg text-sm cursor-pointer border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center"
-                      >
-                        <ArrowRight className="w-4 h-4 mr-2" />
-                        Convert to Project
-                      </button>
+                      {handover.status === 'APPROVED' && !isConverted && (
+                        <button
+                          onClick={() => {
+                            if (onConvertToProject) onConvertToProject(handover.id);
+                            else console.log('Convert to project:', handover.id);
+                          }}
+                          className="flex-1 px-3 py-2 rounded-lg text-sm cursor-pointer border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center"
+                        >
+                          <ArrowRight className="w-4 h-4 mr-2" />
+                          Convert to Project
+                        </button>
+                      )}
                     </>
                   ) : handover.status === 'WAITING_CEO_APPROVAL' && (handover as any).workflowStatus !== 'REVISION_REQUESTED' ? (
                     <button

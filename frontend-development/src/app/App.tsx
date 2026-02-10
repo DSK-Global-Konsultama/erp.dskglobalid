@@ -33,7 +33,6 @@ import { TicketingPage as BDMEOTicketingPage } from './routes/bd-meo/pages/Ticke
 import { BDExecutiveDashboard } from './routes/bd-executive';
 import { TicketingPage as BDExecutiveTicketingPage } from './routes/bd-executive/pages/TicketingPage';
 import { BankDataPage as BDExecutiveBankDataPage } from './routes/bd-executive/pages/BankDataPage';
-import { PMDashboard } from './routes/pm';
 import { TicketingPage as PMTicketingPage } from './routes/pm/pages/TicketingPage';
 import { AdminDashboard } from './routes/admin';
 import { TicketingPage as AdminTicketingPage } from './routes/admin/pages/TicketingPage';
@@ -49,6 +48,7 @@ import { TicketingPage as SuperAdminTicketingPage } from './routes/superadmin/pa
 
 // Shared dashboard for BOD/CEO/COO exports
 import { BODDashboard } from '../features/bod-dashboard';
+import { ProjectsManagementPage } from '../features/projects';
 
 // Auth imports
 import { AuthPage } from './routes/auth/AuthPage';
@@ -85,6 +85,7 @@ export default function App() {
   const [formBuilderDetail, setFormBuilderDetail] = useState<{
     campaignName: string;
   } | null>(null);
+  const [projectDetail, setProjectDetail] = useState<{ onBack: () => void } | null>(null);
   const resetDetailRef = useRef<(() => void) | null>(null);
   const resetCampaignDetailRef = useRef<(() => void) | null>(null);
   const resetFormBuilderDetailRef = useRef<(() => void) | null>(null);
@@ -203,7 +204,12 @@ export default function App() {
     if (formBuilderDetail && path !== 'campaigns') {
       setFormBuilderDetail(null);
     }
-    
+
+    // Reset project detail when navigating away from projects page
+    if (projectDetail && path !== 'projects') {
+      setProjectDetail(null);
+    }
+
     setActiveNav(path);
     // Sync tab state for BD-Executive when clicking sidebar
     if (currentUser?.role === 'BD-Executive' && path === 'leads') {
@@ -353,7 +359,7 @@ export default function App() {
             case 'leads':
               return <COOLeadsPage />;
             case 'projects':
-              return <COOProjectsPage />;
+              return <COOProjectsPage onProjectDetailChange={setProjectDetail} />;
             case 'invoices':
               return <COOInvoicesPage />;
             default:
@@ -426,7 +432,13 @@ export default function App() {
             />
           );
         } else if (currentUser.role === 'PM') {
-          return <PMDashboard pmName={currentUser.name} />;
+          return (
+            <ProjectsManagementPage
+              userRole="PM"
+              currentUserName={currentUser.name}
+              onProjectDetailChange={setProjectDetail}
+            />
+          );
         } else if (currentUser.role === 'Admin') {
           return <AdminDashboard />;
         }
@@ -491,6 +503,12 @@ export default function App() {
                 if (resetFormBuilderDetailRef.current) {
                   resetFormBuilderDetailRef.current();
                 }
+              }
+            } : undefined}
+            projectDetail={projectDetail ? {
+              onBack: () => {
+                projectDetail.onBack();
+                setProjectDetail(null);
               }
             } : undefined}
           />

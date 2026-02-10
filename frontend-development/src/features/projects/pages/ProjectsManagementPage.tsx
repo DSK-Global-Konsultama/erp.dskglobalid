@@ -25,13 +25,18 @@ import { ProjectAlerts } from '../ui/management/ProjectAlerts';
 import { ProjectStatsCards } from '../ui/management/ProjectStatsCards';
 import { AssignPMDialog } from '../ui/management/AssignPMDialog';
 import { ProjectsFilters } from '../ui/management/ProjectsFilters';
-import type { Project } from '../../../lib/mock-data';
+import { ProjectDetailPage } from './ProjectDetailPage';
+import type { Project } from '../api/projectApi';
 
 interface ProjectsManagementPageProps {
   userRole?: UserRole;
+  /** For PM: filter to projects assigned to this user. Ignored for COO/CEO. */
+  currentUserName?: string;
+  /** When showing project detail, call with { onBack }; when showing list, call with null. Used for global header. */
+  onProjectDetailChange?: (detail: { onBack: () => void } | null) => void;
 }
 
-export function ProjectsManagementPage({ userRole }: ProjectsManagementPageProps) {
+export function ProjectsManagementPage({ userRole, currentUserName, onProjectDetailChange }: ProjectsManagementPageProps) {
   const [projects, setProjects] = useState<Project[]>(() => projectApi.getAll());
   const [isAssignPMOpen, setIsAssignPMOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -39,6 +44,16 @@ export function ProjectsManagementPage({ userRole }: ProjectsManagementPageProps
   const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [selectedHandoverId, setSelectedHandoverId] = useState<string | null>(null);
+
+  const handleSeeDetails = (project: Project) => {
+    const handoverId = projectApi.getHandoverIdByProjectId(project.id);
+    if (!handoverId) {
+      toast.info('Detail handover tidak tersedia untuk project ini.');
+      return;
+    }
+    setSelectedHandoverId(handoverId);
+  };
 
   const manageableServices = getCOOManageableServicesForProject(userRole);
   const isCOO = isCOOUser(userRole);
@@ -49,7 +64,9 @@ export function ProjectsManagementPage({ userRole }: ProjectsManagementPageProps
       ? projects.filter(
           (p) => canAssignPM(userRole, p.serviceName) || p.assignedPM
         )
-      : projects;
+      : isPM && currentUserName
+        ? projects.filter((p) => p.assignedPM === currentUserName)
+        : projects;
 
   const searchFiltered = filterProjectsBySearch(baseProjects, searchTerm);
   const filteredProjects = filterProjectsByStatus(
@@ -58,6 +75,30 @@ export function ProjectsManagementPage({ userRole }: ProjectsManagementPageProps
     getProjectDisplayStatus
   );
   const sortedProjects = sortProjectsByPriority(filteredProjects);
+
+  // Stats & alerts based on the list the user sees (baseProjects)
+  const projectsWaitingPM = baseProjects.filter(
+    (p) => p.status === 'waiting-assignment' || p.status === 'waiting-pm'
+  );
+  const projectsWaitingPayment = baseProjects.filter(
+    (p) => p.status === 'waiting-first-payment'
+  );
+  const projectsInProgress = baseProjects.filter(
+    (p) => p.status === 'in-progress'
+  );
+  const projectsWaitingFinal = baseProjects.filter(
+    (p) => p.status === 'waiting-final-payment'
+  );
+  const projectsAtRisk = baseProjects.filter((p) => {
+    if (p.status !== 'in-progress') return false;
+    const daysUntilDue = getDaysUntilDue(p.dueDate);
+    const progress = p.progressPercentage ?? 0;
+    return daysUntilDue <= 15 && daysUntilDue >= 0 && progress < 100;
+  });
+  const projectsOverdue = baseProjects.filter((p) => {
+    if (p.status !== 'in-progress') return false;
+    return getDaysUntilDue(p.dueDate) < 0;
+  });
 
   const handleAssignPM = () => {
     if (!selectedProject || !selectedPM) return;
@@ -119,31 +160,9 @@ export function ProjectsManagementPage({ userRole }: ProjectsManagementPageProps
     );
   };
 
-  const projectsWaitingPM = projects.filter(
-    (p) => p.status === 'waiting-assignment' || p.status === 'waiting-pm'
-  );
-  const projectsWaitingPayment = projects.filter(
-    (p) => p.status === 'waiting-first-payment'
-  );
-  const projectsInProgress = projects.filter((p) => p.status === 'in-progress');
-  const projectsWaitingFinal = projects.filter(
-    (p) => p.status === 'waiting-final-payment'
-  );
-
-  const projectsAtRisk = projects.filter((p) => {
-    if (p.status !== 'in-progress') return false;
-    const daysUntilDue = getDaysUntilDue(p.dueDate);
-    const progress = p.progressPercentage ?? 0;
-    return daysUntilDue <= 15 && daysUntilDue >= 0 && progress < 100;
-  });
-
-  const projectsOverdue = projects.filter((p) => {
-    if (p.status !== 'in-progress') return false;
-    return getDaysUntilDue(p.dueDate) < 0;
-  });
-
-  const getAlertTitle = () => 'Perhatian COO!';
+  const getAlertTitle = () => (isCOO ? 'Perhatian COO!' : 'Ringkasan Project');
   const getAlertDescription = () => {
+    if (!isCOO) return '';
     const services =
       manageableServices && manageableServices.length > 0
         ? manageableServices.join(', ')
@@ -151,6 +170,7 @@ export function ProjectsManagementPage({ userRole }: ProjectsManagementPageProps
     return `Ada ${projectsWaitingPM.length} project yang belum di-assign PM. COO ${userRole} hanya bisa assign PM untuk layanan: ${services}.`;
   };
   const getCardDescription = () => {
+    if (!isCOO) return undefined;
     const services =
       manageableServices && manageableServices.length > 0
         ? manageableServices.join(', ')
@@ -180,6 +200,20 @@ export function ProjectsManagementPage({ userRole }: ProjectsManagementPageProps
       setCurrentPage(totalPages);
     }
   }, [filteredProjects.length, currentPage, itemsPerPage, totalPages, setCurrentPage]);
+
+  useEffect(() => {
+    onProjectDetailChange?.(selectedHandoverId ? { onBack: () => setSelectedHandoverId(null) } : null);
+  }, [selectedHandoverId, onProjectDetailChange]);
+
+  if (selectedHandoverId) {
+    return (
+      <ProjectDetailPage
+        handoverId={selectedHandoverId}
+        userRole={userRole ?? ''}
+        onBack={() => setSelectedHandoverId(null)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -260,6 +294,7 @@ export function ProjectsManagementPage({ userRole }: ProjectsManagementPageProps
                 setIsAssignPMOpen(true);
               }}
               onCompleteProject={completeProject}
+              onSeeDetails={handleSeeDetails}
             />
           ) : (
             <ProjectsCardView
@@ -279,6 +314,7 @@ export function ProjectsManagementPage({ userRole }: ProjectsManagementPageProps
                 setIsAssignPMOpen(true);
               }}
               onCompleteProject={completeProject}
+              onSeeDetails={handleSeeDetails}
             />
           )}
         </CardContent>

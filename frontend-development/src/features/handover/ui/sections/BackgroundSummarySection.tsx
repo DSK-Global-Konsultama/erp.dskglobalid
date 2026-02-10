@@ -8,6 +8,7 @@ import type { SectionId } from '../../model/types';
 
 interface BackgroundSummarySectionProps {
   sectionId: SectionId;
+  displayNumber?: number;
   background: string;
   onBackgroundChange: (value: string) => void;
   isExpanded: boolean;
@@ -22,6 +23,7 @@ interface BackgroundSummarySectionProps {
 
 export function BackgroundSummarySection({
   sectionId,
+  displayNumber,
   background,
   onBackgroundChange,
   isExpanded,
@@ -37,6 +39,7 @@ export function BackgroundSummarySection({
     <Card className="mb-6">
       <SectionHeader
         sectionId={sectionId}
+        displayNumber={displayNumber}
         title="BACKGROUND SUMMARY"
         isExpanded={isExpanded}
         isComplete={isComplete}

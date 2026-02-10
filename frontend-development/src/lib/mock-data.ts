@@ -183,7 +183,7 @@ export interface Handover {
   clientName: string;
   projectTitle: string;
   pm: string;
-  status: 'DRAFT' | 'WAITING_CEO_APPROVAL' | 'APPROVED' | 'REJECTED' | 'SENT_TO_PM';
+  status: 'DRAFT' | 'WAITING_CEO_APPROVAL' | 'APPROVED' | 'REJECTED' | 'SENT_TO_PM' | 'CONVERTED';
   createdBy: string;
   createdAt: string;
   summary?: string;
@@ -1102,6 +1102,44 @@ export const mockDeals: Deal[] = [
     createdDate: '2025-10-05',
     clientNeeds: 'Client butuh transfer pricing policy development untuk group companies.',
   },
+  // Deal untuk L103 - PT Teknologi Nusantara (Transfer Pricing Documentation) - handover CEO approved, converted to project
+  {
+    id: 'D103',
+    leadId: 'L103',
+    clientName: 'Ahmad Fauzi',
+    company: 'PT Teknologi Nusantara',
+    services: [
+      {
+        id: 'S103',
+        name: 'Transfer Pricing Documentation',
+        description: 'Transfer Pricing Master File, Local File, Comparability Analysis',
+        estimatedValue: 65000000,
+        elId: 'EL-L103-001',
+      },
+    ],
+    totalDealValue: 65000000,
+    proposalStatus: 'approved',
+    proposalApprovedDate: '2025-02-05',
+    els: [
+      {
+        id: 'EL-L103-001',
+        serviceIds: ['S103'],
+        status: 'approved',
+        approvedDate: '2025-02-07',
+        paymentTerms: {
+          scheme: '50-50',
+          terms: [
+            { percentage: 50, description: 'DP saat EL signed' },
+            { percentage: 50, description: 'Pelunasan saat project selesai' },
+          ],
+        },
+      },
+    ],
+    elStrategy: 'single',
+    bdExecutive: 'Andi Wijaya',
+    createdDate: '2025-01-25',
+    clientNeeds: 'Client butuh Transfer Pricing Documentation untuk compliance regulasi perpajakan.',
+  },
 ];
 
 export const mockProjects: Project[] = [
@@ -1196,6 +1234,21 @@ export const mockProjects: Project[] = [
     status: 'waiting-assignment', // COO-Tax-Audit belum assign
     dueDate: '2026-01-20',
     pmNotified: false,
+    progressPercentage: 0,
+  },
+  // L103 - PT Teknologi Nusantara (Transfer Pricing Documentation) - converted from handover CEO approved
+  {
+    id: 'P016',
+    dealId: 'D103',
+    serviceId: 'S103',
+    elId: 'EL-L103-001',
+    projectName: 'Transfer Pricing Documentation - PT Teknologi Nusantara',
+    serviceName: 'Transfer Pricing Documentation',
+    clientName: 'Ahmad Fauzi - PT Teknologi Nusantara',
+    assignedPM: 'Diana Putri',
+    status: 'waiting-first-payment',
+    dueDate: '2025-05-15',
+    pmNotified: true,
     progressPercentage: 0,
   },
   // Tax Compliance - 3 projects
@@ -3354,7 +3407,7 @@ export const mockHandovers: Handover[] = [
     clientName: 'PT Teknologi Nusantara',
     projectTitle: 'Transfer Pricing Documentation - PT Teknologi Nusantara',
     pm: 'Diana Putri',
-    status: 'APPROVED' as any,
+    status: 'CONVERTED',
     createdBy: 'Andi Wijaya',
     createdAt: '2025-02-12',
     summary: 'PT Teknologi Nusantara membutuhkan Transfer Pricing Documentation untuk compliance dengan regulasi perpajakan. Perusahaan memiliki transaksi related party dengan perusahaan afiliasi di Singapura dan Malaysia. Project ini akan mencakup analisis comparability, penyusunan Master File dan Local File, serta pendampingan saat pemeriksaan pajak.',

@@ -84,6 +84,7 @@ export function LeadsFilters({
                   <SelectItem value="DRAFT">Draft</SelectItem>
                   <SelectItem value="WAITING_CEO">Waiting CEO Approval</SelectItem>
                   <SelectItem value="CEO_APPROVED">CEO Approved</SelectItem>
+                  <SelectItem value="CONVERTED">Converted</SelectItem>
                 </SelectContent>
               </Select>
               <div className="flex gap-2">

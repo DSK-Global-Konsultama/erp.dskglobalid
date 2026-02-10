@@ -18,6 +18,7 @@ interface DocumentItem {
 
 interface ClientDocumentsSectionProps {
   sectionId: SectionId;
+  displayNumber?: number;
   documentsReceived: DocumentItem[];
   onDocumentsReceivedChange: (documents: DocumentItem[]) => void;
   isExpanded: boolean;
@@ -31,6 +32,7 @@ interface ClientDocumentsSectionProps {
 
 export function ClientDocumentsSection({
   sectionId,
+  displayNumber,
   documentsReceived,
   onDocumentsReceivedChange,
   isExpanded,
@@ -73,6 +75,7 @@ export function ClientDocumentsSection({
     <Card className="mb-6">
       <SectionHeader
         sectionId={sectionId}
+        displayNumber={displayNumber}
         title="CLIENT-PROVIDED DOCUMENTS"
         isExpanded={isExpanded}
         isComplete={isComplete}

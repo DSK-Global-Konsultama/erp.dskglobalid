@@ -16,6 +16,7 @@ type ChecklistItem = {
 
 interface HandoverChecklistSectionProps {
   sectionId: SectionId;
+  displayNumber?: number;
   handoverChecklist: ChecklistItem[];
   onHandoverChecklistChange: (checklist: ChecklistItem[]) => void;
   isExpanded: boolean;
@@ -29,6 +30,7 @@ interface HandoverChecklistSectionProps {
 
 export function HandoverChecklistSection({
   sectionId,
+  displayNumber,
   handoverChecklist,
   onHandoverChecklistChange,
   isExpanded,
@@ -43,6 +45,7 @@ export function HandoverChecklistSection({
     <Card className="mb-6">
       <SectionHeader
         sectionId={sectionId}
+        displayNumber={displayNumber}
         title="HANDOVER CHECKLIST"
         isExpanded={isExpanded}
         isComplete={isComplete}

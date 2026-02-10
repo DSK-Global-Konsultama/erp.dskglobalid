@@ -16,6 +16,7 @@ type TeamMember = {
 
 interface TeamAssignmentSectionProps {
   sectionId: SectionId;
+  displayNumber?: number;
   preliminaryTeam: TeamMember[];
   onPreliminaryTeamChange: (team: TeamMember[]) => void;
   isExpanded: boolean;
@@ -29,6 +30,7 @@ interface TeamAssignmentSectionProps {
 
 export function TeamAssignmentSection({
   sectionId,
+  displayNumber,
   preliminaryTeam,
   onPreliminaryTeamChange,
   isExpanded,
@@ -43,6 +45,7 @@ export function TeamAssignmentSection({
     <Card className="mb-6">
       <SectionHeader
         sectionId={sectionId}
+        displayNumber={displayNumber}
         title="PROJECT TEAM ASSIGNMENT"
         isExpanded={isExpanded}
         isComplete={isComplete}

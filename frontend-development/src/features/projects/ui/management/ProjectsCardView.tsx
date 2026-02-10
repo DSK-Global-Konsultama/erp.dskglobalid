@@ -31,6 +31,7 @@ interface ProjectsCardViewProps {
   isPMUser: boolean;
   onAssignPM: (project: Project) => void;
   onCompleteProject: (projectId: string) => void;
+  onSeeDetails?: (project: Project) => void;
 }
 
 type HandoverExtended = Handover & {
@@ -56,6 +57,7 @@ export function ProjectsCardView({
   isPMUser,
   onAssignPM,
   onCompleteProject,
+  onSeeDetails,
 }: ProjectsCardViewProps) {
   return (
     <div className="space-y-4">
@@ -291,13 +293,11 @@ export function ProjectsCardView({
                       Review and Assign PM
                     </Button>
                   )}
-                {isCOOUser && project.assignedPM && (
+                {((isCOOUser && project.assignedPM) || isPMUser) && (
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => {
-                      toast.info('See details functionality coming soon');
-                    }}
+                    onClick={() => onSeeDetails?.(project)}
                     className="flex items-center gap-2 w-full"
                   >
                     <Eye className="w-4 h-4" />

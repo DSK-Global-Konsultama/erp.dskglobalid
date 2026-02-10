@@ -32,6 +32,7 @@ interface ProjectsTableViewProps {
   isPMUser: boolean;
   onAssignPM: (project: Project) => void;
   onCompleteProject: (projectId: string) => void;
+  onSeeDetails?: (project: Project) => void;
 }
 
 export function ProjectsTableView({
@@ -48,6 +49,7 @@ export function ProjectsTableView({
   isPMUser,
   onAssignPM,
   onCompleteProject,
+  onSeeDetails,
 }: ProjectsTableViewProps) {
   return (
     <div>
@@ -279,30 +281,16 @@ export function ProjectsTableView({
                               Review and Assign PM
                             </Button>
                           )}
-                        {isCOOUser && project.assignedPM && (
+                        {((isCOOUser && project.assignedPM) || isPMUser) && (
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => {
-                              toast.info(
-                                'See details functionality coming soon'
-                              );
-                            }}
+                            onClick={() => onSeeDetails?.(project)}
                           >
                             <Eye className="w-3 h-3 mr-1" />
                             See Details
                           </Button>
                         )}
-
-                        {isPMUser &&
-                          project.status === 'waiting-first-payment' && (
-                            <Badge
-                              variant="outline"
-                              className="bg-blue-50 text-blue-700 border-blue-200"
-                            >
-                              Tunggu Payment
-                            </Badge>
-                          )}
 
                         {isPMUser &&
                           project.status === 'in-progress' &&
@@ -316,36 +304,6 @@ export function ProjectsTableView({
                               Selesai
                             </Button>
                           )}
-
-                        {isPMUser &&
-                          project.status === 'in-progress' &&
-                          project.progressPercentage !== 100 && (
-                            <Badge
-                              variant="outline"
-                              className="bg-gray-50 text-gray-700 border-gray-200"
-                            >
-                              Progress: {project.progressPercentage ?? 0}%
-                            </Badge>
-                          )}
-
-                        {isPMUser &&
-                          project.status === 'waiting-final-payment' && (
-                            <Badge
-                              variant="outline"
-                              className="bg-yellow-50 text-yellow-700 border-yellow-200"
-                            >
-                              Menunggu Final Payment
-                            </Badge>
-                          )}
-
-                        {isPMUser && project.status === 'completed' && (
-                          <Badge
-                            variant="outline"
-                            className="bg-green-50 text-green-700 border-green-200"
-                          >
-                            Selesai
-                          </Badge>
-                        )}
                       </div>
                     </TableCell>
                   </TableRow>

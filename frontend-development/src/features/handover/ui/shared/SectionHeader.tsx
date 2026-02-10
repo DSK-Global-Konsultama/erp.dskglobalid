@@ -3,6 +3,8 @@ import type { SectionId } from '../../model/types';
 
 interface SectionHeaderProps {
   sectionId: SectionId;
+  /** When set (e.g. when some sections are hidden), shown instead of sectionId so numbering is 1–8 consecutive */
+  displayNumber?: number;
   title: string;
   isExpanded: boolean;
   isComplete: boolean;
@@ -13,6 +15,7 @@ interface SectionHeaderProps {
 
 export function SectionHeader({
   sectionId,
+  displayNumber,
   title,
   isExpanded,
   isComplete,
@@ -20,6 +23,7 @@ export function SectionHeader({
   showValidation,
   onToggle
 }: SectionHeaderProps) {
+  const numberLabel = displayNumber ?? sectionId;
   return (
     <button
       onClick={onToggle}
@@ -34,7 +38,7 @@ export function SectionHeader({
           <ChevronRight className="w-5 h-5 text-gray-600" />
         )}
         <span className="font-semibold text-gray-900">
-          {sectionId}. {title}
+          {numberLabel}. {title}
         </span>
         {hasRevision && (
           <div className="flex items-center gap-1 text-xs text-orange-700 bg-orange-100 px-2.5 py-1 rounded border border-orange-200">

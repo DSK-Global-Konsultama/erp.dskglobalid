@@ -18,6 +18,7 @@ type FeeStructureItem = {
 
 interface FeeStructureSectionProps {
   sectionId: SectionId;
+  displayNumber?: number;
   feeStructure: FeeStructureItem[];
   paymentTermsText: string;
   onFeeStructureChange: (fees: FeeStructureItem[]) => void;
@@ -33,6 +34,7 @@ interface FeeStructureSectionProps {
 
 export function FeeStructureSection({
   sectionId,
+  displayNumber,
   feeStructure,
   paymentTermsText,
   onFeeStructureChange,
@@ -49,6 +51,7 @@ export function FeeStructureSection({
     <Card className="mb-6">
       <SectionHeader
         sectionId={sectionId}
+        displayNumber={displayNumber}
         title="FEE STRUCTURE & PAYMENT TERMS"
         isExpanded={isExpanded}
         isComplete={isComplete}

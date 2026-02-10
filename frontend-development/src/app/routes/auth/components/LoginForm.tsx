@@ -127,6 +127,11 @@ export function LoginForm({
           </span>
         </Button>
       </motion.div>
+      {import.meta.env.DEV && (
+        <p className="text-[10px] text-gray-400 mt-2 text-center">
+          Demo PM: diana@dskglobal.com / demo123
+        </p>
+      )}
     </form>
   );
 }
