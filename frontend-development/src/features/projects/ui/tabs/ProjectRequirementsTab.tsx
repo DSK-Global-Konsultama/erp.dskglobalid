@@ -15,14 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '../../../../components/ui/table';
-import { Button } from '../../../../components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '../../../../components/ui/dialog';
+import { MarkAsReceivedModal } from '../modals/MarkAsReceivedModal';
 
 export interface ProjectRequirementsTabProps {
   handoverId: string;
@@ -95,138 +88,117 @@ export function ProjectRequirementsTab({
     handleCloseModal();
   };
 
-  const cellClass = 'px-4 py-4';
-
   return (
-    <div>
-      {canEdit && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <div className="text-sm text-blue-900">
-            <strong>PM:</strong> Anda dapat menandai requirement sebagai <strong>RECEIVED</strong> setelah dokumen diterima.
-          </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">Requirements</h3>
+          <p className="text-sm text-gray-600 mt-1">Data requirements dan status penerimaan dokumen</p>
         </div>
-      )}
+      </div>
 
       <div className="mb-4 flex items-center gap-2 flex-wrap">
-        <button
-          type="button"
-          onClick={() => setFilter('ALL')}
-          className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-            filter === 'ALL' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-          }`}
-        >
-          ALL ({stats.total})
-        </button>
-        <button
-          type="button"
-          onClick={() => setFilter('REQUESTED')}
-          className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-            filter === 'REQUESTED' ? 'bg-orange-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-          }`}
-        >
-          REQUESTED ({stats.requested})
-        </button>
-        <button
-          type="button"
-          onClick={() => setFilter('RECEIVED')}
-          className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-            filter === 'RECEIVED' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-          }`}
-        >
-          RECEIVED ({stats.received})
-        </button>
+            <button
+              type="button"
+              onClick={() => setFilter('ALL')}
+              className={`px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer ${
+                filter === 'ALL' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              All ({stats.total})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('REQUESTED')}
+              className={`px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer ${
+                filter === 'REQUESTED' ? 'bg-orange-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Requested ({stats.requested})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('RECEIVED')}
+              className={`px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer ${
+                filter === 'RECEIVED' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Received ({stats.received})
+            </button>
       </div>
-
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Item Name</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Evidence</TableHead>
-              {canEdit && <TableHead>Actions</TableHead>}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredRequirements.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={canEdit ? 4 : 3} className="text-center py-8">
-                  <div className="flex flex-col items-center justify-center text-gray-500">
-                    <p className="text-sm font-medium">Belum ada data requirement</p>
-                    <p className="text-xs mt-1">Tidak ada requirement yang sesuai filter</p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredRequirements.map((req) => {
-                const evidenceFiles = getEvidenceFiles(req.id);
-                return (
-                  <TableRow key={req.id} className="transition-colors">
-                    <TableCell className={cellClass}>
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(req.status)}
-                        <div>
-                          <p className="font-medium text-gray-900">{req.itemName}</p>
-                          {req.notes && <p className="text-xs text-gray-500 mt-0.5">{req.notes}</p>}
-                        </div>
+      <div className="overflow-x-auto rounded-lg border border-gray-200 [&_td]:py-3">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Item Name</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Evidence</TableHead>
+                  {canEdit && <TableHead>Actions</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredRequirements.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={canEdit ? 4 : 3} className="text-center py-8">
+                      <div className="flex flex-col items-center justify-center text-gray-500">
+                        <p className="text-sm font-medium">Belum ada data requirement</p>
+                        <p className="text-xs mt-1">Tidak ada requirement yang sesuai filter</p>
                       </div>
                     </TableCell>
-                    <TableCell className={cellClass}>{getStatusBadge(req.status)}</TableCell>
-                    <TableCell className={cellClass}>
-                      {evidenceFiles.length > 0 ? (
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm text-blue-600">{evidenceFiles.length} file(s)</span>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-600">No files</span>
-                      )}
-                    </TableCell>
-                    {canEdit && (
-                      <TableCell className={cellClass}>
-                        {req.status === 'REQUESTED' && (
-                          <button
-                            type="button"
-                            className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 hover:underline focus:outline-none focus:underline cursor-pointer"
-                            onClick={() => handleOpenModal(req)}
-                          >
-                            <Edit className="w-3.5 h-3 shrink-0" />
-                            Mark as Received
-                          </button>
-                        )}
-                      </TableCell>
-                    )}
                   </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+                ) : (
+                  filteredRequirements.map((req) => {
+                    const evidenceFiles = getEvidenceFiles(req.id);
+                    return (
+                      <TableRow key={req.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getStatusIcon(req.status)}
+                            <div>
+                              <p className="font-medium text-gray-900">{req.itemName}</p>
+                              {req.notes && <p className="text-xs text-gray-500 mt-0.5">{req.notes}</p>}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{getStatusBadge(req.status)}</TableCell>
+                        <TableCell>
+                          {evidenceFiles.length > 0 ? (
+                            <div className="flex items-center gap-2">
+                              <FileText className="w-4 h-4 text-blue-600" />
+                              <span className="text-sm text-blue-600">{evidenceFiles.length} file(s)</span>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-gray-600">No files</span>
+                          )}
+                        </TableCell>
+                        {canEdit && (
+                          <TableCell>
+                            {req.status === 'REQUESTED' && (
+                              <button
+                                type="button"
+                                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 hover:underline focus:outline-none focus:underline cursor-pointer"
+                                onClick={() => handleOpenModal(req)}
+                              >
+                                <Edit className="w-3.5 h-3 shrink-0" />
+                                Mark as Received
+                              </button>
+                            )}
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
       </div>
 
-      <Dialog open={!!selectedRequirement && canEdit} onOpenChange={(open) => !open && handleCloseModal()}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>MARK AS RECEIVED</DialogTitle>
-          </DialogHeader>
-          {selectedRequirement && (
-            <>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-1 text-sm text-gray-900">
-                <div><strong>Item:</strong> {selectedRequirement.itemName}</div>
-              </div>
-              <p className="text-sm text-gray-600">Tandai requirement ini sebagai <strong>RECEIVED</strong>?</p>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={handleCloseModal}>
-                  Cancel
-                </Button>
-                <Button type="button" onClick={handleMarkAsReceived}>
-                  MARK AS RECEIVED
-                </Button>
-              </DialogFooter>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      <MarkAsReceivedModal
+        requirement={selectedRequirement}
+        open={!!selectedRequirement && canEdit}
+        onClose={handleCloseModal}
+        onConfirm={handleMarkAsReceived}
+      />
     </div>
   );
 }

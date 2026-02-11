@@ -3,6 +3,7 @@ import type {
   Requirement,
   ProjectDocument,
   RequirementStatus,
+  DocumentCategory,
 } from '../../../lib/projectWorkflowTypes';
 import type { Project, Lead, Proposal, EngagementLetter } from '../../../lib/mock-data';
 import {
@@ -170,16 +171,28 @@ function normalizeRequirementStatus(s?: string): RequirementStatus {
   return 'REQUESTED';
 }
 
-/** Documents from handover.documentsReceived (section 5). Used as evidence pool for requirements. */
+/** Documents from handover.documentsReceived (section 5). Maps to Document Center shape with safe defaults. */
 function getDocumentsForHandover(handover: ExtendedHandover): ProjectDocument[] {
   const raw = handover.documentsReceived ?? [];
-  return raw.map((doc, index) => ({
-    id: `${handover.id ?? 'ho'}-doc-${index + 1}`,
-    name: doc.fileName ?? 'Document',
-    fileUrl: doc.fileUrl,
-    uploadedAt: doc.receivedDate ?? doc.uploadDate,
-    uploadedBy: doc.uploadedBy,
-  }));
+  return raw.map((doc, index) => {
+    const fileName = doc.fileName ?? 'Document';
+    const ext = fileName.split('.').pop()?.toLowerCase() ?? '';
+    const fileType = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg'].includes(ext)
+      ? ext
+      : 'pdf';
+    const uploadedAt = doc.receivedDate ?? doc.uploadDate ?? new Date().toISOString();
+    return {
+      id: `${handover.id ?? 'ho'}-doc-${index + 1}`,
+      category: '02-Client Docs' as DocumentCategory,
+      fileName,
+      fileType,
+      fileSize: '0 KB',
+      uploadedBy: doc.uploadedBy ?? '',
+      uploadedAt,
+      version: 1,
+      fileUrl: doc.fileUrl,
+    };
+  });
 }
 
 export type { Project };

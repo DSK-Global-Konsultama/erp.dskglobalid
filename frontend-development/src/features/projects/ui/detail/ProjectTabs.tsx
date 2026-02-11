@@ -13,7 +13,7 @@ import {
 import type { ExtendedHandover, Requirement, ProjectDocument } from '../../../../lib/projectWorkflowTypes';
 import type { Lead, Proposal, EngagementLetter } from '../../../../lib/mock-data';
 import type { ProjectDetailTabId } from '../../pages';
-import { ComingSoonTab, ProjectHandoverTab, ProjectRequirementsTab } from '../tabs';
+import { ComingSoonTab, ProjectDocumentsTab, ProjectHandoverTab, ProjectRequirementsTab } from '../tabs';
 
 const TAB_CONFIG: { id: ProjectDetailTabId; label: string; icon: React.ReactNode }[] = [
   { id: 'overview', label: 'Overview', icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -89,7 +89,14 @@ export function ProjectTabs({
             documents={documents}
           />
         )}
-        {activeTab !== 'handover' && activeTab !== 'requirements' && (
+        {activeTab === 'documents' && (
+          <ProjectDocumentsTab
+            handoverId={handoverId}
+            userRole={userRole}
+            documents={documents}
+          />
+        )}
+        {activeTab !== 'handover' && activeTab !== 'requirements' && activeTab !== 'documents' && (
           <ComingSoonTab title={`${TAB_CONFIG.find((t) => t.id === activeTab)?.label ?? activeTab}`} />
         )}
       </div>

@@ -16,3 +16,13 @@ export function getHandoverHiddenSections(userRole: string): SectionId[] {
 export function canUpdateRequirementStatus(role: string): boolean {
   return role === 'PM';
 }
+
+/** PM can upload project documents. COO view only (set to false for COO; change here to allow COO upload). */
+export function canUploadProjectDocument(role: string): boolean {
+  return role === 'PM';
+}
+
+/** Both COO and PM can view project documents. */
+export function canViewProjectDocument(role: string): boolean {
+  return role === 'PM' || role === 'COO' || role.startsWith('COO');
+}

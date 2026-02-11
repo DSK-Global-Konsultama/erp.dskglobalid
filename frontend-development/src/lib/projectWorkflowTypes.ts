@@ -147,11 +147,25 @@ export interface Requirement {
   evidenceFiles?: string[];
 }
 
+/** Document Center categories */
+export type DocumentCategory =
+  | '01-Handover'
+  | '02-Client Docs'
+  | '03-Working Papers'
+  | '04-Final';
+
 export interface ProjectDocument {
   id: string;
-  name: string;
+  category: DocumentCategory;
+  fileName: string;
+  fileType: string;
+  fileSize: string;
+  uploadedBy: string;
+  uploadedAt: string; // ISO
+  version: number;
+  description?: string;
+  tags?: string[];
+  relatedRequirementId?: string;
   fileUrl?: string;
-  uploadedAt?: string;
-  uploadedBy?: string;
 }
 
