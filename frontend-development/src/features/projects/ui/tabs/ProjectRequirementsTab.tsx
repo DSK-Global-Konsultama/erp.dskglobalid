@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '../../../../components/ui/table';
-import { MarkAsReceivedModal } from '../modals/MarkAsReceivedModal';
+import { UploadDocumentModal } from '../modals/UploadDocumentModal';
 
 export interface ProjectRequirementsTabProps {
   handoverId: string;
@@ -193,11 +193,12 @@ export function ProjectRequirementsTab({
             </Table>
       </div>
 
-      <MarkAsReceivedModal
-        requirement={selectedRequirement}
+      <UploadDocumentModal
         open={!!selectedRequirement && canEdit}
         onClose={handleCloseModal}
-        onConfirm={handleMarkAsReceived}
+        onSubmit={handleMarkAsReceived}
+        requirement={selectedRequirement}
+        onMarkAsReceived={handleMarkAsReceived}
       />
     </div>
   );

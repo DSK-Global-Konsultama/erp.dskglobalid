@@ -1,6 +1,5 @@
 /**
- * Modal upload document untuk Document Center.
- * Bergeser masuk dari kanan seperti MarkAsReceivedModal (framer-motion).
+ * Modal upload document: dari Document Center (upload saja) atau dari Requirements tab (Mark as Received + item).
  */
 
 import { useState, useEffect } from 'react';
@@ -8,7 +7,7 @@ import { X, Upload } from 'lucide-react';
 import { animate } from 'framer-motion';
 import { Dialog, DialogContent } from '../../../../components/ui/dialog';
 import { Button } from '../../../../components/ui/button';
-import type { DocumentCategory } from '../../../../lib/projectWorkflowTypes';
+import type { DocumentCategory, Requirement } from '../../../../lib/projectWorkflowTypes';
 
 const CATEGORIES: DocumentCategory[] = [
   '01-Handover',
@@ -21,12 +20,18 @@ export interface UploadDocumentModalProps {
   open: boolean;
   onClose: () => void;
   onSubmit: () => void;
+  /** Jika diset: mode "Mark as Received" — header Mark as Received + tampilkan item requirement */
+  requirement?: Requirement | null;
+  /** Dipanggil saat submit bila dibuka dari Requirements (untuk update status RECEIVED) */
+  onMarkAsReceived?: () => void;
 }
 
 export function UploadDocumentModal({
   open,
   onClose,
   onSubmit,
+  requirement = null,
+  onMarkAsReceived,
 }: UploadDocumentModalProps) {
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [category, setCategory] = useState<DocumentCategory>('02-Client Docs');
@@ -34,13 +39,15 @@ export function UploadDocumentModal({
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
 
+  const isMarkAsReceivedMode = Boolean(requirement);
+
   useEffect(() => {
     if (open) {
       setCategory('02-Client Docs');
       setDescription('');
       setAttachments([]);
     }
-  }, [open]);
+  }, [open, requirement?.id]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -123,6 +130,9 @@ export function UploadDocumentModal({
 
   const handleSubmit = () => {
     setIsAnimatingOut(true);
+    if (isMarkAsReceivedMode && onMarkAsReceived) {
+      onMarkAsReceived();
+    }
     onSubmit();
     const dialogContent = document.querySelector('[data-slot="dialog-content"]') as HTMLElement;
     if (dialogContent) {
@@ -157,10 +167,16 @@ export function UploadDocumentModal({
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        {/* Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
           <div>
-            <h2 className="text-lg font-semibold">Upload Document</h2>
+            <h2 className="text-lg font-semibold">
+              {isMarkAsReceivedMode ? 'Mark as Received' : 'Upload Document'}
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              {isMarkAsReceivedMode && requirement
+                ? requirement.itemName
+                : 'Tambah dokumen ke Document Center'}
+            </p>
           </div>
           <button
             type="button"
@@ -172,11 +188,21 @@ export function UploadDocumentModal({
           </button>
         </div>
 
-        {/* Form Content */}
         <div className="flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto px-6 pb-6">
             <div className="space-y-4">
-              {/* File */}
+              {isMarkAsReceivedMode && requirement && (
+                <>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-sm text-gray-600">Item</p>
+                    <p className="font-medium break-words">{requirement.itemName}</p>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Tandai requirement ini sebagai <strong>RECEIVED</strong> dan lampirkan dokumen (opsional) sebagai bukti.
+                  </p>
+                </>
+              )}
+
               <div>
                 <label className="block text-sm text-gray-700 mb-2">
                   File <span className="text-red-500">*</span>
@@ -235,7 +261,6 @@ export function UploadDocumentModal({
                 </div>
               </div>
 
-              {/* Category */}
               <div>
                 <label className="block text-sm text-gray-700 mb-1.5">
                   Category <span className="text-red-500">*</span>
@@ -253,11 +278,10 @@ export function UploadDocumentModal({
                 </select>
               </div>
 
-              {/* Description */}
               <div>
                 <label className="block text-sm text-gray-700 mb-1.5">Description</label>
                 <textarea
-                  placeholder="Brief description of the document..."
+                  placeholder={isMarkAsReceivedMode ? 'Keterangan dokumen / bukti penerimaan...' : 'Brief description of the document...'}
                   rows={2}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -267,13 +291,12 @@ export function UploadDocumentModal({
             </div>
           </div>
 
-          {/* Footer */}
           <div className="flex gap-3 justify-end py-4 px-6 border-t border-gray-200 bg-white flex-shrink-0">
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
             <Button type="button" onClick={handleSubmit}>
-              Upload
+              {isMarkAsReceivedMode ? 'Mark as Received' : 'Upload'}
             </Button>
           </div>
         </div>

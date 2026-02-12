@@ -10,10 +10,10 @@ import {
   TrendingUp,
   Activity,
 } from 'lucide-react';
-import type { ExtendedHandover, Requirement, ProjectDocument } from '../../../../lib/projectWorkflowTypes';
+import type { ExtendedHandover, Requirement, ProjectDocument, ProgressLog } from '../../../../lib/projectWorkflowTypes';
 import type { Lead, Proposal, EngagementLetter } from '../../../../lib/mock-data';
 import type { ProjectDetailTabId } from '../../pages';
-import { ComingSoonTab, ProjectDocumentsTab, ProjectHandoverTab, ProjectRequirementsTab } from '../tabs';
+import { ComingSoonTab, ProjectDocumentsTab, ProjectHandoverTab, ProjectProgressTab, ProjectRequirementsTab } from '../tabs';
 
 const TAB_CONFIG: { id: ProjectDetailTabId; label: string; icon: React.ReactNode }[] = [
   { id: 'overview', label: 'Overview', icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -35,6 +35,8 @@ export interface ProjectTabsProps {
   engagementLetter?: EngagementLetter;
   requirements?: Requirement[];
   documents?: ProjectDocument[];
+  progressLogs?: ProgressLog[];
+  onAddProgress?: (log: ProgressLog) => void;
   onBack?: () => void;
 }
 
@@ -49,6 +51,8 @@ export function ProjectTabs({
   engagementLetter,
   requirements = [],
   documents = [],
+  progressLogs = [],
+  onAddProgress,
 }: ProjectTabsProps) {
   return (
     <div className="bg-white rounded-lg border border-gray-200">
@@ -96,7 +100,15 @@ export function ProjectTabs({
             documents={documents}
           />
         )}
-        {activeTab !== 'handover' && activeTab !== 'requirements' && activeTab !== 'documents' && (
+        {activeTab === 'progress' && (
+          <ProjectProgressTab
+            handoverId={handoverId}
+            userRole={userRole}
+            progressLogs={progressLogs}
+            onAddProgress={onAddProgress}
+          />
+        )}
+        {activeTab !== 'handover' && activeTab !== 'requirements' && activeTab !== 'documents' && activeTab !== 'progress' && (
           <ComingSoonTab title={`${TAB_CONFIG.find((t) => t.id === activeTab)?.label ?? activeTab}`} />
         )}
       </div>

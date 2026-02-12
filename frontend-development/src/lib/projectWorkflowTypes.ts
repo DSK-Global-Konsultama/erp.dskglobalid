@@ -169,3 +169,25 @@ export interface ProjectDocument {
   fileUrl?: string;
 }
 
+/** Progress tab: phase pengerjaan project */
+export type ProjectPhase =
+  | 'Data Collection'
+  | 'Analysis'
+  | 'Drafting'
+  | 'Review'
+  | 'Finalization'
+  | 'Other';
+
+export interface ProgressLog {
+  id: string;
+  handoverId: string;
+  progressPercentage: number;
+  phase: ProjectPhase;
+  updateNote: string;
+  blockers?: string;
+  nextSteps?: string;
+  reasonForDecrease?: string;
+  createdBy: string;
+  createdAt: string; // ISO
+}
+

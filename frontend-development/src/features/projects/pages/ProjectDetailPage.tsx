@@ -3,7 +3,7 @@
  * Tabs: Overview, Handover, Requirements, Documents, Progress, Activity.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { projectApi } from '../api/projectApi';
 import { mapWorkflowToDisplayStatus, getWorkflowLabel } from '../model/selectors';
 import { ProjectDetailHeaderBar } from '../ui/detail/ProjectDetailHeaderBar';
@@ -39,6 +39,12 @@ export function ProjectDetailPage({ handoverId, userRole, onBack }: ProjectDetai
 
   const [activeTab, setActiveTab] = useState<ProjectDetailTabId>('overview');
   const bundle = projectApi.getProjectDetailByHandoverId(handoverId);
+  const [progressLogs, setProgressLogs] = useState(bundle?.progressLogs ?? []);
+
+  useEffect(() => {
+    const b = projectApi.getProjectDetailByHandoverId(handoverId);
+    if (b) setProgressLogs(b.progressLogs ?? []);
+  }, [handoverId]);
 
   if (!bundle) {
     return (
@@ -100,6 +106,8 @@ export function ProjectDetailPage({ handoverId, userRole, onBack }: ProjectDetai
         engagementLetter={engagementLetter}
         requirements={requirements}
         documents={documents}
+        progressLogs={progressLogs}
+        onAddProgress={(log) => setProgressLogs((prev) => [log, ...prev])}
         onBack={onBack}
       />
     </div>

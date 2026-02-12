@@ -4,6 +4,7 @@ import type {
   ProjectDocument,
   RequirementStatus,
   DocumentCategory,
+  ProgressLog,
 } from '../../../lib/projectWorkflowTypes';
 import type { Project, Lead, Proposal, EngagementLetter } from '../../../lib/mock-data';
 import {
@@ -40,6 +41,7 @@ export interface ProjectDetailBundle {
   projectId?: string;
   requirements: Requirement[];
   documents: ProjectDocument[];
+  progressLogs: ProgressLog[];
 }
 
 /**
@@ -129,6 +131,7 @@ export const projectApi = {
       project?.assignedPM ? 'PM_ASSIGNED' : (handover.workflowStatus ?? undefined);
     const requirements = mapHandoverDataRequirementsToRequirements(handover, handoverId);
     const documents = getDocumentsForHandover(handover);
+    const progressLogs: ProgressLog[] = [];
     return {
       handover,
       lead,
@@ -140,6 +143,7 @@ export const projectApi = {
       projectId: project?.id,
       requirements,
       documents,
+      progressLogs,
     };
   },
 };
