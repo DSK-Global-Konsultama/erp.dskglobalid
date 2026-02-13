@@ -1,5 +1,5 @@
 /**
- * Handover tab: read-only HandoverForm. Hidden sections from projectViewPolicy (PM: 4,5,6; COO: none).
+ * Handover tab: read-only HandoverForm. Hidden sections from projectViewPolicy (PM: 4,5,6; COO: 5,6).
  */
 
 import { useMemo, useState, useCallback } from 'react';
