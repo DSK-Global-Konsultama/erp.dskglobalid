@@ -1,6 +1,5 @@
 // controllers/campaign.controller.js
 const pool = require('../config/db');
-const crypto = require('crypto');
 
 // GET /campaigns
 exports.getAllCampaigns = async (req, res) => {
@@ -43,7 +42,7 @@ exports.getCampaignById = async (req, res) => {
 // POST /campaigns
 exports.createCampaign = async (req, res) => {
   const { name, type, channel, topic_tag, date_start, date_end, notes, status } = req.body;
-  const created_by = req.user?.username || req.user?.email || 'system';
+  const created_by = req.user?.full_name || req.user?.username || req.user?.email || 'system';
 
   if (!name || !type || !channel || !status) {
     return res.status(400).json({
@@ -66,20 +65,22 @@ exports.createCampaign = async (req, res) => {
     return res.status(400).json({ message: `status harus salah satu dari: ${validStatuses.join(', ')}` });
   }
 
-  const id = crypto.randomUUID();
-
   try {
+    // Generate numeric ID (auto-increment style)
+    const [maxRows] = await pool.query('SELECT COALESCE(MAX(CAST(id AS UNSIGNED)), 0) as max_id FROM campaigns');
+    const nextId = (parseInt(maxRows[0].max_id) + 1).toString();
+
     await pool.query(
       `INSERT INTO campaigns (id, name, type, channel, topic_tag, date_start, date_end, notes, status, created_by) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, name, type, channel, topic_tag || null, date_start || null, date_end || null, notes || null, status, created_by]
+      [nextId, name, type, channel, topic_tag || null, date_start || null, date_end || null, notes || null, status, created_by]
     );
 
     const [rows] = await pool.query(
       `SELECT id, name, type, channel, topic_tag, date_start, date_end, notes, status, created_by, created_at, updated_at 
        FROM campaigns 
        WHERE id = ? LIMIT 1`,
-      [id]
+      [nextId]
     );
 
     return res.status(201).json({

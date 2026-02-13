@@ -32,7 +32,7 @@
 
 #### 1.1 Create Campaign
 ```
-POST {{base_url}}/d
+POST {{base_url}}/campaigns
 Headers:
   Authorization: Bearer {{token}}
   Content-Type: application/json

@@ -7,7 +7,7 @@ exports.getAllFormFields = async (req, res) => {
 
   try {
     let query = `
-      SELECT ff.id, ff.form_id, ff.field_key, ff.type, ff.label, ff.required, ff.is_core, ff.placeholder, ff.sort_order, ff.created_at, ff.updated_at
+      SELECT ff.id, ff.form_id, ff.field_key, ff.type, ff.label, ff.note, ff.required, ff.is_core, ff.placeholder, ff.file_settings, ff.sort_order, ff.created_at, ff.updated_at
       FROM form_fields ff
     `;
     const params = [];
@@ -64,7 +64,7 @@ exports.getFormFieldById = async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      `SELECT id, form_id, field_key, type, label, required, is_core, placeholder, sort_order, created_at, updated_at 
+      `SELECT id, form_id, field_key, type, label, note, required, is_core, placeholder, file_settings, sort_order, created_at, updated_at 
        FROM form_fields 
        WHERE id = ? LIMIT 1`,
       [id]
@@ -96,7 +96,7 @@ exports.getFormFieldById = async (req, res) => {
 
 // POST /form-fields
 exports.createFormField = async (req, res) => {
-  const { form_id, field_key, type, label, required, is_core, placeholder, sort_order, options } = req.body;
+  const { form_id, field_key, type, label, note, required, is_core, placeholder, file_settings, sort_order, options } = req.body;
 
   if (!form_id || !field_key || !type || !label || sort_order === undefined) {
     return res.status(400).json({
@@ -105,7 +105,7 @@ exports.createFormField = async (req, res) => {
   }
 
   // Validate enum values
-  const validTypes = ['SHORT_TEXT', 'LONG_TEXT', 'DROPDOWN', 'RADIO', 'CHECKBOX', 'DATE'];
+  const validTypes = ['SHORT_TEXT', 'LONG_TEXT', 'DROPDOWN', 'RADIO', 'CHECKBOX', 'DATE', 'FILE_UPLOAD'];
   if (!validTypes.includes(type)) {
     return res.status(400).json({ message: `type harus salah satu dari: ${validTypes.join(', ')}` });
   }
@@ -122,16 +122,18 @@ exports.createFormField = async (req, res) => {
   try {
     // Insert form field
     const [result] = await connection.query(
-      `INSERT INTO form_fields (form_id, field_key, type, label, required, is_core, placeholder, sort_order) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO form_fields (form_id, field_key, type, label, note, required, is_core, placeholder, file_settings, sort_order) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         form_id,
         field_key,
         type,
         label,
+        note || null,
         required ? 1 : 0,
         is_core ? 1 : 0,
         placeholder || null,
+        file_settings ? JSON.stringify(file_settings) : null,
         sort_order
       ]
     );
@@ -153,7 +155,7 @@ exports.createFormField = async (req, res) => {
 
     // Fetch the complete field with options
     const [rows] = await pool.query(
-      `SELECT id, form_id, field_key, type, label, required, is_core, placeholder, sort_order, created_at, updated_at 
+      `SELECT id, form_id, field_key, type, label, note, required, is_core, placeholder, file_settings, sort_order, created_at, updated_at 
        FROM form_fields 
        WHERE id = ? LIMIT 1`,
       [fieldId]
@@ -197,7 +199,7 @@ exports.createFormField = async (req, res) => {
 // PUT /form-fields/:id
 exports.updateFormField = async (req, res) => {
   const { id } = req.params;
-  const { field_key, type, label, required, is_core, placeholder, sort_order, options } = req.body;
+  const { field_key, type, label, note, required, is_core, placeholder, file_settings, sort_order, options } = req.body;
 
   const fields = [];
   const values = [];
@@ -207,7 +209,7 @@ exports.updateFormField = async (req, res) => {
     values.push(field_key);
   }
   if (type !== undefined) {
-    const validTypes = ['SHORT_TEXT', 'LONG_TEXT', 'DROPDOWN', 'RADIO', 'CHECKBOX', 'DATE'];
+    const validTypes = ['SHORT_TEXT', 'LONG_TEXT', 'DROPDOWN', 'RADIO', 'CHECKBOX', 'DATE', 'FILE_UPLOAD'];
     if (!validTypes.includes(type)) {
       return res.status(400).json({ message: `type harus salah satu dari: ${validTypes.join(', ')}` });
     }
@@ -217,6 +219,10 @@ exports.updateFormField = async (req, res) => {
   if (label !== undefined) {
     fields.push('label = ?');
     values.push(label);
+  }
+  if (note !== undefined) {
+    fields.push('note = ?');
+    values.push(note || null);
   }
   if (required !== undefined) {
     fields.push('required = ?');
@@ -233,6 +239,11 @@ exports.updateFormField = async (req, res) => {
   if (sort_order !== undefined) {
     fields.push('sort_order = ?');
     values.push(sort_order);
+  }
+
+  if (file_settings !== undefined) {
+    fields.push('file_settings = ?');
+    values.push(file_settings ? JSON.stringify(file_settings) : null);
   }
 
   const connection = await pool.getConnection();
@@ -275,7 +286,7 @@ exports.updateFormField = async (req, res) => {
 
     // Fetch the updated field with options
     const [rows] = await pool.query(
-      `SELECT id, form_id, field_key, type, label, required, is_core, placeholder, sort_order, created_at, updated_at 
+      `SELECT id, form_id, field_key, type, label, note, required, is_core, placeholder, file_settings, sort_order, created_at, updated_at 
        FROM form_fields 
        WHERE id = ? LIMIT 1`,
       [id]

@@ -32,9 +32,13 @@ const formRoutes = require('./routes/form.routes');
 const formFieldRoutes = require('./routes/form_field.routes');
 const campaignFormRoutes = require('./routes/campaign_form.routes');
 const bankDataEntryRoutes = require('./routes/bank_data_entry.routes');
+const publicRoutes = require('./routes/public.routes');
 
 // Auth (tanpa JWT)
 app.use('/auth', authRoutes);
+
+// Public routes (tanpa JWT)
+app.use('/public', publicRoutes);
 
 // Protected routes (butuh Authorization: Bearer <token>)
 app.use('/users', authenticate, userRoutes);
@@ -54,4 +58,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
- 

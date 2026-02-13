@@ -3,7 +3,7 @@ import { mockReimbursements } from '../../../lib/mock-data';
 
 export const reimbursementService = {
   getAll: (): Reimbursement[] => {
-    // In real app, this would fetch from API
+    // In real app, this would use axios: return await api.get('/reimbursements').then(r => r.data);
     return mockReimbursements;
   },
 

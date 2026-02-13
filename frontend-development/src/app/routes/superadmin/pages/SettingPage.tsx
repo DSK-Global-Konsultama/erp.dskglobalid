@@ -3,10 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Label } from '../../../../components/ui/label';
-import { Textarea } from '../../../../components/ui/textarea';
+// Textarea removed (unused)
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
 import { Switch } from '../../../../components/ui/switch';
-import { Settings, Bell, Shield, Database, Mail, Globe, Save } from 'lucide-react';
+import { Settings, Bell, Shield, Database, Mail, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function SettingPage() {

@@ -7,6 +7,7 @@ import { X } from 'lucide-react';
 import { animate } from 'framer-motion';
 import { Dialog, DialogContent } from '../../../../components/ui/dialog';
 import type { BankDataEntry } from '../../../../lib/leadManagementTypes';
+import { formatIndonesianLongDateTime } from '../../../../utils/dateFormat';
 
 interface SubmissionDetailModalProps {
   submission: BankDataEntry | null;
@@ -32,10 +33,15 @@ export function SubmissionDetailModal({ submission, open, onClose }: SubmissionD
 
   // Format channel display (capitalize first letter only)
   const formatChannel = (channel: string) => {
-    if (channel === 'IG') {
-      return 'Instagram';
-    }
-    return channel.charAt(0).toUpperCase() + channel.slice(1).toLowerCase();
+    const map: Record<string, string> = {
+      INSTAGRAM: 'Instagram',
+      LINKEDIN: 'LinkedIn',
+      WEBSITE: 'Website',
+      SEMINAR: 'Seminar',
+      WEBINAR: 'Webinar',
+      BREVET: 'Brevet'
+    };
+    return map[channel] || channel;
   };
 
   // Handle close with animation
@@ -177,7 +183,7 @@ export function SubmissionDetailModal({ submission, open, onClose }: SubmissionD
                 <div className="flex justify-between">
                   <span className="text-gray-600">Submitted At:</span>
                   <span className="font-medium text-gray-900">
-                    {new Date(submission.submittedAt).toLocaleString('id-ID')}
+                    {formatIndonesianLongDateTime(submission.submittedAt)}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -260,7 +266,7 @@ export function SubmissionDetailModal({ submission, open, onClose }: SubmissionD
                         By: {submission.cleanedBy}
                         {submission.cleanedAt && (
                           <span className="ml-2 text-gray-500">
-                            on {new Date(submission.cleanedAt).toLocaleDateString('id-ID')}
+                            on {formatIndonesianLongDateTime(submission.cleanedAt)}
                           </span>
                         )}
                       </div>
@@ -274,7 +280,7 @@ export function SubmissionDetailModal({ submission, open, onClose }: SubmissionD
                         By: {submission.rejectedBy}
                         {submission.rejectedAt && (
                           <span className="ml-2 text-gray-500">
-                            on {new Date(submission.rejectedAt).toLocaleDateString('id-ID')}
+                            on {formatIndonesianLongDateTime(submission.rejectedAt)}
                           </span>
                         )}
                       </div>
@@ -293,7 +299,7 @@ export function SubmissionDetailModal({ submission, open, onClose }: SubmissionD
                         By: {submission.promotedBy}
                         {submission.promotedAt && (
                           <span className="ml-2 text-gray-500">
-                            on {new Date(submission.promotedAt).toLocaleDateString('id-ID')}
+                            on {formatIndonesianLongDateTime(submission.promotedAt)}
                           </span>
                         )}
                       </div>

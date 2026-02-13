@@ -7,15 +7,16 @@ import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
 import { Card, CardContent } from '../../../../components/ui/card';
-import type { BankDataEntry } from '../../../../lib/leadManagementTypes';
-import { mockForms } from '../../../../lib/leadManagementMockData';
+import type { BankDataEntry, Form } from '../../../../lib/leadManagementTypes';
+import { formatIndonesianLongDateTime } from '../../../../utils/dateFormat';
 
 interface SubmissionsTabProps {
   submissions: BankDataEntry[];
+  forms?: Form[];
   onViewSubmission: (submission: BankDataEntry) => void;
 }
 
-export function SubmissionsTab({ submissions, onViewSubmission }: SubmissionsTabProps) {
+export function SubmissionsTab({ submissions, forms = [], onViewSubmission }: SubmissionsTabProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
@@ -79,7 +80,7 @@ export function SubmissionsTab({ submissions, onViewSubmission }: SubmissionsTab
       s.email,
       s.phone,
       s.triageStatus,
-      s.submittedAt,
+      formatIndonesianLongDateTime(s.submittedAt),
       s.campaignName,
       s.sourceChannel
     ]);
@@ -100,10 +101,15 @@ export function SubmissionsTab({ submissions, onViewSubmission }: SubmissionsTab
 
   // Format channel
   const formatChannel = (channel: string) => {
-    if (channel === 'IG') {
-      return 'Instagram';
-    }
-    return channel.charAt(0).toUpperCase() + channel.slice(1).toLowerCase();
+    const map: Record<string, string> = {
+      INSTAGRAM: 'Instagram',
+      LINKEDIN: 'LinkedIn',
+      WEBSITE: 'Website',
+      SEMINAR: 'Seminar',
+      WEBINAR: 'Webinar',
+      BREVET: 'Brevet'
+    };
+    return map[channel] || channel;
   };
 
   return (
@@ -215,7 +221,7 @@ export function SubmissionsTab({ submissions, onViewSubmission }: SubmissionsTab
         <>
           <div className="space-y-3">
             {paginatedSubmissions.map(submission => {
-              const formInfo = mockForms.find(f => f.id === submission.formId);
+              const formInfo = forms.find(f => f.id === submission.formId);
               return (
                 <Card key={submission.id} className="hover:shadow-md transition-all cursor-pointer group" onClick={() => onViewSubmission(submission)}>
                   <CardContent className="pt-6">
@@ -257,7 +263,7 @@ export function SubmissionsTab({ submissions, onViewSubmission }: SubmissionsTab
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3.5 h-3.5" />
-                          <span>{submission.submittedAt}</span>
+                          <span>{formatIndonesianLongDateTime(submission.submittedAt)}</span>
                         </div>
                         {formInfo && (
                           <div className="flex items-center gap-1">

@@ -3,7 +3,7 @@ import { mockLeads } from '../../../lib/mock-data';
 
 export const leadsService = {
   getAll: (): Lead[] => {
-    // In real app, this would fetch from API
+    // In real app, this would use axios: return await api.get('/leads').then(r => r.data);
     return mockLeads;
   },
 

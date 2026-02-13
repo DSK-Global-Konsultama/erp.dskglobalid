@@ -74,15 +74,15 @@ export function UserManagementPage() {
     departments: [],
   });
 
-  // Fetch data
+  // Load data using axios
   useEffect(() => {
-    fetchAllData();
+    loadAllData();
   }, []);
 
-  const fetchAllData = async () => {
+  const loadAllData = async () => {
     setLoading(true);
     try {
-      console.log('[UserManagement] Fetching data...');
+      console.log('[UserManagement] Loading data...');
       const token = localStorage.getItem('erp_auth_token');
       console.log('[UserManagement] Token exists:', !!token);
       
@@ -92,7 +92,7 @@ export function UserManagementPage() {
         departmentService.getAllDepartments(),
       ]);
 
-      console.log('[UserManagement] Data fetched:', {
+      console.log('[UserManagement] Data loaded:', {
         users: usersData.length,
         roles: rolesData.length,
         departments: departmentsData.length,
@@ -138,7 +138,7 @@ export function UserManagementPage() {
       setRoles(rolesData);
       setDepartments(departmentsData);
     } catch (error) {
-      console.error('[UserManagement] Error fetching data:', error);
+      console.error('[UserManagement] Error loading data:', error);
       const errorMessage = error instanceof Error ? error.message : 'Gagal memuat data';
       console.error('[UserManagement] Error details:', {
         message: errorMessage,
@@ -202,7 +202,7 @@ export function UserManagementPage() {
       toast.success('User berhasil dibuat');
       setIsCreateDialogOpen(false);
       resetForm();
-      fetchAllData();
+      loadAllData();
     } catch (error) {
       console.error('Error creating user:', error);
       toast.error(error instanceof Error ? error.message : 'Gagal membuat user');
@@ -247,7 +247,7 @@ export function UserManagementPage() {
       setIsEditDialogOpen(false);
       setEditingUser(null);
       resetForm();
-      fetchAllData();
+      loadAllData();
     } catch (error) {
       console.error('Error updating user:', error);
       toast.error(error instanceof Error ? error.message : 'Gagal mengupdate user');
@@ -264,7 +264,7 @@ export function UserManagementPage() {
     try {
       await userService.deleteUser(userId);
       toast.success('User berhasil dihapus');
-      fetchAllData();
+      loadAllData();
     } catch (error) {
       console.error('Error deleting user:', error);
       toast.error(error instanceof Error ? error.message : 'Gagal menghapus user');

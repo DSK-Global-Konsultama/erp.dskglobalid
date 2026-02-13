@@ -3,7 +3,7 @@ import { mockTickets } from '../../../lib/mock-data';
 
 export const ticketingService = {
   getAll: (): Ticket[] => {
-    // In real app, this would fetch from API
+    // In real app, this would use axios: return await api.get('/tickets').then(r => r.data);
     return mockTickets;
   },
 

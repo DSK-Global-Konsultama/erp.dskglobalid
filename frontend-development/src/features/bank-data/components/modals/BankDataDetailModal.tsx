@@ -9,12 +9,12 @@ import { Dialog, DialogContent } from '../../../../components/ui/dialog';
 import { Button } from '../../../../components/ui/button';
 import type { BankDataEntry } from '../../../../lib/leadManagementTypes';
 import { getTriageStatusBadge } from '../../../../lib/statusHelpers';
+import { formatIndonesianLongDateTime } from '../../../../utils/dateFormat';
 
 interface BankDataDetailModalProps {
   entry: BankDataEntry | null;
   open: boolean;
   onClose: () => void;
-  onUpdate?: (updates: Partial<BankDataEntry>) => void;
   onReject?: (reason: string) => void;
   onPromote?: () => void;
   canEdit?: boolean; // For BD-MEO, this should be false
@@ -23,9 +23,8 @@ interface BankDataDetailModalProps {
 export function BankDataDetailModal({ 
   entry, 
   open,
-  onClose, 
-  onUpdate, 
-  onReject, 
+  onClose,
+  onReject,
   onPromote,
   canEdit = true 
 }: BankDataDetailModalProps) {
@@ -124,10 +123,31 @@ export function BankDataDetailModal({
 
   // Format channel
   const formatChannel = (channel: string) => {
-    if (channel === 'IG') {
-      return 'Instagram';
-    }
-    return channel.charAt(0).toUpperCase() + channel.slice(1).toLowerCase();
+    const map: Record<string, string> = {
+      INSTAGRAM: 'Instagram',
+      LINKEDIN: 'LinkedIn',
+      WEBSITE: 'Website',
+      SEMINAR: 'Seminar',
+      WEBINAR: 'Webinar',
+      BREVET: 'Brevet'
+    };
+    return map[channel] || channel;
+  };
+
+  const toWhatsAppLink = (raw: string | null | undefined): string | null => {
+    const s = String(raw || '').trim();
+    if (!s) return null;
+
+    const digits = s.replace(/\D/g, '');
+    if (!digits) return null;
+
+    let normalized = digits;
+    if (normalized.startsWith('0')) normalized = `62${normalized.slice(1)}`;
+    else if (normalized.startsWith('62')) normalized = normalized;
+    else if (normalized.startsWith('8')) normalized = `62${normalized}`;
+
+    if (!normalized.startsWith('62') || normalized.length < 10) return null;
+    return `https://wa.me/${normalized}`;
   };
 
   return (
@@ -180,7 +200,7 @@ export function BankDataDetailModal({
                 <div className="flex justify-between">
                   <span className="text-gray-600">Submitted At:</span>
                   <span className="font-medium text-gray-900">
-                    {new Date(entry.submittedAt).toLocaleString('id-ID')}
+                    {formatIndonesianLongDateTime(entry.submittedAt)}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -221,7 +241,19 @@ export function BankDataDetailModal({
                 </div>
                 <div className="bg-white border border-gray-200 rounded-lg p-3">
                   <div className="text-xs text-gray-600 mb-1">Phone Number</div>
-                  <div className="font-medium text-gray-900">{entry.phone}</div>
+                  {toWhatsAppLink(entry.phone) ? (
+                    <a
+                      className="font-medium text-blue-600 hover:underline"
+                      href={toWhatsAppLink(entry.phone) as string}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Chat via WhatsApp"
+                    >
+                      {entry.phone}
+                    </a>
+                  ) : (
+                    <div className="font-medium text-gray-900">{entry.phone}</div>
+                  )}
                 </div>
               </div>
             </div>

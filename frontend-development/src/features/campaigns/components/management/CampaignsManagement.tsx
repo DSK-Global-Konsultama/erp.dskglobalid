@@ -2,35 +2,73 @@
  * BD_MEO: Campaign List & Management
  */
 
-import { useState, useEffect } from 'react';
-import { Search, Plus, Eye, Filter } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Search, Plus, Eye, Filter, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '../../../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { Input } from '../../../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
-import { mockCampaigns } from '../../../../lib/leadManagementMockData';
 import type { Campaign, CampaignType, Channel, CampaignStatus } from '../../../../lib/leadManagementTypes';
 import { CreateCampaignModal } from '../modals/CreateCampaignModal';
-import { getBankDataByCampaign } from '../../../../lib/leadManagementMockData';
+import { EditCampaignModal } from '../modals/EditCampaignModal';
+import { DeleteCampaignConfirmDialog } from '../modals/DeleteCampaignConfirmDialog';
+import { campaignsService } from '../../services/campaignsService';
+import { toast } from 'sonner';
+import { formatCampaignPeriod } from '../../../../utils/dateFormat';
 
 export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignId: string) => void }) {
-  const [campaigns] = useState<Campaign[]>(mockCampaigns);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [bankDataCount, setBankDataCount] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<CampaignType | 'ALL'>('ALL');
   const [filterChannel, setFilterChannel] = useState<Channel | 'ALL'>('ALL');
   const [filterStatus, setFilterStatus] = useState<CampaignStatus | 'ALL'>('ALL');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  const [deletingCampaign, setDeletingCampaign] = useState<Campaign | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
+  const refetchCampaigns = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [campaignRes, bankEntries] = await Promise.all([
+        campaignsService.getAll(),
+        campaignsService.getBankDataEntries()
+      ]);
+      setCampaigns(campaignRes);
+      const counts: Record<string, number> = {};
+      bankEntries.forEach((entry) => {
+        counts[entry.campaignId] = (counts[entry.campaignId] || 0) + 1;
+      });
+      setBankDataCount(counts);
+    } catch (err: any) {
+      setError(err?.message || 'Gagal memuat data campaign');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refetchCampaigns();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Filter campaigns
-  const filteredCampaigns = campaigns.filter(campaign => {
-    const matchesSearch = campaign.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = filterType === 'ALL' || campaign.type === filterType;
-    const matchesChannel = filterChannel === 'ALL' || campaign.channel === filterChannel;
-    const matchesStatus = filterStatus === 'ALL' || campaign.status === filterStatus;
-    return matchesSearch && matchesType && matchesChannel && matchesStatus;
-  });
+  const filteredCampaigns = useMemo(
+    () =>
+      campaigns.filter((campaign) => {
+        const matchesSearch = campaign.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesType = filterType === 'ALL' || campaign.type === filterType;
+        const matchesChannel = filterChannel === 'ALL' || campaign.channel === filterChannel;
+        const matchesStatus = filterStatus === 'ALL' || campaign.status === filterStatus;
+        return matchesSearch && matchesType && matchesChannel && matchesStatus;
+      }),
+    [campaigns, searchQuery, filterType, filterChannel, filterStatus]
+  );
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -53,7 +91,7 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
 
   // Get submission count for each campaign
   const getSubmissionCount = (campaignId: string) => {
-    return getBankDataByCampaign(campaignId).length;
+    return bankDataCount[campaignId] || 0;
   };
 
   // Status badge colors
@@ -71,9 +109,7 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
   // Type badge colors
   const getTypeColor = (type: CampaignType) => {
     switch (type) {
-      case 'WEBINAR':
-        return 'bg-blue-100 text-blue-800';
-      case 'SOCIAL':
+      case 'SOCIAL_MEDIA':
         return 'bg-purple-100 text-purple-800';
       case 'FREEBIE':
         return 'bg-green-100 text-green-800';
@@ -84,10 +120,15 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
 
   // Format channel display (capitalize first letter only)
   const formatChannel = (channel: Channel) => {
-    if (channel === 'IG') {
-      return 'Instagram';
-    }
-    return channel.charAt(0).toUpperCase() + channel.slice(1).toLowerCase();
+    const map: Partial<Record<Channel, string>> = {
+      INSTAGRAM: 'Instagram',
+      LINKEDIN: 'LinkedIn',
+      WEBSITE: 'Website',
+      SEMINAR: 'Seminar',
+      WEBINAR: 'Webinar',
+      BREVET: 'Brevet'
+    };
+    return map[channel] || channel;
   };
 
   return (
@@ -115,9 +156,9 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="WEBINAR">Webinar</SelectItem>
-                <SelectItem value="SOCIAL">Social</SelectItem>
+                <SelectItem value="SOCIAL_MEDIA">Social Media</SelectItem>
                 <SelectItem value="FREEBIE">Freebie</SelectItem>
+                <SelectItem value="EVENT">Event</SelectItem>
               </SelectContent>
             </Select>
             <Select 
@@ -129,10 +170,12 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Channels</SelectItem>
-                <SelectItem value="IG">Instagram</SelectItem>
+                <SelectItem value="INSTAGRAM">Instagram</SelectItem>
                 <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
                 <SelectItem value="WEBSITE">Website</SelectItem>
-                <SelectItem value="EVENT">Event</SelectItem>
+                <SelectItem value="SEMINAR">Seminar</SelectItem>
+                <SelectItem value="WEBINAR">Webinar</SelectItem>
+                <SelectItem value="BREVET">Brevet</SelectItem>
               </SelectContent>
             </Select>
             <Select 
@@ -195,7 +238,19 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {paginatedCampaigns.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                      Loading campaigns...
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-red-600">
+                      {error}
+                    </td>
+                  </tr>
+                ) : paginatedCampaigns.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                       No campaigns found
@@ -209,7 +264,7 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
                           <div className="font-medium text-gray-900">{campaign.name}</div>
                           {campaign.dateRange && (
                             <div className="text-sm text-gray-500">
-                              {campaign.dateRange.start} - {campaign.dateRange.end}
+                              {formatCampaignPeriod({ start: campaign.dateRange.start, end: campaign.dateRange.end })}
                             </div>
                           )}
                         </div>
@@ -240,13 +295,31 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <button
-                          onClick={() => onViewDetail(campaign.id)}
-                          className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                          View
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => onViewDetail(campaign.id)}
+                            className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                            <Eye className="w-4 h-4" />
+                            View
+                          </button>
+
+                          <button
+                            onClick={() => setEditingCampaign(campaign)}
+                            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                            Edit
+                          </button>
+
+                          <button
+                            onClick={() => setDeletingCampaign(campaign)}
+                            className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -319,9 +392,35 @@ export function CampaignsManagement({ onViewDetail }: { onViewDetail: (campaignI
         onClose={() => setShowCreateModal(false)}
         onSuccess={() => {
           setShowCreateModal(false);
-          // In real app: refetch campaigns
+          toast.success('Campaign berhasil dibuat');
+          refetchCampaigns();
         }}
       />
+
+      {editingCampaign && (
+        <EditCampaignModal
+          open={!!editingCampaign}
+          campaign={editingCampaign}
+          onClose={() => setEditingCampaign(null)}
+          onSuccess={(updated) => {
+            setCampaigns((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+            setEditingCampaign(null);
+          }}
+        />
+      )}
+
+      {deletingCampaign && (
+        <DeleteCampaignConfirmDialog
+          open={!!deletingCampaign}
+          campaignName={deletingCampaign.name}
+          onClose={() => setDeletingCampaign(null)}
+          onConfirm={async () => {
+            await campaignsService.delete(deletingCampaign.id);
+            setCampaigns((prev) => prev.filter((c) => c.id !== deletingCampaign.id));
+            setDeletingCampaign(null);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,5 @@
 // controllers/bank_data_entry.controller.js
 const pool = require('../config/db');
-const crypto = require('crypto');
 
 // GET /bank-data-entries
 exports.getAllBankDataEntries = async (req, res) => {
@@ -119,8 +118,6 @@ exports.createBankDataEntry = async (req, res) => {
     return res.status(404).json({ message: 'Campaign form tidak ditemukan' });
   }
 
-  const id = crypto.randomUUID();
-
   try {
     // Parse extra_answers if it's a string
     let extraAnswersValue = extra_answers;
@@ -132,13 +129,17 @@ exports.createBankDataEntry = async (req, res) => {
       }
     }
 
+    // Generate numeric ID (auto-increment style)
+    const [maxRows] = await pool.query('SELECT COALESCE(MAX(CAST(id AS UNSIGNED)), 0) as max_id FROM bank_data_entries');
+    const nextId = (parseInt(maxRows[0].max_id) + 1).toString();
+
     await pool.query(
       `INSERT INTO bank_data_entries 
        (id, campaign_id, form_id, client_name, pic_name, email, phone, source_channel, campaign_name, 
         topic_tag, triage_status, extra_answers, notes, submitted_at) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        id,
+        nextId,
         campaign_id,
         form_id,
         client_name,
@@ -162,7 +163,7 @@ exports.createBankDataEntry = async (req, res) => {
               submitted_at, created_at, updated_at 
        FROM bank_data_entries 
        WHERE id = ? LIMIT 1`,
-      [id]
+      [nextId]
     );
 
     return res.status(201).json({

@@ -7,7 +7,10 @@ function generateToken(user, departments) {
   const payload = {
     sub: user.id,
     role: user.role_code,
-    departments: departments.map((d) => d.code)
+    departments: departments.map((d) => d.code),
+    full_name: user.full_name,
+    username: user.username,
+    email: user.email
   };
 
   const token = jwt.sign(
