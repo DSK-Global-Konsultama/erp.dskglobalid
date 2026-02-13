@@ -9,11 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../../components
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
-import { mockBankData } from '../../../../lib/leadManagementMockData';
 import type { BankDataEntry, BankDataTriageStatus, Channel } from '../../../../lib/leadManagementTypes';
 import { getTriageStatusBadge } from '../../../../lib/statusHelpers';
 import { BankDataDetailModal } from '../modals/BankDataDetailModal';
 import { CreateManualLeadModal } from '../modals/CreateManualLeadModal';
+import { campaignsService } from '../../../campaigns/services/campaignsService';
+import { formatIndonesianLongDateTime } from '../../../../utils/dateFormat';
 
 interface BankDataManagementProps {
   canEdit?: boolean; // false for BD-MEO, true for BD-Admin
@@ -21,12 +22,16 @@ interface BankDataManagementProps {
 }
 
 export function BankDataManagement({ canEdit = true, onPromoteToLead }: BankDataManagementProps) {
-  const [bankData] = useState<BankDataEntry[]>(mockBankData);
+  const [bankData, setBankData] = useState<BankDataEntry[]>([]);
+  // Map form_id -> form title (source form)
+  const [formTitleById, setFormTitleById] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<BankDataTriageStatus | 'ALL'>('ALL');
   const [filterChannel, setFilterChannel] = useState<Channel | 'ALL'>('ALL');
   const [selectedEntry, setSelectedEntry] = useState<BankDataEntry | null>(null);
   const [showManualLeadModal, setShowManualLeadModal] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   
   // Sorting state
   const [sortBy, setSortBy] = useState<'date' | 'client' | 'status'>('date');
@@ -82,6 +87,45 @@ export function BankDataManagement({ canEdit = true, onPromoteToLead }: BankData
     setCurrentPage(1);
   }, [searchQuery, filterStatus, filterChannel, itemsPerPage]);
 
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const entries = await campaignsService.getBankDataEntries();
+        setBankData(entries);
+
+        // Load form titles for rendering "Form" column
+        const uniqueFormIds = Array.from(new Set((entries || []).map((e) => String(e.formId)).filter(Boolean)));
+        if (uniqueFormIds.length > 0) {
+          // Fetch in parallel; if some fail (deleted form), ignore.
+          const results = await Promise.all(
+            uniqueFormIds.map(async (id) => {
+              try {
+                const f = await campaignsService.getFormById(id);
+                return [id, f.title] as const;
+              } catch {
+                return [id, id] as const;
+              }
+            })
+          );
+          const map: Record<string, string> = {};
+          results.forEach(([id, title]) => {
+            map[id] = title;
+          });
+          setFormTitleById(map);
+        } else {
+          setFormTitleById({});
+        }
+      } catch (err: any) {
+        setError(err?.message || 'Gagal memuat bank data entries');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
   // Ensure currentPage doesn't exceed totalPages
   useEffect(() => {
     const totalPages = Math.ceil(sortedData.length / itemsPerPage);
@@ -106,10 +150,36 @@ export function BankDataManagement({ canEdit = true, onPromoteToLead }: BankData
 
   // Format channel
   const formatChannel = (channel: string) => {
-    if (channel === 'IG') {
-      return 'Instagram';
-    }
-    return channel.charAt(0).toUpperCase() + channel.slice(1).toLowerCase();
+    const map: Record<string, string> = {
+      INSTAGRAM: 'Instagram',
+      LINKEDIN: 'LinkedIn',
+      WEBSITE: 'Website',
+      SEMINAR: 'Seminar',
+      WEBINAR: 'Webinar',
+      BREVET: 'Brevet'
+    };
+    return map[channel] || channel;
+  };
+
+  // Helper: normalize Indonesian phone numbers to wa.me/62...
+  const toWhatsAppLink = (raw: string | null | undefined): string | null => {
+    const s = String(raw || '').trim();
+    if (!s) return null;
+
+    // Keep digits only
+    const digits = s.replace(/\D/g, '');
+    if (!digits) return null;
+
+    // Normalize to 62xxxxxxxxxx
+    let normalized = digits;
+    if (normalized.startsWith('0')) normalized = `62${normalized.slice(1)}`;
+    else if (normalized.startsWith('62')) normalized = normalized;
+    else if (normalized.startsWith('8')) normalized = `62${normalized}`;
+
+    // Basic sanity: must start with 62 and have plausible length
+    if (!normalized.startsWith('62') || normalized.length < 10) return null;
+
+    return `https://wa.me/${normalized}`;
   };
 
   return (
@@ -184,10 +254,12 @@ export function BankDataManagement({ canEdit = true, onPromoteToLead }: BankData
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Channels</SelectItem>
-                <SelectItem value="IG">Instagram</SelectItem>
+                <SelectItem value="INSTAGRAM">Instagram</SelectItem>
                 <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
                 <SelectItem value="WEBSITE">Website</SelectItem>
-                <SelectItem value="EVENT">Event</SelectItem>
+                <SelectItem value="SEMINAR">Seminar</SelectItem>
+                <SelectItem value="WEBINAR">Webinar</SelectItem>
+                <SelectItem value="BREVET">Brevet</SelectItem>
               </SelectContent>
             </Select>
 
@@ -254,6 +326,7 @@ export function BankDataManagement({ canEdit = true, onPromoteToLead }: BankData
                   <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">PIC / Contact</th>
                   <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Source</th>
                   <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Campaign</th>
+                  <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Form</th>
                   <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">
                     <button
                       onClick={() => handleSort('status')}
@@ -269,7 +342,19 @@ export function BankDataManagement({ canEdit = true, onPromoteToLead }: BankData
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {paginatedData.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                      Loading data...
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-red-600">
+                      {error}
+                    </td>
+                  </tr>
+                ) : paginatedData.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                       No entries found
@@ -281,15 +366,7 @@ export function BankDataManagement({ canEdit = true, onPromoteToLead }: BankData
                     return (
                       <tr key={entry.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900">
-                            {new Date(entry.submittedAt).toLocaleDateString('id-ID')}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {new Date(entry.submittedAt).toLocaleTimeString('id-ID', { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })}
-                          </div>
+                          <div className="text-sm text-gray-900">{formatIndonesianLongDateTime(entry.submittedAt)}</div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="font-medium text-gray-900">{entry.clientName}</div>
@@ -297,20 +374,33 @@ export function BankDataManagement({ canEdit = true, onPromoteToLead }: BankData
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-900">{entry.picName}</div>
                           <div className="text-xs text-gray-500">{entry.email}</div>
-                          <div className="text-xs text-gray-500">{entry.phone}</div>
+                          {toWhatsAppLink(entry.phone) ? (
+                            <a
+                              className="text-xs text-blue-600 hover:underline"
+                              href={toWhatsAppLink(entry.phone) as string}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Chat via WhatsApp"
+                            >
+                              {entry.phone}
+                            </a>
+                          ) : (
+                            <div className="text-xs text-gray-500">{entry.phone}</div>
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           <span className="text-sm text-gray-700">{formatChannel(entry.sourceChannel)}</span>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900 max-w-xs truncate">
-                            {entry.campaignName}
-                          </div>
+                          <div className="text-sm text-gray-900 max-w-xs truncate">{entry.campaignName}</div>
                           {entry.topicTag && (
                             <span className="inline-block mt-1 px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded text-xs">
                               {entry.topicTag}
                             </span>
                           )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-700 truncate">{formTitleById[entry.formId] || entry.formId}</div>
                         </td>
                         <td className="px-6 py-4">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border ${statusBadge.color}`}>
@@ -390,11 +480,6 @@ export function BankDataManagement({ canEdit = true, onPromoteToLead }: BankData
         entry={selectedEntry}
         open={!!selectedEntry}
         onClose={() => setSelectedEntry(null)}
-        onUpdate={(updates) => {
-          console.log('Update entry:', updates);
-          // In real app: update state via service
-          setSelectedEntry(null);
-        }}
         onReject={(reason) => {
           console.log('Reject entry:', reason);
           // In real app: update state via service

@@ -1,15 +1,18 @@
 /**
  * BD_MEO: Campaign Detail Page
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../../../../components/ui/button';
 import { Card, CardContent } from '../../../../components/ui/card';
-import { mockCampaigns, mockForms, getBankDataByCampaign } from '../../../../lib/leadManagementMockData';
-import type { Campaign, BankDataEntry } from '../../../../lib/leadManagementTypes';
+import type { BankDataEntry, Campaign, Form } from '../../../../lib/leadManagementTypes';
 import { OverviewTab } from '../tabs/OverviewTab';
 import { FormsTab } from '../tabs/FormsTab';
 import { SubmissionsTab } from '../tabs/SubmissionsTab';
 import { SubmissionDetailModal } from '../modals/SubmissionDetailModal';
+import { campaignsService } from '../../services/campaignsService';
+import { formatCampaignPeriod } from '../../../../utils/dateFormat';
+import { toast } from 'sonner';
+import { DeleteFormConfirmDialog } from '../modals/DeleteFormConfirmDialog';
 
 interface CampaignDetailProps {
   campaignId: string;
@@ -23,15 +26,52 @@ type TabType = 'overview' | 'forms' | 'submissions';
 export function CampaignDetail({ campaignId, onBack, onCreateForm, onEditForm }: CampaignDetailProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [selectedSubmission, setSelectedSubmission] = useState<BankDataEntry | null>(null);
+  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [campaignForms, setCampaignForms] = useState<Form[]>([]);
+  const [submissions, setSubmissions] = useState<BankDataEntry[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [deletingForm, setDeletingForm] = useState<Form | null>(null);
 
-  const campaign = mockCampaigns.find(c => c.id === campaignId);
-  const campaignForms = mockForms.filter(f => f.campaignId === campaignId);
-  const submissions = getBankDataByCampaign(campaignId);
+  const refetchForms = async () => {
+    const forms = await campaignsService.getFormsByCampaign(campaignId);
+    setCampaignForms(forms);
+  };
 
-  if (!campaign) {
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [camp, forms, bank] = await Promise.all([
+          campaignsService.getById(campaignId),
+          campaignsService.getFormsByCampaign(campaignId),
+          campaignsService.getBankDataEntries({ campaign_id: campaignId })
+        ]);
+        setCampaign(camp);
+        setCampaignForms(forms);
+        setSubmissions(bank);
+      } catch (err: any) {
+        setError(err?.message || 'Gagal memuat detail campaign');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [campaignId]);
+
+  if (loading) {
     return (
       <div className="p-8">
-        <p className="text-gray-600">Campaign not found</p>
+        <p className="text-gray-600">Memuat detail campaign...</p>
+      </div>
+    );
+  }
+
+  if (error || !campaign) {
+    return (
+      <div className="p-8">
+        <p className="text-gray-600">{error || 'Campaign not found'}</p>
         <Button onClick={onBack} variant="outline" className="mt-4">
           ← Back to campaigns
         </Button>
@@ -50,8 +90,7 @@ export function CampaignDetail({ campaignId, onBack, onCreateForm, onEditForm }:
 
   const getTypeColor = (type: Campaign['type']) => {
     switch (type) {
-      case 'WEBINAR': return 'bg-blue-100 text-blue-700';
-      case 'SOCIAL': return 'bg-purple-100 text-purple-700';
+      case 'SOCIAL_MEDIA': return 'bg-purple-100 text-purple-700';
       case 'FREEBIE': return 'bg-green-100 text-green-700';
       case 'EVENT': return 'bg-red-100 text-red-700';
     }
@@ -59,10 +98,15 @@ export function CampaignDetail({ campaignId, onBack, onCreateForm, onEditForm }:
 
   // Format channel display (capitalize first letter only)
   const formatChannel = (channel: Campaign['channel']) => {
-    if (channel === 'IG') {
-      return 'Instagram';
-    }
-    return channel.charAt(0).toUpperCase() + channel.slice(1).toLowerCase();
+    const labels: Partial<Record<Campaign['channel'], string>> = {
+      INSTAGRAM: 'Instagram',
+      LINKEDIN: 'LinkedIn',
+      WEBSITE: 'Website',
+      SEMINAR: 'Seminar',
+      WEBINAR: 'Webinar',
+      BREVET: 'Brevet'
+    };
+    return labels[channel] || channel;
   };
 
   // Calculate stats
@@ -98,7 +142,7 @@ export function CampaignDetail({ campaignId, onBack, onCreateForm, onEditForm }:
         </div>
         {campaign.dateRange && (
           <div className="text-sm text-gray-600 mb-2">
-            Period: {campaign.dateRange.start} — {campaign.dateRange.end}
+            Period: {formatCampaignPeriod({ start: campaign.dateRange.start, end: campaign.dateRange.end })}
           </div>
         )}
         {campaign.notes && (
@@ -190,12 +234,18 @@ export function CampaignDetail({ campaignId, onBack, onCreateForm, onEditForm }:
               forms={campaignForms}
               onCreateForm={onCreateForm}
               onEditForm={onEditForm}
+              onDeleteForm={(form) => setDeletingForm(form)}
+              onUpdateFormStatus={async (formId, status) => {
+                await campaignsService.updateForm(formId, { status });
+                await refetchForms();
+              }}
             />
           )}
 
           {activeTab === 'submissions' && (
             <SubmissionsTab
               submissions={submissions}
+              forms={campaignForms}
               onViewSubmission={setSelectedSubmission}
             />
           )}
@@ -207,6 +257,23 @@ export function CampaignDetail({ campaignId, onBack, onCreateForm, onEditForm }:
         submission={selectedSubmission}
         open={!!selectedSubmission}
         onClose={() => setSelectedSubmission(null)}
+      />
+
+      <DeleteFormConfirmDialog
+        open={!!deletingForm}
+        formTitle={deletingForm?.title || ''}
+        onClose={() => setDeletingForm(null)}
+        onConfirm={async () => {
+          if (!deletingForm) return;
+          try {
+            await campaignsService.deleteForm(deletingForm.id);
+            toast.success('Form berhasil dihapus');
+            setDeletingForm(null);
+            await refetchForms();
+          } catch (err: any) {
+            toast.error(err?.message || 'Gagal menghapus form');
+          }
+        }}
       />
     </div>
   );

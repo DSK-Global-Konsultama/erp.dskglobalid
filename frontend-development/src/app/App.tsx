@@ -53,6 +53,9 @@ import { ProjectsManagementPage } from '../features/projects';
 // Auth imports
 import { AuthPage } from './routes/auth/AuthPage';
 
+// Public form import
+import { PublicFormPage } from './routes/public-form/PublicFormPage';
+
 // Helper function to map User role to Header role type
 const mapRoleForHeader = (role: User['role']): 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'SuperAdmin' => {
   if (role === 'ITSpecialist') return 'IT';
@@ -89,6 +92,18 @@ export default function App() {
   const resetDetailRef = useRef<(() => void) | null>(null);
   const resetCampaignDetailRef = useRef<(() => void) | null>(null);
   const resetFormBuilderDetailRef = useRef<(() => void) | null>(null);
+
+  // If path looks like a public form slug (e.g. /form-test-campaign-2026), render public form page.
+  // Keep this before the authenticated app shell.
+  if (typeof window !== 'undefined') {
+    const path = window.location.pathname || '';
+    const slug = path.replace(/^\//, '');
+    const looksLikeSlug = !!slug && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+
+    if (looksLikeSlug) {
+      return <PublicFormPage slug={slug} />;
+    }
+  }
 
   // Check for existing session on mount
   useEffect(() => {
@@ -451,7 +466,7 @@ export default function App() {
     return (
       <>
         <AuthPage onLoginSuccess={handleLogin} />
-        <Toaster />
+        <Toaster position="bottom-right" />
       </>
     );
   }
@@ -522,7 +537,7 @@ export default function App() {
         </div>
       </div>
 
-      <Toaster />
+      <Toaster position="bottom-right" />
     </div>
   );
 }

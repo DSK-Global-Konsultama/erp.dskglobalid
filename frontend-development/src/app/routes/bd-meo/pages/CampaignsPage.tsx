@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { CampaignsManagement } from '../../../../features/campaigns/components/management/CampaignsManagement';
 import { CampaignDetail } from '../../../../features/campaigns/components/management/CampaignDetail';
 import { FormBuilder } from '../../../../features/campaigns/components/FormBuilder';
-import { mockCampaigns, mockForms } from '../../../../lib/leadManagementMockData';
-import type { Form } from '../../../../lib/leadManagementTypes';
+import type { Campaign, Form } from '../../../../lib/leadManagementTypes';
+import { campaignsService } from '../../../../features/campaigns/services/campaignsService';
+import { toast } from 'sonner';
 
 interface CampaignsPageProps {
   userName: string;
@@ -22,8 +23,9 @@ interface CampaignsPageProps {
   onResetFormBuilderDetail?: (resetFn: () => void) => void;
 }
 
-export function CampaignsPage({ userName, activeNav, onCampaignDetailChange, onFormBuilderDetailChange, onResetDetail, onResetFormBuilderDetail }: CampaignsPageProps) {
+export function CampaignsPage({ activeNav, onCampaignDetailChange, onFormBuilderDetailChange, onResetDetail, onResetFormBuilderDetail }: CampaignsPageProps) {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [formBuilderState, setFormBuilderState] = useState<{
     campaignId: string;
     campaignName: string;
@@ -85,62 +87,125 @@ export function CampaignsPage({ userName, activeNav, onCampaignDetailChange, onF
   // Update campaign detail in header when selected campaign changes
   useEffect(() => {
     if (selectedCampaignId && onCampaignDetailChange) {
-      const campaign = mockCampaigns.find(c => c.id === selectedCampaignId);
-      if (campaign) {
-        onCampaignDetailChange({
-          name: campaign.name,
-          type: campaign.type,
-          status: campaign.status,
-          channel: campaign.channel,
-          topicTag: campaign.topicTag
+      campaignsService
+        .getById(selectedCampaignId)
+        .then((campaign) => {
+          setSelectedCampaign(campaign);
+          onCampaignDetailChange({
+            name: campaign.name,
+            type: campaign.type,
+            status: campaign.status,
+            channel: campaign.channel,
+            topicTag: campaign.topicTag
+          });
+        })
+        .catch(() => {
+          setSelectedCampaign(null);
+          onCampaignDetailChange(null);
         });
-      }
     } else if (onCampaignDetailChange) {
+      setSelectedCampaign(null);
       onCampaignDetailChange(null);
     }
   }, [selectedCampaignId, onCampaignDetailChange]);
 
   const handleCreateForm = (campaignId: string) => {
-    const campaign = mockCampaigns.find(c => c.id === campaignId);
-    if (campaign) {
-      setFormBuilderState({
-        campaignId,
-        campaignName: campaign.name
+    const campaign = selectedCampaign && selectedCampaign.id === campaignId ? selectedCampaign : null;
+    const campaignName = campaign?.name || 'Campaign';
+    setFormBuilderState({
+      campaignId,
+      campaignName
+    });
+    if (onFormBuilderDetailChange) {
+      onFormBuilderDetailChange({
+        campaignName
       });
-      // Update form builder detail in header
-      if (onFormBuilderDetailChange) {
-        onFormBuilderDetailChange({
-          campaignName: campaign.name
-        });
-      }
     }
   };
 
   const handleEditForm = (formId: string) => {
-    const form = mockForms.find(f => f.id === formId);
-    if (form) {
-      const campaign = mockCampaigns.find(c => c.id === form.campaignId);
-      if (campaign) {
+    campaignsService
+      .getFormById(formId)
+      .then((form) => {
+        const campaignId = form.primaryCampaignId || form.campaignId || '';
+        const campaignName =
+          form.campaignId === selectedCampaign?.id
+            ? (selectedCampaign?.name ?? form.title)
+            : form.title;
         setFormBuilderState({
-          campaignId: form.campaignId,
-          campaignName: campaign.name,
+          campaignId,
+          campaignName,
           formId: form.id
         });
-        // Update form builder detail in header
         if (onFormBuilderDetailChange) {
           onFormBuilderDetailChange({
-            campaignName: campaign.name
+            campaignName
           });
         }
-      }
-    }
+      })
+      .catch(() => {
+        setFormBuilderState(null);
+      });
   };
 
-  const handleFormSave = (formData: Partial<Form>) => {
-    // In real app: API call to save form
-    console.log('Saving form:', formData);
-    // For now, just show success message
-    // In production, this would call campaignsService.createForm() or updateForm()
+  const handleFormSave = async (formData: Partial<Form>) => {
+    if (!formBuilderState) return;
+    try {
+      const basePayload = {
+        title: formData.title || `Form: ${formBuilderState.campaignName}`,
+        description: formData.description || '',
+        success_message: formData.successMessage || null,
+        status: formData.status || 'DRAFT',
+        public_link: formData.publicLink || null,
+        published_at: formData.publishedAt || null,
+        primary_campaign_id: formBuilderState.campaignId
+      };
+
+      const savedForm = formBuilderState.formId
+        ? await campaignsService.updateForm(formBuilderState.formId, basePayload)
+        : await campaignsService.createForm(basePayload);
+
+      if (formData.fields && formData.fields.length > 0) {
+        // Clear old fields when updating
+        if (formBuilderState.formId) {
+          const existing = await campaignsService.getFormFields(savedForm.id);
+          await Promise.all(existing.map((f) => campaignsService.deleteFormField(f.id)));
+        }
+
+        await Promise.all(
+          formData.fields.map((field, index) =>
+            campaignsService.createFormField({
+              form_id: savedForm.id,
+              field_key: field.label.toLowerCase().replace(/\s+/g, '_'),
+              type: field.type,
+              label: field.label,
+              required: field.required,
+              is_core: field.isCore ?? false,
+              placeholder: field.placeholder || null,
+              sort_order: index,
+              options: (field.options || []).map((opt) => ({ opt_value: opt }))
+            })
+          )
+        );
+      }
+
+      toast.success(
+        formData.status === 'PUBLISHED'
+          ? 'Form berhasil dipublish'
+          : 'Form berhasil disimpan'
+      );
+
+      // FormBuilder onSave expects void
+      return;
+    } catch (error: any) {
+      const status = error?.status ?? error?.response?.status;
+      if (status === 409) {
+        toast.error('Judul form sudah digunakan pada campaign ini. Silakan gunakan judul lain.');
+        return;
+      }
+      toast.error(error?.message || 'Gagal menyimpan form');
+      throw error;
+    }
   };
 
   const handleFormBuilderBack = () => {
@@ -149,20 +214,9 @@ export function CampaignsPage({ userName, activeNav, onCampaignDetailChange, onF
     if (onFormBuilderDetailChange) {
       onFormBuilderDetailChange(null);
     }
-    // Return to campaign detail (set selectedCampaignId back)
+    // Return to campaign detail
     if (formBuilderState) {
       setSelectedCampaignId(formBuilderState.campaignId);
-      // Update campaign detail in header
-      const campaign = mockCampaigns.find(c => c.id === formBuilderState.campaignId);
-      if (campaign && onCampaignDetailChange) {
-        onCampaignDetailChange({
-          name: campaign.name,
-          type: campaign.type,
-          status: campaign.status,
-          channel: campaign.channel,
-          topicTag: campaign.topicTag
-        });
-      }
     }
   };
 

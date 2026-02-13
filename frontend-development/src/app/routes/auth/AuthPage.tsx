@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { Button } from '../../../components/ui/button';
 import { useAuthForm } from './hooks/useAuthForm';
 import { AuthBackground } from './components/AuthBackground';
 import { InfoPanel } from './components/InfoPanel';
@@ -169,7 +168,7 @@ export function AuthPage({ onLoginSuccess }: AuthPageProps) {
                   </motion.div>
 
                   {/* Divider */}
-                  <motion.div
+                  {/* <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.9, duration: 0.4 }}
@@ -181,10 +180,10 @@ export function AuthPage({ onLoginSuccess }: AuthPageProps) {
                     <div className="relative flex justify-center">
                       <span className="bg-white px-2 sm:px-3 text-gray-400 text-[10px] sm:text-xs">Atau masuk dengan</span>
                     </div>
-                  </motion.div>
+                  </motion.div> */}
 
                   {/* Social Login */}
-                  <motion.div
+                  {/* <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1, duration: 0.4 }}
@@ -203,7 +202,7 @@ export function AuthPage({ onLoginSuccess }: AuthPageProps) {
                       </svg>
                       Login menggunakan Microsoft
                     </Button>
-                  </motion.div>
+                  </motion.div> */}
                 </motion.div>
               </div>
 

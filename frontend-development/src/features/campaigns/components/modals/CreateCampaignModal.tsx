@@ -4,12 +4,14 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { animate } from 'framer-motion';
+import { toast } from 'sonner';
 import { Dialog, DialogContent } from '../../../../components/ui/dialog';
 import { Input } from '../../../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
 import { Textarea } from '../../../../components/ui/textarea';
 import { Button } from '../../../../components/ui/button';
-import type { CampaignType, Channel } from '../../../../lib/leadManagementTypes';
+import type { CampaignStatus, CampaignType, Channel } from '../../../../lib/leadManagementTypes';
+import { campaignsService } from '../../services/campaignsService';
 
 interface CreateCampaignModalProps {
   open: boolean;
@@ -21,13 +23,54 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    type: 'WEBINAR' as CampaignType,
-    channel: 'EVENT' as Channel, // Default EVENT for WEBINAR
+    type: 'SOCIAL_MEDIA' as CampaignType,
+    channel: 'INSTAGRAM' as Channel,
+    status: 'ACTIVE' as CampaignStatus,
     topicTag: '',
     dateStart: '',
     dateEnd: '',
     notes: ''
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [noEndDate, setNoEndDate] = useState(false);
+
+  useEffect(() => {
+    if (noEndDate) {
+      setFormData((prev) => ({ ...prev, dateEnd: '' }));
+    }
+  }, [noEndDate]);
+
+  const CHANNEL_OPTIONS_BY_TYPE: Record<CampaignType, Array<{ value: Channel; label: string }>> = {
+    SOCIAL_MEDIA: [
+      { value: 'INSTAGRAM', label: 'Instagram' },
+      { value: 'LINKEDIN', label: 'LinkedIn' }
+    ],
+    SOCIAL: [
+      { value: 'INSTAGRAM', label: 'Instagram' },
+      { value: 'LINKEDIN', label: 'LinkedIn' }
+    ],
+    FREEBIE: [{ value: 'WEBSITE', label: 'Website' }],
+    EVENT: [
+      { value: 'SEMINAR', label: 'Seminar' },
+      { value: 'WEBINAR', label: 'Webinar' },
+      { value: 'BREVET', label: 'Brevet' }
+    ],
+    WEBINAR: [
+      { value: 'SEMINAR', label: 'Seminar' },
+      { value: 'WEBINAR', label: 'Webinar' },
+      { value: 'BREVET', label: 'Brevet' }
+    ]
+  };
+
+  const allowedChannels = CHANNEL_OPTIONS_BY_TYPE[formData.type];
+
+  useEffect(() => {
+    const isAllowed = allowedChannels.some((c) => c.value === formData.channel);
+    if (!isAllowed) {
+      setFormData((prev) => ({ ...prev, channel: allowedChannels[0].value }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.type]);
 
   // Handle close with animation
   const handleClose = () => {
@@ -116,62 +159,44 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
     return () => clearTimeout(timer);
   }, [open, isAnimatingOut]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate required fields
-    if (!formData.type) {
-      alert('Campaign Type is required');
-      return;
-    }
-    
-    if (!formData.channel) {
-      alert('Channel is required');
-      return;
-    }
-    
-    if (!formData.name.trim()) {
-      alert('Campaign Name is required');
-      return;
-    }
-    
-    if (isWebinar && !formData.topicTag.trim()) {
-      alert('Topic Tag is required for Webinar campaigns');
-      return;
-    }
-    
-    if (!formData.dateStart) {
-      alert('Start Date is required');
-      return;
-    }
-    
-    if (!formData.dateEnd) {
-      alert('End Date is required');
-      return;
-    }
-    
-    if (!formData.notes.trim()) {
-      alert('Notes is required');
-      return;
-    }
-    
-    // Validate date range
-    if (formData.dateStart && formData.dateEnd && new Date(formData.dateStart) > new Date(formData.dateEnd)) {
-      alert('End Date must be after Start Date');
-      return;
-    }
-    
-    // In real app: API call to create campaign
-    console.log('Creating campaign:', formData);
-    
-    // Show success toast
-    alert('Campaign created successfully!');
-    onSuccess();
-    handleClose();
-  };
 
-  const isWebinar = formData.type === 'WEBINAR';
-  const isEventType = formData.type === 'WEBINAR' || formData.type === 'EVENT';
+    if (!formData.name.trim() || !formData.type || !formData.channel || !formData.status) {
+      toast.error('Mohon lengkapi data campaign');
+      return;
+    }
+
+    if (!formData.dateStart || (!noEndDate && !formData.dateEnd)) {
+      toast.error('Start Date dan End Date wajib diisi');
+      return;
+    }
+
+    if (!noEndDate && formData.dateStart && formData.dateEnd && new Date(formData.dateStart) > new Date(formData.dateEnd)) {
+      toast.error('End Date must be after Start Date');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await campaignsService.create({
+        name: formData.name.trim(),
+        type: formData.type,
+        channel: formData.channel,
+        topic_tag: formData.topicTag || null,
+        date_start: formData.dateStart || null,
+        date_end: noEndDate ? null : (formData.dateEnd || null),
+        notes: formData.notes || null,
+        status: formData.status
+      });
+      onSuccess();
+      handleClose();
+    } catch (err: any) {
+      toast.error(err?.message || 'Gagal membuat campaign');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <Dialog open={open || isAnimatingOut} onOpenChange={() => {
@@ -227,33 +252,18 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
               <label className="block text-sm text-gray-700 mb-2">
                 Campaign Type <span className="text-red-500">*</span>
               </label>
-              <Select
-                value={formData.type}
-                onValueChange={(value) => {
-                  const newType = value as CampaignType;
-                  setFormData({ 
-                    ...formData, 
-                    type: newType,
-                    // Auto-set channel: WEBINAR/EVENT → EVENT, others → LINKEDIN default
-                    channel: (newType === 'WEBINAR' || newType === 'EVENT') ? 'EVENT' : 'LINKEDIN',
-                    // Reset topic tag if not webinar or event
-                    topicTag: (newType !== 'WEBINAR' && newType !== 'EVENT') ? '' : formData.topicTag
-                  });
-                }}
-              >
+              <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value as CampaignType })}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="z-[10000]">
-                  <SelectItem value="WEBINAR">Webinar</SelectItem>
-                  <SelectItem value="SOCIAL">Social Media</SelectItem>
+                  <SelectItem value="SOCIAL_MEDIA">Social Media</SelectItem>
                   <SelectItem value="FREEBIE">Freebie / Lead Magnet</SelectItem>
                   <SelectItem value="EVENT">Event</SelectItem>
                 </SelectContent>
               </Select>
               <p className="mt-1 text-sm text-gray-500">
-                {formData.type === 'WEBINAR' && 'Event webinar atau online seminar'}
-                {formData.type === 'SOCIAL' && 'Campaign di social media (post, story, ads)'}
+                {formData.type === 'SOCIAL_MEDIA' && 'Campaign di social media (post, story, ads)'}
                 {formData.type === 'FREEBIE' && 'Free download atau lead magnet di website'}
                 {formData.type === 'EVENT' && 'Event fisik atau seminar offline'}
               </p>
@@ -267,28 +277,38 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
               <Select
                 value={formData.channel}
                 onValueChange={(value) => setFormData({ ...formData, channel: value as Channel })}
-                disabled={isEventType}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={isEventType ? "Event" : "Select channel"} />
+                  <SelectValue placeholder="Select channel" />
                 </SelectTrigger>
                 <SelectContent className="z-[10000]">
-                  {isEventType ? (
-                    <SelectItem value="EVENT">Event</SelectItem>
-                  ) : (
-                    <>
-                      <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
-                      <SelectItem value="IG">Instagram</SelectItem>
-                      <SelectItem value="WEBSITE">Website</SelectItem>
-                    </>
-                  )}
+                  {allowedChannels.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>
+                      {c.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              {isEventType && (
-                <p className="mt-1 text-sm text-gray-500">
-                  Channel otomatis di-set ke EVENT untuk campaign {formData.type === 'WEBINAR' ? 'webinar' : 'event'}
-                </p>
-              )}
+            </div>
+
+            {/* Status */}
+            <div>
+              <label className="block text-sm text-gray-700 mb-2">
+                Status <span className="text-red-500">*</span>
+              </label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => setFormData({ ...formData, status: value as CampaignStatus })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="z-[10000]">
+                  <SelectItem value="ACTIVE">Active</SelectItem>
+                  <SelectItem value="PAUSED">Paused</SelectItem>
+                  <SelectItem value="ENDED">Ended</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Campaign Name */}
@@ -306,25 +326,22 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
               />
             </div>
 
-            {/* Topic Tag (Webinar required, Event optional) */}
-            {(isWebinar || formData.type === 'EVENT') && (
-              <div className="md:col-span-2">
-                <label className="block text-sm text-gray-700 mb-2">
-                  Topic Tag {isWebinar && <span className="text-red-500">*</span>}
-                </label>
-                <Input
-                  type="text"
-                  value={formData.topicTag}
-                  onChange={(e) => setFormData({ ...formData, topicTag: e.target.value })}
-                  placeholder="e.g., TAX_PLANNING, LEGAL_SETUP"
-                  className="w-full"
-                  required={isWebinar}
-                />
-                <p className="mt-1 text-sm text-gray-500">
-                  Topic tag untuk analytics (tidak ditampilkan ke user form)
-                </p>
-              </div>
-            )}
+            {/* Topic Tag */}
+            <div className="md:col-span-2">
+              <label className="block text-sm text-gray-700 mb-2">
+                Topic Tag (optional)
+              </label>
+              <Input
+                type="text"
+                value={formData.topicTag}
+                onChange={(e) => setFormData({ ...formData, topicTag: e.target.value })}
+                placeholder="e.g., TAX_PLANNING, LEGAL_SETUP"
+                className="w-full"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Topic tag untuk analytics (tidak ditampilkan ke user form)
+              </p>
+            </div>
 
             {/* Date Range */}
             <div>
@@ -341,15 +358,32 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
             </div>
             <div>
               <label className="block text-sm text-gray-700 mb-2">
-                End Date <span className="text-red-500">*</span>
+                End Date {!noEndDate && <span className="text-red-500">*</span>}
               </label>
-              <Input
-                type="date"
-                value={formData.dateEnd}
-                onChange={(e) => setFormData({ ...formData, dateEnd: e.target.value })}
-                className="w-full"
-                required
-              />
+              {noEndDate ? (
+                <Input
+                  type="text"
+                  value="-"
+                  readOnly
+                  className="w-full bg-gray-50"
+                />
+              ) : (
+                <Input
+                  type="date"
+                  value={formData.dateEnd}
+                  onChange={(e) => setFormData({ ...formData, dateEnd: e.target.value })}
+                  className="w-full"
+                  required={!noEndDate}
+                />
+              )}
+              <label className="mt-2 inline-flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={noEndDate}
+                  onChange={(e) => setNoEndDate(e.target.checked)}
+                />
+                Present (tanpa end date)
+              </label>
             </div>
           </div>
 
@@ -371,18 +405,12 @@ export function CreateCampaignModal({ open, onClose, onSuccess }: CreateCampaign
           </div>
           
           {/* Footer - Tombol di Bawah */}
-          <div className="flex gap-3 justify-end py-4 px-6 border-t border-gray-200 bg-white flex-shrink-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-            >
+          <div className="bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0">
+            <Button type="button" variant="outline" onClick={handleClose} disabled={submitting}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-            >
-              Create Campaign
+            <Button type="submit" disabled={submitting}>
+              {submitting ? 'Creating...' : 'Create Campaign'}
             </Button>
           </div>
         </form>

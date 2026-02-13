@@ -1,6 +1,7 @@
 import { Eye } from 'lucide-react';
 import type { Campaign, BankDataEntry } from '../../../../lib/leadManagementTypes';
 import { getTriageStatusBadge } from '../../../../lib/statusHelpers';
+import { formatIndonesianLongDateTime } from '../../../../utils/dateFormat';
 
 interface OverviewTabProps {
   campaign: Campaign;
@@ -49,7 +50,7 @@ export function OverviewTab({ campaign, submissions, onViewSubmission }: Overvie
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <div className="text-sm text-gray-600">{submission.submittedAt}</div>
+                    <div className="text-sm text-gray-600">{formatIndonesianLongDateTime(submission.submittedAt)}</div>
                     <div>
                       {(() => {
                         const statusBadge = getTriageStatusBadge(submission.triageStatus);

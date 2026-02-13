@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 export type UserRole =
   | 'CEO'
   | 'COO-Tax-Audit'
@@ -157,6 +159,7 @@ const mapBackendUserToFrontend = (beUser: BackendUser): User => {
 export const authService = {
   // Login function with remember me support (calls backend API; demo accounts skip API)
   login: async (credentials: LoginCredentials, rememberMe: boolean = false): Promise<User> => {
+    // Demo accounts untuk development (skip backend)
     const identifier = (credentials.username || '').trim().toLowerCase();
     const demo = DEMO_ACCOUNTS[identifier] || DEMO_ACCOUNTS[credentials.username?.trim() ?? ''];
     if (demo && demo.password === credentials.password) {
@@ -172,59 +175,54 @@ export const authService = {
       return demo.user;
     }
 
-    const base = getApiBase();
-
-    let response: Response;
     try {
-      response = await fetch(`${base}/auth/login`, {
-        method: 'POST',
+      // Create a separate axios instance for login without auth token
+      const loginApi = axios.create({
+        baseURL: getApiBase(),
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          identifier: credentials.username,
-          password: credentials.password
-        })
       });
-    } catch (err) {
-      console.error('[authService.login] Network error', err);
-      throw new Error('Tidak dapat terhubung ke server. Periksa koneksi Anda.');
+
+      const response = await loginApi.post<BackendLoginResponse>('/auth/login', {
+        identifier: credentials.username,
+        password: credentials.password,
+      });
+
+      const payload = response.data;
+
+      if (!payload?.token || !payload?.user) {
+        throw new Error('Respon login tidak lengkap dari server');
+      }
+
+      const user = mapBackendUserToFrontend(payload.user);
+
+      const sessionData: SessionData = {
+        user,
+        token: payload.token,
+        timestamp: Date.now(),
+        rememberMe,
+      };
+
+      // Always use localStorage for session sharing across tabs
+      localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+      localStorage.setItem(TOKEN_KEY, payload.token);
+
+      // Set expiry time based on remember me
+      const expiryTime = Date.now() + (rememberMe ? REMEMBER_ME_DURATION : SESSION_TIMEOUT);
+      localStorage.setItem(SESSION_EXPIRY_KEY, expiryTime.toString());
+
+      return user;
+    } catch (err: any) {
+      console.error('[authService.login] Error', err);
+      if (err.response?.data?.message) {
+        throw new Error(err.response.data.message);
+      }
+      if (err.message) {
+        throw err;
+      }
+      throw new Error('Username atau password salah');
     }
-
-    let payload: BackendLoginResponse | null = null;
-    try {
-      payload = (await response.json()) as BackendLoginResponse;
-    } catch (err) {
-      console.error('[authService.login] Failed to parse response', err);
-    }
-
-    if (!response.ok) {
-      const message = payload?.message || 'Username atau password salah';
-      throw new Error(message);
-    }
-
-    if (!payload?.token || !payload?.user) {
-      throw new Error('Respon login tidak lengkap dari server');
-    }
-
-    const user = mapBackendUserToFrontend(payload.user);
-
-    const sessionData: SessionData = {
-      user,
-      token: payload.token,
-      timestamp: Date.now(),
-      rememberMe
-    };
-
-    // Always use localStorage for session sharing across tabs
-    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-    localStorage.setItem(TOKEN_KEY, payload.token);
-
-    // Set expiry time based on remember me
-    const expiryTime = Date.now() + (rememberMe ? REMEMBER_ME_DURATION : SESSION_TIMEOUT);
-    localStorage.setItem(SESSION_EXPIRY_KEY, expiryTime.toString());
-
-    return user;
   },
 
   // Logout function - clear localStorage and broadcast to other tabs
@@ -249,19 +247,22 @@ export const authService = {
   // Start Microsoft login by redirecting to backend
   loginWithMicrosoftStart: (): void => {
     const base = getApiBase();
-    const url = `${base}/auth/login`;
+    // backend route is /auth/microsoft (see backend routes)
+    const url = `${base}/auth/microsoft`;
     window.location.href = url;
   },
 
   // Finalize Microsoft login: call backend /me with credentials, store session locally
   finalizeMicrosoftLogin: async (): Promise<User | null> => {
     try {
-      const base = getApiBase();
-      const res = await fetch(`${base}/me`, {
-        method: 'GET',
-        credentials: 'include'
+      // Create a separate axios instance for Microsoft login with credentials
+      const microsoftApi = axios.create({
+        baseURL: getApiBase(),
+        withCredentials: true,
       });
-      const data = await res.json();
+
+      const res = await microsoftApi.get('/me');
+      const data = res.data;
       const beUser = data?.user;
       if (!beUser) return null;
 
