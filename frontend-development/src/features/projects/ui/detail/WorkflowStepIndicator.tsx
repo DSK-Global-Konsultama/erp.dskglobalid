@@ -36,9 +36,9 @@ export function WorkflowStepIndicator({ currentStatus }: WorkflowStepIndicatorPr
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
                     isCompleted
-                      ? 'bg-green-500 border-green-500 text-white'
+                      ? 'bg-gray-800 border-red-500 text-white'
                       : isCurrent
-                        ? 'bg-blue-600 border-blue-600 text-white'
+                        ? 'bg-red-600 border-red-600 text-white'
                         : 'bg-white border-gray-300 text-gray-400'
                   }`}
                 >
@@ -61,7 +61,7 @@ export function WorkflowStepIndicator({ currentStatus }: WorkflowStepIndicatorPr
               {!isLast && (
                 <div
                   className={`flex-1 h-0.5 mx-2 ${
-                    isCompleted ? 'bg-green-500' : 'bg-gray-300'
+                    isCompleted ? 'bg-red-500' : 'bg-gray-300'
                   }`}
                 />
               )}
