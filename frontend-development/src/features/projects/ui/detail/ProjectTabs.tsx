@@ -10,10 +10,10 @@ import {
   TrendingUp,
   Activity,
 } from 'lucide-react';
-import type { ExtendedHandover, Requirement, ProjectDocument, ProgressLog } from '../../../../lib/projectWorkflowTypes';
+import type { ExtendedHandover, Requirement, ProjectDocument, ProgressLog, ActivityLog } from '../../../../lib/projectWorkflowTypes';
 import type { Lead, Proposal, EngagementLetter } from '../../../../lib/mock-data';
 import type { ProjectDetailTabId } from '../../pages';
-import { ComingSoonTab, ProjectDocumentsTab, ProjectHandoverTab, ProjectProgressTab, ProjectRequirementsTab } from '../tabs';
+import { ComingSoonTab, ProjectActivityTab, ProjectDocumentsTab, ProjectHandoverTab, ProjectProgressTab, ProjectRequirementsTab } from '../tabs';
 
 const TAB_CONFIG: { id: ProjectDetailTabId; label: string; icon: React.ReactNode }[] = [
   { id: 'overview', label: 'Overview', icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -36,6 +36,7 @@ export interface ProjectTabsProps {
   requirements?: Requirement[];
   documents?: ProjectDocument[];
   progressLogs?: ProgressLog[];
+  activityLogs?: ActivityLog[];
   onAddProgress?: (log: ProgressLog) => void;
   onBack?: () => void;
 }
@@ -52,6 +53,7 @@ export function ProjectTabs({
   requirements = [],
   documents = [],
   progressLogs = [],
+  activityLogs = [],
   onAddProgress,
 }: ProjectTabsProps) {
   return (
@@ -108,7 +110,10 @@ export function ProjectTabs({
             onAddProgress={onAddProgress}
           />
         )}
-        {activeTab !== 'handover' && activeTab !== 'requirements' && activeTab !== 'documents' && activeTab !== 'progress' && (
+        {activeTab === 'activity' && (
+          <ProjectActivityTab activityLogs={activityLogs} />
+        )}
+        {activeTab !== 'handover' && activeTab !== 'requirements' && activeTab !== 'documents' && activeTab !== 'progress' && activeTab !== 'activity' && (
           <ComingSoonTab title={`${TAB_CONFIG.find((t) => t.id === activeTab)?.label ?? activeTab}`} />
         )}
       </div>

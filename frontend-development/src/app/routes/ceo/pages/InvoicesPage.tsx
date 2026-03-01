@@ -1,4 +1,4 @@
-import { InvoiceManagement } from '../../../../features/invoices/components/InvoiceManagement';
+import { InvoicesManagementPage } from '../../../../features/invoices';
 import { canApproveInvoices } from '../../../../utils/rolePermissions';
 import { authService } from '../../../../services/authService';
 
@@ -7,8 +7,8 @@ export function InvoicesPage() {
   const canApprove = canApproveInvoices(currentUser?.role);
 
   return (
-    <InvoiceManagement 
-      canApprove={canApprove} 
+    <InvoicesManagementPage
+      canApprove={canApprove}
       userRole={currentUser?.role}
     />
   );
