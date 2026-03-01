@@ -121,19 +121,6 @@ export function BankDataDetailModal({
 
   const statusBadge = getTriageStatusBadge(entry.triageStatus);
 
-  // Format channel
-  const formatChannel = (channel: string) => {
-    const map: Record<string, string> = {
-      INSTAGRAM: 'Instagram',
-      LINKEDIN: 'LinkedIn',
-      WEBSITE: 'Website',
-      SEMINAR: 'Seminar',
-      WEBINAR: 'Webinar',
-      BREVET: 'Brevet'
-    };
-    return map[channel] || channel;
-  };
-
   const toWhatsAppLink = (raw: string | null | undefined): string | null => {
     const s = String(raw || '').trim();
     if (!s) return null;
@@ -207,9 +194,15 @@ export function BankDataDetailModal({
                   <span className="text-gray-600">Campaign:</span>
                   <span className="font-medium text-gray-900">{entry.campaignName}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Source Channel:</span>
-                  <span className="font-medium text-gray-900">{formatChannel(entry.sourceChannel)}</span>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-xs text-gray-500">Source Channel</div>
+                    <div className="text-sm text-gray-900">{entry.sourceChannel}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Entry Slug</div>
+                    <div className="text-sm text-gray-900 font-mono break-all">{(entry as any).entrySlug || '-'}</div>
+                  </div>
                 </div>
                 {entry.topicTag && (
                   <div className="flex justify-between">

@@ -20,8 +20,8 @@ interface LeadTrackerDetailPageProps {
   onDeleteMeeting?: (id: string) => void;
   onAddNotulensi: (notulensi: Notulensi) => void;
   onUpdateNotulensi: (id: string, updates: Partial<Notulensi>) => void;
-  onAddProposal: (proposal: Proposal) => void;
-  onUpdateProposal: (id: string, updates: Partial<Proposal>) => void;
+  onAddProposal: (proposal: Proposal & { file?: File }) => void;
+  onUpdateProposal: (id: string, updates: Partial<Proposal> & { file?: File }) => void;
   onAddEngagementLetter: (el: EngagementLetter) => void;
   onUpdateEngagementLetter: (id: string, updates: Partial<EngagementLetter>) => void;
   onAddHandover: (handover: Handover) => void;

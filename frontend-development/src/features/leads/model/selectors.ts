@@ -1,33 +1,46 @@
 import type { Lead, Proposal, EngagementLetter, Handover, Meeting, Notulensi } from '../../../lib/mock-data';
 
+// Pipeline status baru dikemas dalam 1 status saja: Commercial Stage
 export type CommercialStage =
-  | 'TO_BE_MEET'
+  // Meeting
+  | 'MEETING_NOT_STARTED'
   | 'MEETING_SCHEDULED'
-  | 'NEED_NOTULEN'
-  | 'IN_NOTULEN'
-  | 'NEED_PROPOSAL'
-  | 'IN_PROPOSAL'
-  | 'IN_EL'
+  // Notulen
+  | 'NOTULEN_NOT_STARTED'
+  | 'NOTULEN_DRAFT'
+  | 'NOTULEN_WAITING_CEO_APPROVAL'
+  | 'NOTULEN_REVISION'
+  | 'NOTULEN_APPROVED'
+  // Proposal
+  | 'PROPOSAL_NOT_STARTED'
+  | 'PROPOSAL_DRAFT'
+  | 'PROPOSAL_WAITING_CEO_APPROVAL'
+  | 'PROPOSAL_REVISION'
+  | 'PROPOSAL_APPROVED'
+  | 'PROPOSAL_SENT_TO_CLIENT'
+  | 'PROPOSAL_ACCEPTED'
+  // Engagement Letter
+  | 'EL_NOT_UPLOADED'
+  | 'EL_WAITING_CEO_APPROVAL'
+  | 'EL_REVISION'
+  | 'EL_APPROVED'
+  | 'EL_SENT_TO_CLIENT'
   | 'EL_SIGNED'
-  | 'ON_HOLD'
-  | 'DROP';
-
-export type HandoverStatus =
-  | 'LOCKED'
-  | 'NOT_STARTED'
-  | 'DRAFT'
-  | 'WAITING_CEO'
-  | 'CEO_APPROVED'
-  | 'CONVERTED';
+  // Handover
+  | 'HANDOVER_LOCKED'
+  | 'HANDOVER_NOT_STARTED'
+  | 'HANDOVER_DRAFT'
+  | 'HANDOVER_WAITING_CEO_APPROVAL'
+  | 'HANDOVER_REVISION'
+  | 'HANDOVER_APPROVED';
 
 export interface LeadTrackerRowMeta {
   commercialStage: CommercialStage;
   activeDocumentLabel: string;
-  handoverStatus: HandoverStatus;
 }
 
 /**
- * Derive commercial stage, active document, and handover status from lead data
+ * Derive commercial stage and active document from lead data
  */
 export function deriveLeadTrackerRowMeta(
   lead: Lead & { status?: string; service?: string },
@@ -45,103 +58,144 @@ export function deriveLeadTrackerRowMeta(
   const leadELs = engagementLetters.filter(el => el.leadId === leadId);
   const leadHandovers = handovers.filter(h => h.leadId === leadId);
 
-  const signedEL = leadELs.find(el => el.status === 'SIGNED');
-
-  if (signedEL) {
-    const commercialStage: CommercialStage = 'EL_SIGNED';
-
-    let handoverStatus: HandoverStatus;
+  // Handover stage is only reachable after EL Accepted
+  const acceptedEL = leadELs.find(el => el.status === 'SIGNED');
+  if (acceptedEL) {
     if (leadHandovers.length === 0) {
-      handoverStatus = 'NOT_STARTED';
-    } else {
-      const latestHandover = leadHandovers[leadHandovers.length - 1];
+      return {
+        commercialStage: 'HANDOVER_NOT_STARTED',
+        activeDocumentLabel: 'Handover • Not Started',
+      };
+    }
+
+    const latestHandover = leadHandovers[leadHandovers.length - 1];
+    const substatus = getHandoverSubstatusLabel(latestHandover.status);
+
+    const commercialStage: CommercialStage = (() => {
       switch (latestHandover.status) {
         case 'DRAFT':
-          handoverStatus = 'DRAFT';
-          break;
+          return 'HANDOVER_DRAFT';
         case 'WAITING_CEO_APPROVAL':
-          handoverStatus = 'WAITING_CEO';
-          break;
+          return 'HANDOVER_WAITING_CEO_APPROVAL';
         case 'APPROVED':
-          handoverStatus = 'CEO_APPROVED';
-          break;
-        case 'CONVERTED':
-          handoverStatus = 'CONVERTED';
-          break;
-        case 'REJECTED':
-          handoverStatus = 'DRAFT';
-          break;
         case 'SENT_TO_PM':
-          handoverStatus = 'CEO_APPROVED';
-          break;
+        case 'CONVERTED':
+          return 'HANDOVER_APPROVED';
+        case 'REVISION':
+          return 'HANDOVER_REVISION';
         default:
-          handoverStatus = 'NOT_STARTED';
+          return 'HANDOVER_NOT_STARTED';
       }
-    }
-
-    let activeDocumentLabel: string;
-    if (leadHandovers.length === 0) {
-      activeDocumentLabel = 'Handover • Not Started (Required)';
-    } else {
-      const latestHandover = leadHandovers[leadHandovers.length - 1];
-      const substatus = getHandoverSubstatusLabel(latestHandover.status);
-      activeDocumentLabel = `Handover • ${substatus}`;
-    }
+    })();
 
     return {
       commercialStage,
-      activeDocumentLabel,
-      handoverStatus,
+      activeDocumentLabel: `Handover • ${substatus}`,
     };
   }
 
-  let commercialStage: CommercialStage;
-  let activeDocumentLabel: string;
-
+  // EL stage
   const latestEL = leadELs.length > 0 ? leadELs[leadELs.length - 1] : null;
-  if (latestEL && latestEL.status !== 'SIGNED') {
-    commercialStage = 'IN_EL';
+  if (latestEL) {
     const substatus = getELSubstatusLabel(latestEL.status);
-    activeDocumentLabel = `EL • ${substatus}`;
-  } else {
-    const latestProposal = leadProposals.length > 0 ? leadProposals[leadProposals.length - 1] : null;
-    if (latestProposal) {
-      commercialStage = 'IN_PROPOSAL';
-      const substatus = getProposalSubstatusLabel(latestProposal.status);
-      activeDocumentLabel = `Proposal • ${substatus}`;
-    } else {
-      const latestNotulen = leadNotulensi.length > 0 ? leadNotulensi[leadNotulensi.length - 1] : null;
-      if (latestNotulen) {
-        commercialStage = 'IN_NOTULEN';
-        const substatus = getNotulenSubstatusLabel(latestNotulen.status);
-        activeDocumentLabel = `Notulen • ${substatus}`;
-      } else {
-        const latestMeeting = leadMeetings.length > 0 ? leadMeetings[leadMeetings.length - 1] : null;
-        if (latestMeeting) {
-          if (latestMeeting.status === 'SCHEDULED') {
-            commercialStage = 'MEETING_SCHEDULED';
-            activeDocumentLabel = 'Meeting • Scheduled';
-          } else if (latestMeeting.status === 'DONE') {
-            commercialStage = 'NEED_NOTULEN';
-            activeDocumentLabel = 'Notulen • Not Started';
-          } else {
-            commercialStage = 'MEETING_SCHEDULED';
-            activeDocumentLabel = 'Meeting • Scheduled';
-          }
-        } else {
-          commercialStage = 'TO_BE_MEET';
-          activeDocumentLabel = 'Meeting • Not Scheduled';
-        }
+    const commercialStage: CommercialStage = (() => {
+      switch (latestEL.status) {
+        case 'WAITING_APPROVAL':
+          return 'EL_WAITING_CEO_APPROVAL';
+        case 'APPROVED':
+          return 'EL_APPROVED';
+        case 'SENT':
+          return 'EL_SENT_TO_CLIENT';
+        case 'SIGNED':
+          return 'EL_SIGNED';
+        case 'REVISION':
+          return 'EL_REVISION';
+        case 'DRAFT':
+        default:
+          return 'EL_NOT_UPLOADED';
       }
-    }
+    })();
+
+    return {
+      commercialStage,
+      activeDocumentLabel: `EL • ${substatus}`,
+    };
   }
 
-  const handoverStatus: HandoverStatus = 'LOCKED';
+  // Proposal stage
+  const latestProposal = leadProposals.length > 0 ? leadProposals[leadProposals.length - 1] : null;
+  if (latestProposal) {
+    const substatus = getProposalSubstatusLabel(latestProposal.status);
+    const commercialStage: CommercialStage = (() => {
+      switch (latestProposal.status) {
+        case 'WAITING_APPROVAL':
+        case 'WAITING_CEO_APPROVAL':
+          return 'PROPOSAL_WAITING_CEO_APPROVAL';
+        case 'APPROVED':
+          return 'PROPOSAL_APPROVED';
+        case 'SENT':
+          return 'PROPOSAL_SENT_TO_CLIENT';
+        case 'ACCEPTED':
+          return 'PROPOSAL_ACCEPTED';
+        case 'REVISION':
+          return 'PROPOSAL_REVISION';
+        case 'DRAFT':
+          return 'PROPOSAL_DRAFT';
+        default:
+          return 'PROPOSAL_NOT_STARTED';
+      }
+    })();
+
+    return {
+      commercialStage,
+      activeDocumentLabel: `Proposal • ${substatus}`,
+    };
+  }
+
+  // Notulen stage
+  const latestNotulen = leadNotulensi.length > 0 ? leadNotulensi[leadNotulensi.length - 1] : null;
+  if (latestNotulen) {
+    const substatus = getNotulenSubstatusLabel(latestNotulen.status);
+    const commercialStage: CommercialStage = (() => {
+      switch (latestNotulen.status) {
+        case 'WAITING_CEO_APPROVAL':
+          return 'NOTULEN_WAITING_CEO_APPROVAL';
+        case 'APPROVED':
+          return 'NOTULEN_APPROVED';
+        case 'REVISION':
+          return 'NOTULEN_REVISION';
+        case 'DRAFT':
+          return 'NOTULEN_DRAFT';
+        default:
+          return 'NOTULEN_NOT_STARTED';
+      }
+    })();
+
+    return {
+      commercialStage,
+      activeDocumentLabel: `Notulen • ${substatus}`,
+    };
+  }
+
+  // Meeting stage
+  const latestMeeting = leadMeetings.length > 0 ? leadMeetings[leadMeetings.length - 1] : null;
+  if (latestMeeting) {
+    if (latestMeeting.status === 'SCHEDULED') {
+      return {
+        commercialStage: 'MEETING_SCHEDULED',
+        activeDocumentLabel: 'Meeting • Scheduled',
+      };
+    }
+
+    return {
+      commercialStage: 'MEETING_NOT_STARTED',
+      activeDocumentLabel: 'Meeting • Not Started',
+    };
+  }
 
   return {
-    commercialStage,
-    activeDocumentLabel,
-    handoverStatus,
+    commercialStage: 'MEETING_NOT_STARTED',
+    activeDocumentLabel: 'Meeting • Not Started',
   };
 }
 
@@ -152,22 +206,18 @@ function getHandoverSubstatusLabel(status: Handover['status']): string {
     case 'WAITING_CEO_APPROVAL':
       return 'Waiting CEO Approval';
     case 'APPROVED':
-      return 'CEO Approved';
-    case 'CONVERTED':
-      return 'CONVERTED';
-    case 'REJECTED':
-      return 'Revision Requested';
     case 'SENT_TO_PM':
-      return 'CEO Approved';
+    case 'CONVERTED':
+      return 'Approved';
+    case 'REVISION':
+      return 'Revision';
     default:
-      return 'Not Started (Required)';
+      return 'Not Started';
   }
 }
 
 function getELSubstatusLabel(status: EngagementLetter['status']): string {
   switch (status) {
-    case 'DRAFT':
-      return 'Draft';
     case 'WAITING_APPROVAL':
       return 'Waiting CEO Approval';
     case 'APPROVED':
@@ -176,10 +226,11 @@ function getELSubstatusLabel(status: EngagementLetter['status']): string {
       return 'Sent to Client';
     case 'SIGNED':
       return 'Signed';
-    case 'REJECTED':
-      return 'Revision Requested';
+    case 'REVISION':
+      return 'Revision';
+    case 'DRAFT':
     default:
-      return 'Draft';
+      return 'Not Uploaded';
   }
 }
 
@@ -188,7 +239,6 @@ function getProposalSubstatusLabel(status: Proposal['status']): string {
     case 'DRAFT':
       return 'Draft';
     case 'WAITING_APPROVAL':
-      return 'Waiting CEO Approval';
     case 'WAITING_CEO_APPROVAL':
       return 'Waiting CEO Approval';
     case 'APPROVED':
@@ -197,10 +247,8 @@ function getProposalSubstatusLabel(status: Proposal['status']): string {
       return 'Sent to Client';
     case 'ACCEPTED':
       return 'Accepted';
-    case 'PROPOSAL_EXPIRED':
-      return 'Expired';
-    case 'REJECTED':
-      return 'Revision Requested';
+    case 'REVISION':
+      return 'Revision';
     default:
       return 'Not Started';
   }
@@ -214,8 +262,8 @@ function getNotulenSubstatusLabel(status: Notulensi['status']): string {
       return 'Waiting CEO Approval';
     case 'APPROVED':
       return 'Approved';
-    case 'REJECTED':
-      return 'Revision Requested';
+    case 'REVISION':
+      return 'Revision';
     default:
       return 'Not Started';
   }

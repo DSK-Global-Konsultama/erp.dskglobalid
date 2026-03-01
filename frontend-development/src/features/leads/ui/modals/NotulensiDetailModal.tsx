@@ -5,6 +5,7 @@ import { animate } from 'framer-motion';
 import { Dialog, DialogContent } from '../../../../components/ui/dialog';
 import { Button } from '../../../../components/ui/button';
 import type { Notulensi } from '../../../../lib/mock-data';
+import { NotulensiRevisionModal } from './NotulensiRevisionModal';
 
 interface NotulensiDetailModalProps {
   notulensi: Notulensi | null;
@@ -24,6 +25,7 @@ export function NotulensiDetailModal({
   readOnly = false
 }: NotulensiDetailModalProps) {
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
+  const [showRevisionModal, setShowRevisionModal] = useState(false);
 
   // Handle close with animation
   const handleClose = () => {
@@ -134,6 +136,25 @@ export function NotulensiDetailModal({
     }
   };
 
+  const handleApprove = () => {
+    if (!notulensi || !onUpdateNotulensi) return;
+    onUpdateNotulensi(notulensi.id, { status: 'APPROVED' });
+    toast.success('Notulensi approved');
+    handleClose();
+  };
+
+  const handleReject = () => {
+    if (!notulensi || !onUpdateNotulensi) return;
+    // For CEO flow we capture revision notes first
+    if (readOnly && notulensi.status === 'WAITING_CEO_APPROVAL') {
+      setShowRevisionModal(true);
+      return;
+    }
+    onUpdateNotulensi(notulensi.id, { status: 'REVISION' as any });
+    toast.success('Notulensi sent for revision');
+    handleClose();
+  };
+
   if (!notulensi) return null;
 
   return (
@@ -167,6 +188,24 @@ export function NotulensiDetailModal({
 
         {/* Content */}
         <div className="px-6 pb-6 space-y-6 overflow-y-auto flex-1">
+          {/* Revision Notes (if any) */}
+          {notulensi.status === 'REVISION' && notulensi.revisionNotes?.note ? (
+            <div className="border border-orange-200 bg-orange-50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-orange-900">Revision Notes</h3>
+                <div className="text-xs text-orange-800">
+                  {notulensi.revisionNotes.createdAt ? new Date(notulensi.revisionNotes.createdAt).toLocaleString('id-ID') : ''}
+                </div>
+              </div>
+              {notulensi.revisionNotes.sections?.length ? (
+                <div className="text-xs text-orange-900 mb-2">
+                  <span className="font-medium">Sections:</span> {notulensi.revisionNotes.sections.join(', ')}
+                </div>
+              ) : null}
+              <div className="text-sm text-orange-900 whitespace-pre-wrap">{notulensi.revisionNotes.note}</div>
+            </div>
+          ) : null}
+
           {/* Meeting Info */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="text-sm text-gray-600 mb-3">Meeting Info</h3>
@@ -320,14 +359,38 @@ export function NotulensiDetailModal({
         {/* Actions */}
         <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex gap-3 justify-end">
           {readOnly ? (
-            <Button
-              type="button"
-              onClick={handleClose}
-              className="bg-white text-gray-900 border border-gray-300 hover:bg-gray-50"
-            >
-              Close
-            </Button>
-          ) : notulensi.status === 'DRAFT' ? (
+            notulensi.status === 'WAITING_CEO_APPROVAL' ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleClose}
+                  className="bg-white text-gray-900 border border-gray-300 hover:bg-gray-50"
+                >
+                  Close
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleReject}
+                  className="bg-white text-red-700 border border-red-200 hover:bg-red-50"
+                >
+                  Revision
+                </Button>
+                <Button type="button" onClick={handleApprove}>
+                  Approve
+                </Button>
+              </>
+            ) : (
+              <Button
+                type="button"
+                onClick={handleClose}
+                className="bg-white text-gray-900 border border-gray-300 hover:bg-gray-50"
+              >
+                Close
+              </Button>
+            )
+          ) : notulensi.status === 'DRAFT' || notulensi.status === 'REVISION' ? (
             <>
               <Button
                 type="button"
@@ -346,10 +409,7 @@ export function NotulensiDetailModal({
                 <Edit className="w-4 h-4" />
                 Edit
               </Button>
-              <Button
-                type="button"
-                onClick={handleSubmitForApproval}
-              >
+              <Button type="button" onClick={handleSubmitForApproval}>
                 Submit for Approval
               </Button>
             </>
@@ -364,6 +424,27 @@ export function NotulensiDetailModal({
           )}
         </div>
       </DialogContent>
+
+      {notulensi && (
+        <NotulensiRevisionModal
+          open={showRevisionModal}
+          onClose={() => setShowRevisionModal(false)}
+          onSubmit={({ sections, note }) => {
+            if (!onUpdateNotulensi) return;
+            onUpdateNotulensi(notulensi.id, {
+              status: 'REVISION' as any,
+              revisionNotes: {
+                sections,
+                note,
+                createdAt: new Date().toISOString(),
+              },
+            });
+            toast.success('Revision notes sent');
+            setShowRevisionModal(false);
+            handleClose();
+          }}
+        />
+      )}
     </Dialog>
   );
 }

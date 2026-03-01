@@ -12,8 +12,8 @@ interface ProposalTabProps {
   leads: Lead[];
   proposals: Proposal[];
   readOnly?: boolean;
-  onAddProposal: (proposal: Proposal) => void;
-  onUpdateProposal: (id: string, updates: Partial<Proposal>) => void;
+  onAddProposal: (proposal: Proposal & { file?: File }) => void;
+  onUpdateProposal: (id: string, updates: Partial<Proposal> & { file?: File }) => void;
   onUpdateLeadStatus: (leadId: string, status: LeadStatus) => void;
 }
 
@@ -137,20 +137,20 @@ export function ProposalTab({ leadId, leads, proposals, readOnly = false, onAddP
                     <p className="font-medium">
                       {(proposal.status === 'SENT' || proposal.status === 'ACCEPTED' || expired) && proposal.sentAt
                         ? new Date(proposal.sentAt).toLocaleDateString('id-ID', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })
                         : '-'}
                     </p>
                     <p className="text-gray-600 mt-1">Deal Date</p>
                     <p className="font-medium text-green-600">
                       {proposal.dealDate
                         ? new Date(proposal.dealDate).toLocaleDateString('id-ID', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })
                         : '-'}
                     </p>
                   </div>

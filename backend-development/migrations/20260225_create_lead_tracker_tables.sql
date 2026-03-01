@@ -1,0 +1,82 @@
+-- Create minimal tables needed by Lead Tracker meta derivation.
+-- Mirrors FE mock-data structures used by deriveLeadTrackerRowMeta.
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS lead_notulensi;
+DROP TABLE IF EXISTS lead_handovers;
+DROP TABLE IF EXISTS lead_engagement_letters;
+DROP TABLE IF EXISTS lead_proposals;
+DROP TABLE IF EXISTS lead_meetings;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+CREATE TABLE IF NOT EXISTS lead_meetings (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  lead_id BIGINT UNSIGNED NOT NULL,
+  name VARCHAR(255) NULL,
+  date_time DATETIME NULL,
+  location VARCHAR(255) NULL,
+  status ENUM('SCHEDULED','DONE','CANCELLED') NOT NULL DEFAULT 'SCHEDULED',
+  notes TEXT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_lead_meetings_lead_id (lead_id),
+  CONSTRAINT fk_lead_meetings_lead_id FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS lead_notulensi (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  lead_id BIGINT UNSIGNED NOT NULL,
+  meeting_id BIGINT UNSIGNED NULL,
+  status ENUM('DRAFT','WAITING_CEO_APPROVAL','APPROVED','REJECTED') NOT NULL DEFAULT 'DRAFT',
+  payload JSON NULL,
+  created_by VARCHAR(150) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_lead_notulensi_lead_id (lead_id),
+  KEY idx_lead_notulensi_meeting_id (meeting_id),
+  CONSTRAINT fk_lead_notulensi_lead_id FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE,
+  CONSTRAINT fk_lead_notulensi_meeting_id FOREIGN KEY (meeting_id) REFERENCES lead_meetings(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS lead_proposals (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  lead_id BIGINT UNSIGNED NOT NULL,
+  status ENUM('DRAFT','WAITING_APPROVAL','WAITING_CEO_APPROVAL','APPROVED','SENT','ACCEPTED','PROPOSAL_EXPIRED','REJECTED') NOT NULL DEFAULT 'DRAFT',
+  payload JSON NULL,
+  created_by VARCHAR(150) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_lead_proposals_lead_id (lead_id),
+  CONSTRAINT fk_lead_proposals_lead_id FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS lead_engagement_letters (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  lead_id BIGINT UNSIGNED NOT NULL,
+  status ENUM('DRAFT','WAITING_APPROVAL','APPROVED','SENT','SIGNED','REJECTED') NOT NULL DEFAULT 'DRAFT',
+  payload JSON NULL,
+  created_by VARCHAR(150) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_lead_engagement_letters_lead_id (lead_id),
+  CONSTRAINT fk_lead_engagement_letters_lead_id FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS lead_handovers (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  lead_id BIGINT UNSIGNED NOT NULL,
+  status ENUM('DRAFT','WAITING_CEO_APPROVAL','APPROVED','CONVERTED','REJECTED','SENT_TO_PM') NOT NULL DEFAULT 'DRAFT',
+  payload JSON NULL,
+  created_by VARCHAR(150) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_lead_handovers_lead_id (lead_id),
+  CONSTRAINT fk_lead_handovers_lead_id FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
+);

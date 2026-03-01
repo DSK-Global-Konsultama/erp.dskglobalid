@@ -7,6 +7,7 @@ const cors = require('cors');
 const app = express();
 
 const { authenticate } = require('./middleware/auth.middleware');
+const leadController = require('./controllers/lead.controller');
 
 // CORS: izinkan akses dari FE (Vite dev server)
 app.use(
@@ -33,6 +34,7 @@ const formFieldRoutes = require('./routes/form_field.routes');
 const campaignFormRoutes = require('./routes/campaign_form.routes');
 const bankDataEntryRoutes = require('./routes/bank_data_entry.routes');
 const publicRoutes = require('./routes/public.routes');
+const leadRoutes = require('./routes/lead.routes');
 
 // Auth (tanpa JWT)
 app.use('/auth', authRoutes);
@@ -49,10 +51,23 @@ app.use('/forms', authenticate, formRoutes);
 app.use('/form-fields', authenticate, formFieldRoutes);
 app.use('/campaign-forms', authenticate, campaignFormRoutes);
 app.use('/bank-data-entries', authenticate, bankDataEntryRoutes);
+app.use('/leads', authenticate, leadRoutes);
 
 app.get('/testing', (req, res) => {
   res.json({ status: 'ok' });
 });
+
+// DEV helper: allow testing tracker response without JWT (do not use in production)
+app.get('/testing/tracker-leads', leadController.getLeadTrackerLeads);
+
+// DEV helper: allow testing tracker detail response without JWT (do not use in production)
+app.get('/testing/tracker/:id', leadController.getLeadTrackerDetail);
+
+// DEV helper: allow testing tracker document updates without JWT (do not use in production)
+app.put('/testing/leads/:id/notulensi/:notulensiId', leadController.updateLeadNotulensi);
+app.put('/testing/leads/:id/proposals/:proposalId', leadController.updateLeadProposal);
+app.put('/testing/leads/:id/engagement-letters/:elId', leadController.updateLeadEngagementLetter);
+app.put('/testing/leads/:id/handovers/:handoverId', leadController.updateLeadHandover);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

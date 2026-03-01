@@ -3,16 +3,17 @@
  * Review and approve Notulensi, Proposal, Engagement Letter, and Handover Memo
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileText, FileCheck, Award, Share2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { mockNotulensi, mockProposals, mockLeads, mockEngagementLetters, mockHandovers, type Notulensi, type Proposal, type Handover, type EngagementLetter } from '../../../../lib/mock-data';
+import { type Notulensi, type Proposal, type Handover, type EngagementLetter } from '../../../../lib/mock-data';
 import { authService } from '../../../../services/authService';
 import { NotulensiTab } from '../tabs/NotulensiTab';
 import { ProposalTab } from '../tabs/ProposalTab';
 import { ELTab } from '../tabs/ELTab';
 import { HandoverTab } from '../tabs/HandoverTab';
-
+import { leadsService } from '../../../leads/services/leadsService';
+import type { Lead } from '../../../../lib/mock-data';
 
 export function ApprovalManagement() {
   // Check if user is CEO
@@ -29,30 +30,175 @@ export function ApprovalManagement() {
   }
 
   const [activeTab, setActiveTab] = useState<'notulensi' | 'proposal' | 'el' | 'handover'>('notulensi');
-  const [notulensi, setNotulensi] = useState<Notulensi[]>(mockNotulensi);
-  const [proposals, setProposals] = useState<Proposal[]>(mockProposals);
-  const [engagementLetters, setEngagementLetters] = useState<EngagementLetter[]>(mockEngagementLetters);
-  const [handovers, setHandovers] = useState<Handover[]>(mockHandovers);
+  const [notulensi, setNotulensi] = useState<Notulensi[]>([]);
+  const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [engagementLetters, setEngagementLetters] = useState<EngagementLetter[]>([]);
+  const [handovers, setHandovers] = useState<Handover[]>([]);
+  const [fetchedLeads, setFetchedLeads] = useState<Lead[]>([]);
+
+  // Load pending approvals from backend (based on CEO approvals inbox)
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        // Use CEO approvals inbox so docs awaiting CEO approval are visible even if the lead
+        // is not yet part of /leads/tracker (align with mock-data business flow).
+        const leads = await leadsService.getCEOApprovalLeads();
+
+        const details = await Promise.all(
+          (leads || []).map(async (l) => {
+            try {
+              return await leadsService.getTrackerLeadDetail(l.id);
+            } catch {
+              return null;
+            }
+          })
+        );
+
+        if (cancelled) return;
+
+        const allNotulensi: Notulensi[] = [];
+        const allProposals: Proposal[] = [];
+        const allEls: EngagementLetter[] = [];
+        const allHandovers: Handover[] = [];
+
+        details.filter(Boolean).forEach((d: any) => {
+          allNotulensi.push(...((d?.notulensi as Notulensi[]) || []));
+          allProposals.push(...((d?.proposals as Proposal[]) || []));
+          allEls.push(...((d?.engagementLetters as EngagementLetter[]) || []));
+          allHandovers.push(...((d?.handovers as Handover[]) || []));
+        });
+
+        setNotulensi(allNotulensi);
+        setProposals(allProposals);
+        setEngagementLetters(allEls);
+        setHandovers(allHandovers);
+        setFetchedLeads(leads as unknown as Lead[]);
+      } catch {
+        if (!cancelled) {
+          setNotulensi([]);
+          setProposals([]);
+          setEngagementLetters([]);
+          setHandovers([]);
+          setFetchedLeads([]);
+        }
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const waitingNotulensi = notulensi.filter(n => n.status === 'WAITING_CEO_APPROVAL');
   const waitingProposals = proposals.filter(p => p.status === 'WAITING_CEO_APPROVAL');
   const waitingELs = engagementLetters.filter(el => el.status === 'WAITING_APPROVAL');
   const waitingHandovers = handovers.filter(h => h.status === 'WAITING_CEO_APPROVAL');
 
-  const handleUpdateNotulensi = (id: string, updates: Partial<Notulensi>) => {
+  const handleUpdateNotulensi = async (id: string, updates: Partial<Notulensi>) => {
+    const current = notulensi.find((n) => n.id === id);
+    if (!current) return;
+
+    // optimistic UI
     setNotulensi(notulensi.map(n => n.id === id ? { ...n, ...updates } : n));
+
+    try {
+      const updated = await leadsService.updateNotulensi(current.leadId, id, {
+        status: (updates as any).status,
+        objectives: updates.objectives,
+        nextSteps: updates.nextSteps,
+        notes: updates.notes,
+        clientName: updates.clientName,
+        payload: {
+          meetingInfo: (updates as any).meetingInfo,
+          participants: (updates as any).participants,
+          discussionSummary: (updates as any).discussionSummary,
+          agreements: (updates as any).agreements,
+          actionItems: (updates as any).actionItems,
+          revisionNotes: (updates as any).revisionNotes,
+        },
+      });
+
+      setNotulensi((prev) => prev.map((n) => (n.id === id ? updated : n)));
+    } catch {
+      // rollback best-effort
+      setNotulensi((prev) => prev.map((n) => (n.id === id ? current : n)));
+    }
   };
 
-  const handleUpdateProposal = (id: string, updates: Partial<Proposal>) => {
+  const handleUpdateProposal = async (id: string, updates: Partial<Proposal>) => {
+    const current = proposals.find((p) => p.id === id);
+    if (!current) return;
+
     setProposals(proposals.map(p => p.id === id ? { ...p, ...updates } : p));
+
+    try {
+      const updated = await leadsService.updateProposal(current.leadId, id, {
+        status: (updates as any).status,
+        sentAt: (updates as any).sentAt,
+        service: updates.service,
+        proposalFee: (updates as any).proposalFee,
+        agreeFee: (updates as any).agreeFee,
+        paymentType: (updates as any).paymentType,
+        paymentTypeFinal: (updates as any).paymentTypeFinal,
+        dealDate: (updates as any).dealDate,
+        hasSubcon: (updates as any).hasSubcon,
+      });
+      setProposals((prev) => prev.map((p) => (p.id === id ? updated : p)));
+    } catch {
+      setProposals((prev) => prev.map((p) => (p.id === id ? current : p)));
+    }
   };
 
-  const handleUpdateEngagementLetter = (id: string, updates: Partial<EngagementLetter>) => {
+  const handleUpdateEngagementLetter = async (id: string, updates: Partial<EngagementLetter>) => {
+    const current = engagementLetters.find((el) => el.id === id);
+    if (!current) return;
+
     setEngagementLetters(engagementLetters.map(el => el.id === id ? { ...el, ...updates } : el));
+
+    try {
+      const updated = await leadsService.updateEngagementLetter(current.leadId, id, {
+        status: (updates as any).status,
+        submittedDate: (updates as any).submittedDate,
+        approvedDate: (updates as any).approvedDate,
+        sentAt: (updates as any).sentAt,
+        signedDate: (updates as any).signedDate,
+        fileUrl: (updates as any).fileUrl,
+        service: updates.service,
+        agreeFee: (updates as any).agreeFee,
+        hasSubcon: (updates as any).hasSubcon,
+        paymentType: (updates as any).paymentType,
+        paymentTypeFinal: (updates as any).paymentTypeFinal,
+      });
+      setEngagementLetters((prev) => prev.map((el) => (el.id === id ? updated : el)));
+    } catch {
+      setEngagementLetters((prev) => prev.map((el) => (el.id === id ? current : el)));
+    }
   };
 
-  const handleUpdateHandover = (id: string, updates: Partial<Handover>) => {
+  const handleUpdateHandover = async (id: string, updates: Partial<Handover>) => {
+    const current = handovers.find((h) => h.id === id);
+    if (!current) return;
+
     setHandovers(handovers.map(h => h.id === id ? { ...h, ...updates } : h));
+
+    try {
+      const updated = await leadsService.updateHandover(current.leadId, id, {
+        status: (updates as any).status,
+        projectId: (updates as any).projectId,
+        clientName: updates.clientName,
+        projectTitle: updates.projectTitle,
+        pm: updates.pm,
+        summary: (updates as any).summary,
+        deliverables: (updates as any).deliverables,
+        notes: (updates as any).notes,
+      });
+      setHandovers((prev) => prev.map((h) => (h.id === id ? updated : h)));
+    } catch {
+      setHandovers((prev) => prev.map((h) => (h.id === id ? current : h)));
+    }
   };
 
   const tabs = [
@@ -127,11 +273,10 @@ export function ApprovalManagement() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-6 py-4 border-b-2 transition-colors cursor-pointer ${
-                  activeTab === tab.id
-                    ? 'border-black text-black'
-                    : 'border-transparent text-gray-600 hover:text-red-600 hover:border-red-600'
-                }`}
+                className={`px-6 py-4 border-b-2 transition-colors cursor-pointer ${activeTab === tab.id
+                  ? 'border-black text-black'
+                  : 'border-transparent text-gray-600 hover:text-red-600 hover:border-red-600'
+                  }`}
               >
                 {tab.label}
               </button>
@@ -150,7 +295,7 @@ export function ApprovalManagement() {
           {activeTab === 'proposal' && (
             <ProposalTab
               proposals={waitingProposals}
-              leads={mockLeads}
+              leads={fetchedLeads}
               onUpdateProposal={handleUpdateProposal}
             />
           )}
@@ -158,7 +303,7 @@ export function ApprovalManagement() {
           {activeTab === 'el' && (
             <ELTab
               engagementLetters={waitingELs}
-              leads={mockLeads}
+              leads={fetchedLeads}
               onUpdateEngagementLetter={handleUpdateEngagementLetter}
             />
           )}
@@ -166,7 +311,7 @@ export function ApprovalManagement() {
           {activeTab === 'handover' && (
             <HandoverTab
               handovers={waitingHandovers}
-              leads={mockLeads}
+              leads={fetchedLeads}
               proposals={proposals}
               engagementLetters={engagementLetters}
               onUpdateHandover={handleUpdateHandover}

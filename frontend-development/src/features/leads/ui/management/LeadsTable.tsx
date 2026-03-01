@@ -1,14 +1,14 @@
-import { Lock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../../components/ui/table';
 import { StatusChip } from '../shared/StatusChip';
 import { deriveLeadTrackerRowMeta } from '../../model/selectors';
 import type { Lead, Meeting, Notulensi, Proposal, EngagementLetter, Handover } from '../../../../lib/mock-data';
+import type { CEOLead } from '../../../../lib/leadManagementMockData';
 
 export interface LeadsTableProps {
   mode: 'view' | 'tracker';
   title: string;
-  leads: Lead[];
+  leads: Array<Lead | CEOLead>;
   meetings: Meeting[];
   notulensi: Notulensi[];
   proposals: Proposal[];
@@ -19,6 +19,29 @@ export interface LeadsTableProps {
   /** Optional pagination UI to render below the table (same card) */
   pagination?: React.ReactNode;
 }
+
+const formatChannelLabel = (ch?: string | null): string => {
+  const normalized = String(ch || '').toUpperCase();
+  const map: Record<string, string> = {
+    INSTAGRAM: 'Instagram',
+    IG: 'Instagram',
+    LINKEDIN: 'LinkedIn',
+    WEBSITE: 'Website',
+    SEMINAR: 'Seminar',
+    WEBINAR: 'Webinar',
+    BREVET: 'Brevet',
+    EVENT: 'Event',
+  };
+  return map[normalized] || (ch ? String(ch) : '-');
+};
+
+const getTrackerCreatedDate = (lead: Lead | CEOLead): string => {
+  // backend: promotedAt is 'YYYY-MM-DD HH:mm:ss' (string)
+  const promotedAt = (lead as any).promotedAt || (lead as any).promoted_at;
+  const createdAt = (lead as any).createdAt || (lead as any).created_at;
+  const createdDate = (lead as any).createdDate;
+  return promotedAt || createdAt || createdDate || '';
+};
 
 export function LeadsTable({
   mode,
@@ -52,7 +75,6 @@ export function LeadsTable({
                   <>
                     <TableHead>Commercial Stage</TableHead>
                     <TableHead>Active Document</TableHead>
-                    <TableHead>Handover Status</TableHead>
                   </>
                 )}
                 {mode !== 'tracker' && <TableHead>Status</TableHead>}
@@ -72,10 +94,11 @@ export function LeadsTable({
                 </TableRow>
               ) : (
                 leads.map((lead) => {
+                  const isBackendLead = (lead as any).sourceType && (lead as any).pipelineStatus;
                   const meta =
-                    mode === 'tracker'
+                    mode === 'tracker' && !isBackendLead
                       ? deriveLeadTrackerRowMeta(
-                          lead,
+                          lead as any,
                           meetings,
                           notulensi,
                           proposals,
@@ -84,23 +107,31 @@ export function LeadsTable({
                         )
                       : null;
 
+                  const backendCommercialStage = (lead as any).commercialStage;
+                  const backendActiveDocumentLabel = (lead as any).activeDocumentLabel;
+                  const backendLastActivity = (lead as any).lastActivity;
+
                   return (
                     <TableRow
-                      key={lead.id}
+                      key={(lead as any).id}
                       className={onLeadClick ? 'cursor-pointer' : ''}
-                      onClick={onLeadClick ? () => onLeadClick(lead.id) : undefined}
+                      onClick={onLeadClick ? () => onLeadClick(String((lead as any).id)) : undefined}
                     >
                       <TableCell>
-                        <span className="text-sm text-gray-700">{lead.id}</span>
+                        <span className="text-sm text-gray-700">{String((lead as any).id)}</span>
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          <p className="font-medium text-gray-900">{lead.company}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{lead.clientName}</p>
+                          <p className="font-medium text-gray-900">
+                            {String((lead as any).company || (lead as any).sourceCampaignName || '-')}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">{String((lead as any).clientName || '-')}</p>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm text-gray-700">{lead.source}</span>
+                        <span className="text-sm text-gray-700">
+                          {isBackendLead ? formatChannelLabel((lead as any).sourceChannel) : String((lead as any).source)}
+                        </span>
                       </TableCell>
                       {mode === 'tracker' && meta ? (
                         <>
@@ -120,37 +151,38 @@ export function LeadsTable({
                               );
                             })()}
                           </TableCell>
+                        </>
+                      ) : mode === 'tracker' && isBackendLead ? (
+                        <>
                           <TableCell>
-                            {meta.handoverStatus === 'LOCKED' ? (
-                              <div className="flex items-center gap-1 text-xs text-gray-400">
-                                <Lock className="w-3 h-3" />
-                                <span>LOCKED</span>
-                              </div>
-                            ) : (
-                              <StatusChip status={meta.handoverStatus} />
-                            )}
+                            <StatusChip status={String(backendCommercialStage || (lead as any).pipelineStatus || '-')} />
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm text-gray-700">{String(backendActiveDocumentLabel || '-')}</span>
                           </TableCell>
                         </>
                       ) : (
                         <TableCell>
-                          <StatusChip status={(lead as Lead & { status?: string }).status || lead.status} />
+                          <StatusChip status={((lead as any) as Lead & { status?: string }).status || (lead as any).status} />
                         </TableCell>
                       )}
                       <TableCell>
-                        <span className="text-sm text-gray-600">{formatDate(lead.createdDate)}</span>
+                        <span className="text-sm text-gray-600">{formatDate(getTrackerCreatedDate(lead))}</span>
                       </TableCell>
                       {mode === 'tracker' && (
                         <TableCell>
                           <span className="text-sm text-gray-600">
-                            {(lead as Lead & { lastActivity?: string }).lastActivity || '-'}
+                            {String(backendLastActivity || (lead as any).lastActivity || '-')}
                           </span>
                         </TableCell>
                       )}
                       {mode === 'view' && (
                         <TableCell>
                           <span className="text-sm text-gray-600">
-                            {(lead as Lead & { lastActivity?: string }).lastActivity ||
-                              (lead.lastFollowUp ? formatDate(lead.lastFollowUp) : formatDate(lead.createdDate))}
+                            {((lead as any) as Lead & { lastActivity?: string }).lastActivity ||
+                              (((lead as any) as Lead).lastFollowUp
+                                ? formatDate(((lead as any) as Lead).lastFollowUp as any)
+                                : formatDate(((lead as any) as Lead).createdDate as any))}
                           </span>
                         </TableCell>
                       )}

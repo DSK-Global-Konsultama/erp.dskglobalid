@@ -4,17 +4,6 @@ import { toast } from 'sonner';
 import { publicFormsService } from '../../../features/campaigns/services/publicFormsService';
 import { FormRenderer } from '../../../features/campaigns/components/FormRenderer'; // <- sesuaikan path
 
-function slugify(input: string): string {
-  const base = String(input || '')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9\-]/g, '')
-    .replace(/\-+/g, '-')
-    .replace(/^\-+|\-+$/g, '');
-  return base || 'form';
-}
-
 export function PublicFormPage({ slug }: { slug: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +13,8 @@ export function PublicFormPage({ slug }: { slug: string }) {
   const [, setCampaignChannel] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [entryChannel, setEntryChannel] = useState<string | null>(null);
+  const [entrySlug, setEntrySlug] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -32,6 +23,10 @@ export function PublicFormPage({ slug }: { slug: string }) {
       setValidationError(null);
       try {
         const publicForm = await publicFormsService.getFormBySlug(slug);
+
+        setEntryChannel((publicForm as any).entry_channel || null);
+        // Prefer backend-provided entry_slug (when available), otherwise fall back to current route slug.
+        setEntrySlug((publicForm as any).entry_slug || slug || null);
 
         const baseForm: any = {
           id: String(publicForm.id),
@@ -105,14 +100,68 @@ export function PublicFormPage({ slug }: { slug: string }) {
     if (!form) return;
     setValidationError(null);
 
-    // (logic validasi + payload kamu biarkan sama)
-    // ... setelah sukses:
-    // setSubmitted(true);
+    // Ambil nilai core fields dari jawaban berdasarkan label
+    const getAnswerByLabel = (label: string): string => {
+      const field = fields.find(
+        (f) => String(f.label || '').trim().toLowerCase() === label.trim().toLowerCase()
+      );
+      if (!field) return '';
+      const raw = answers[field.id];
+      return typeof raw === 'string' ? raw.trim() : String(raw ?? '').trim();
+    };
 
-    // NOTE: ini contoh minimal
+    const client_name = getAnswerByLabel('Nama Perusahaan / Client');
+    const pic_name = getAnswerByLabel('Nama PIC');
+    const email = getAnswerByLabel('Email');
+    const phone = getAnswerByLabel('Nomor Telepon / WhatsApp');
+
+    if (!client_name || !pic_name || !email || !phone) {
+      setValidationError(
+        'Harap lengkapi Nama Perusahaan/Client, Nama PIC, Email, dan Nomor Telepon/WhatsApp.'
+      );
+      toast.error('Data wajib masih kosong. Mohon lengkapi form terlebih dahulu.');
+      return;
+    }
+
+    // Kumpulkan jawaban lain sebagai extra_answers (disimpan di kolom JSON)
+    const extra_answers: Record<string, any> = {};
+    const coreLabels = new Set([
+      'nama perusahaan / client',
+      'nama pic',
+      'email',
+      'nomor telepon / whatsapp',
+    ]);
+
+    fields.forEach((f) => {
+      const labelNorm = String(f.label || '').trim().toLowerCase();
+      if (coreLabels.has(labelNorm)) return;
+
+      const value = answers[f.id];
+      if (
+        value === undefined ||
+        value === null ||
+        (typeof value === 'string' && value.trim().length === 0) ||
+        (Array.isArray(value) && value.length === 0)
+      ) {
+        return;
+      }
+
+      // Pakai id field sebagai key di extra_answers
+      extra_answers[f.id] = value;
+    });
+
     setSubmitting(true);
     try {
-      // await publicFormsService.submit(...)
+      await publicFormsService.submit(String(form.id), {
+        client_name,
+        pic_name,
+        email,
+        phone,
+        extra_answers,
+        entry_channel: entryChannel,
+        entry_slug: entrySlug || slug || null,
+      });
+
       setAnswers({});
       setSubmitted(true);
       toast.success('Berhasil submit. Data sudah masuk database.');

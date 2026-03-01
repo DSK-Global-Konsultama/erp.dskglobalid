@@ -16,7 +16,6 @@ import { canAssignPM } from '../guards/canProject';
 import { mockHandovers, mockDeals, mockLeads } from '../../../../lib/mock-data';
 import type { Project, Handover } from '../../../../lib/mock-data';
 import type { UserRole } from '../../../../services/authService';
-import { toast } from 'sonner';
 
 interface ProjectsTableViewProps {
   projects: Project[];

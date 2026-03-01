@@ -13,6 +13,8 @@ export type PublicFormResponse = {
   published_at?: string | null;
   primary_campaign_id?: string | null;
   source_channel?: string | null;
+  entry_channel?: string | null;
+  entry_slug?: string | null;
 };
 
 export const publicFormsService = {
@@ -53,7 +55,18 @@ export const publicFormsService = {
     }));
   },
 
-  async submit(formId: string, payload: { client_name: string; pic_name: string; email: string; phone: string; extra_answers: any }): Promise<any> {
+  async submit(
+    formId: string,
+    payload: {
+      client_name: string;
+      pic_name: string;
+      email: string;
+      phone: string;
+      extra_answers: any;
+      entry_channel?: string | null;
+      entry_slug?: string | null;
+    }
+  ): Promise<any> {
     const res = await publicApi.post(`/public/forms/${encodeURIComponent(formId)}/submit`, payload);
     return res.data?.data;
   },

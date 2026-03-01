@@ -14,8 +14,6 @@ export interface LeadsFiltersProps {
   onFilterStatusChange: (value: string) => void;
   filterCommercialStage: string;
   onFilterCommercialStageChange: (value: string) => void;
-  filterHandoverStatus: string;
-  onFilterHandoverStatusChange: (value: string) => void;
   serviceFilter: string;
   onServiceFilterChange: (value: string) => void;
   onReset: () => void;
@@ -33,8 +31,6 @@ export function LeadsFilters({
   onFilterStatusChange,
   filterCommercialStage,
   onFilterCommercialStageChange,
-  filterHandoverStatus,
-  onFilterHandoverStatusChange,
   serviceFilter,
   onServiceFilterChange,
   onReset,
@@ -63,30 +59,35 @@ export function LeadsFilters({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Commercial Stage</SelectItem>
-                  <SelectItem value="TO_BE_MEET">TO BE MEET</SelectItem>
-                  <SelectItem value="MEETING_SCHEDULED">MEETING SCHEDULED</SelectItem>
-                  <SelectItem value="NEED_NOTULEN">NEED NOTULEN</SelectItem>
-                  <SelectItem value="IN_NOTULEN">IN NOTULEN</SelectItem>
-                  <SelectItem value="NEED_PROPOSAL">NEED PROPOSAL</SelectItem>
-                  <SelectItem value="IN_PROPOSAL">IN PROPOSAL</SelectItem>
-                  <SelectItem value="IN_EL">IN EL</SelectItem>
-                  <SelectItem value="EL_SIGNED">EL SIGNED (Deal)</SelectItem>
+                  <SelectItem value="MEETING_NOT_STARTED">Meeting • Not Started</SelectItem>
+                  <SelectItem value="MEETING_SCHEDULED">Meeting • Scheduled</SelectItem>
+                  <SelectItem value="NOTULEN_NOT_STARTED">Notulen • Not Started</SelectItem>
+                  <SelectItem value="NOTULEN_DRAFT">Notulen • Draft</SelectItem>
+                  <SelectItem value="NOTULEN_WAITING_CEO_APPROVAL">Notulen • Waiting CEO Approval</SelectItem>
+                  <SelectItem value="NOTULEN_REVISION">Notulen • Revision</SelectItem>
+                  <SelectItem value="NOTULEN_APPROVED">Notulen • Approved</SelectItem>
+                  <SelectItem value="PROPOSAL_NOT_STARTED">Proposal • Not Started</SelectItem>
+                  <SelectItem value="PROPOSAL_DRAFT">Proposal • Draft</SelectItem>
+                  <SelectItem value="PROPOSAL_WAITING_CEO_APPROVAL">Proposal • Waiting CEO Approval</SelectItem>
+                  <SelectItem value="PROPOSAL_REVISION">Proposal • Revision</SelectItem>
+                  <SelectItem value="PROPOSAL_APPROVED">Proposal • Approved</SelectItem>
+                  <SelectItem value="PROPOSAL_SENT_TO_CLIENT">Proposal • Sent to Client</SelectItem>
+                  <SelectItem value="PROPOSAL_ACCEPTED">Proposal • Accepted</SelectItem>
+                  <SelectItem value="EL_NOT_UPLOADED">EL • Not Uploaded</SelectItem>
+                  <SelectItem value="EL_WAITING_CEO_APPROVAL">EL • Waiting CEO Approval</SelectItem>
+                  <SelectItem value="EL_REVISION">EL • Revision</SelectItem>
+                  <SelectItem value="EL_APPROVED">EL • Approved</SelectItem>
+                  <SelectItem value="EL_SENT_TO_CLIENT">EL • Sent to Client</SelectItem>
+                  <SelectItem value="EL_SIGNED">EL • Signed</SelectItem>
+                  <SelectItem value="HANDOVER_LOCKED">Handover • Locked</SelectItem>
+                  <SelectItem value="HANDOVER_NOT_STARTED">Handover • Not Started</SelectItem>
+                  <SelectItem value="HANDOVER_DRAFT">Handover • Draft</SelectItem>
+                  <SelectItem value="HANDOVER_WAITING_CEO_APPROVAL">Handover • Waiting CEO Approval</SelectItem>
+                  <SelectItem value="HANDOVER_REVISION">Handover • Revision</SelectItem>
+                  <SelectItem value="HANDOVER_APPROVED">Handover • Approved</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={filterHandoverStatus} onValueChange={onFilterHandoverStatusChange}>
-                <SelectTrigger className="focus:border-black focus:ring-1 focus:ring-black">
-                  <SelectValue placeholder="Handover Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Handover Status</SelectItem>
-                  <SelectItem value="LOCKED">Locked</SelectItem>
-                  <SelectItem value="NOT_STARTED">Not Started (Required)</SelectItem>
-                  <SelectItem value="DRAFT">Draft</SelectItem>
-                  <SelectItem value="WAITING_CEO">Waiting CEO Approval</SelectItem>
-                  <SelectItem value="CEO_APPROVED">CEO Approved</SelectItem>
-                  <SelectItem value="CONVERTED">Converted</SelectItem>
-                </SelectContent>
-              </Select>
+
               <div className="flex gap-2">
                 <Select value={serviceFilter} onValueChange={onServiceFilterChange}>
                   <SelectTrigger className="flex-1 focus:border-black focus:ring-1 focus:ring-black">

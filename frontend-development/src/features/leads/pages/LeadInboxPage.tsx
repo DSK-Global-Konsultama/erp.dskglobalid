@@ -11,7 +11,8 @@ import { LeadInboxFilters } from '../ui/management/LeadInboxFilters';
 import { LeadInboxTable } from '../ui/management/LeadInboxTable';
 import { LeadInboxPagination } from '../ui/management/LeadInboxPagination';
 import type { CEOFollowUpStatus } from '../../../lib/leadManagementTypes';
-import { mockCEOLeads, type CEOLead } from '../../../lib/leadManagementMockData';
+import type { CEOLead } from '../../../lib/leadManagementMockData';
+import { leadsService } from '../services/leadsService';
 import { authService } from '../../../services/authService';
 
 export function LeadInboxPage() {
@@ -27,7 +28,7 @@ export function LeadInboxPage() {
     );
   }
 
-  const [leads, setLeads] = useState<CEOLead[]>(mockCEOLeads);
+  const [leads, setLeads] = useState<CEOLead[]>([]);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const buttonRefs = useRef<Record<string, HTMLButtonElement>>({});
@@ -48,6 +49,19 @@ export function LeadInboxPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, filterStatus]);
+
+  // Load leads from backend (CEO inbox)
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await leadsService.getCEOInbox('ALL');
+        setLeads(data);
+      } catch (e: any) {
+        toast.error(e?.message || 'Gagal memuat lead inbox CEO');
+      }
+    };
+    load();
+  }, []);
 
   useEffect(() => {
     const totalPages = Math.ceil(filteredLeads.length / itemsPerPage);
@@ -88,38 +102,32 @@ export function LeadInboxPage() {
     }
   };
 
-  const handleFollowUp = (leadId: string) => {
-    setLeads((prev) =>
-      prev.map((lead) =>
-        lead.id === leadId
-          ? {
-              ...lead,
-              ceoFollowUpStatus: 'FOLLOWED_UP' as CEOFollowUpStatus,
-              ceoFollowUpDate: new Date().toISOString(),
-            }
-          : lead
-      )
-    );
-    setOpenMenuId(null);
-    setMenuPosition(null);
-    toast.success('Lead marked as Followed Up');
+  const handleFollowUp = async (leadId: string) => {
+    try {
+      const updated = await leadsService.updateCEOFollowUp(leadId, {
+        status: 'FOLLOWED_UP',
+      });
+      setLeads((prev) => prev.map((lead) => (lead.id === leadId ? updated : lead)));
+      setOpenMenuId(null);
+      setMenuPosition(null);
+      toast.success('Lead marked as Followed Up');
+    } catch (e: any) {
+      toast.error(e?.message || 'Gagal mengubah status lead');
+    }
   };
 
-  const handleDrop = (leadId: string) => {
-    setLeads((prev) =>
-      prev.map((lead) =>
-        lead.id === leadId
-          ? {
-              ...lead,
-              ceoFollowUpStatus: 'DROP' as CEOFollowUpStatus,
-              ceoFollowUpDate: new Date().toISOString(),
-            }
-          : lead
-      )
-    );
-    setOpenMenuId(null);
-    setMenuPosition(null);
-    toast.success('Lead dropped');
+  const handleDrop = async (leadId: string) => {
+    try {
+      const updated = await leadsService.updateCEOFollowUp(leadId, {
+        status: 'DROP',
+      });
+      setLeads((prev) => prev.map((lead) => (lead.id === leadId ? updated : lead)));
+      setOpenMenuId(null);
+      setMenuPosition(null);
+      toast.success('Lead dropped');
+    } catch (e: any) {
+      toast.error(e?.message || 'Gagal mengubah status lead');
+    }
   };
 
   const handleSeeDetail = (leadId: string) => {

@@ -35,7 +35,7 @@ export function HandoverTab({ handovers, leads = [], proposals = [], engagementL
           setViewingHandover(undefined);
         }}
         onReject={(handoverId) => {
-          onUpdateHandover(handoverId, { status: 'REJECTED' });
+          onUpdateHandover(handoverId, { status: 'REVISION' as any });
           setViewingHandover(undefined);
         }}
         onBack={() => setViewingHandover(undefined)}
