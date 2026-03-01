@@ -76,11 +76,12 @@ export function NotulensiTab({ notulensi, onUpdateNotulensi }: NotulensiTabProps
         <NotulensiDetailModal
           notulensi={selectedNotulensi}
           open={true}
+          readOnly={true}
           onClose={() => setSelectedNotulensi(null)}
           onEdit={() => {}}
           onUpdateNotulensi={(id, updates) => {
             onUpdateNotulensi(id, updates);
-            if (updates.status === 'APPROVED' || updates.status === 'REJECTED') {
+            if (updates.status === 'APPROVED' || updates.status === 'REVISION') {
               setSelectedNotulensi(null);
             }
           }}

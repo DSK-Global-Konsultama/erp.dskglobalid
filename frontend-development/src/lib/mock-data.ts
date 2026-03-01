@@ -136,9 +136,16 @@ export interface Notulensi {
   }>;
   nextSteps: string;
   notes: string;
-  status: 'DRAFT' | 'WAITING_CEO_APPROVAL' | 'APPROVED' | 'REJECTED';
+  status: 'DRAFT' | 'WAITING_CEO_APPROVAL' | 'REVISION' | 'APPROVED';
   createdBy: string;
   createdAt: string;
+  /** Catatan revisi dari CEO ketika status = REVISION */
+  revisionNotes?: {
+    sections: string[];
+    note: string;
+    createdAt: string;
+    createdBy?: string;
+  };
 }
 
 export interface Proposal {
@@ -152,7 +159,18 @@ export interface Proposal {
   dealDate?: string;
   hasSubcon: boolean;
   sentAt?: string;
-  status: 'DRAFT' | 'WAITING_APPROVAL' | 'WAITING_CEO_APPROVAL' | 'APPROVED' | 'SENT' | 'REJECTED' | 'ACCEPTED' | 'PROPOSAL_EXPIRED';
+  fileUrl?: string;
+  status:
+  | 'DRAFT'
+  | 'WAITING_APPROVAL'
+  | 'WAITING_CEO_APPROVAL'
+  | 'REVISION'
+  | 'APPROVED'
+  | 'SENT'
+  | 'ACCEPTED'
+  | 'REJECTED'
+  | 'PROPOSAL_EXPIRED';
+  revisionNotes?: string;
   createdAt: string;
   createdBy?: string;
   clientName?: string;
@@ -166,7 +184,7 @@ export interface EngagementLetter {
   hasSubcon: boolean;
   paymentType: string;
   paymentTypeFinal?: string;
-  status: 'DRAFT' | 'WAITING_APPROVAL' | 'APPROVED' | 'SENT' | 'SIGNED' | 'REJECTED';
+  status: 'DRAFT' | 'WAITING_APPROVAL' | 'REVISION' | 'APPROVED' | 'SENT' | 'SIGNED';
   clientName: string;
   createdAt?: string;
   signedDate?: string;
@@ -183,7 +201,7 @@ export interface Handover {
   clientName: string;
   projectTitle: string;
   pm: string;
-  status: 'DRAFT' | 'WAITING_CEO_APPROVAL' | 'APPROVED' | 'REJECTED' | 'SENT_TO_PM' | 'CONVERTED';
+  status: 'DRAFT' | 'WAITING_CEO_APPROVAL' | 'REVISION' | 'APPROVED' | 'SENT_TO_PM' | 'CONVERTED';
   createdBy: string;
   createdAt: string;
   summary?: string;
@@ -221,7 +239,7 @@ export const consultants = [
 
 export const leadSources = [
   'Facebook',
-  'Instagram', 
+  'Instagram',
   'LinkedIn',
   'Website',
   'Referral',
@@ -3469,36 +3487,36 @@ export const mockHandovers: Handover[] = [
     ],
     paymentTermsText: 'Invoice DP telah diterbitkan 10 Februari 2025. Pekerjaan dimulai setelah DP diterima (estimasi 15-20 Februari 2025). Pelunasan dilakukan setelah semua deliverables final diserahkan dan mendapat approval dari management klien.',
     documentsReceived: [
-      { 
-        fileName: 'Financial statements FY 2022-2024', 
+      {
+        fileName: 'Financial statements FY 2022-2024',
         receivedDate: '2025-02-08',
         fileUrl: '/uploads/PT-Teknologi-Nusantara/Financial-statements-FY-2022-2024.pdf',
         uploadedBy: 'Andi Wijaya',
         uploadDate: '2025-02-08T10:30:00.000Z'
       },
-      { 
-        fileName: 'Intercompany transaction details', 
+      {
+        fileName: 'Intercompany transaction details',
         receivedDate: '2025-02-09',
         fileUrl: '/uploads/PT-Teknologi-Nusantara/Intercompany-transaction-details.xlsx',
         uploadedBy: 'Andi Wijaya',
         uploadDate: '2025-02-09T14:20:00.000Z'
       },
-      { 
-        fileName: 'Organizational structure and group chart', 
+      {
+        fileName: 'Organizational structure and group chart',
         receivedDate: '2025-02-10',
         fileUrl: '/uploads/PT-Teknologi-Nusantara/Organizational-structure-group-chart.pdf',
         uploadedBy: 'Andi Wijaya',
         uploadDate: '2025-02-10T09:15:00.000Z'
       },
-      { 
-        fileName: 'Related party agreements', 
+      {
+        fileName: 'Related party agreements',
         receivedDate: '2025-02-11',
         fileUrl: '/uploads/PT-Teknologi-Nusantara/Related-party-agreements.pdf',
         uploadedBy: 'Andi Wijaya',
         uploadDate: '2025-02-11T11:45:00.000Z'
       },
-      { 
-        fileName: 'Tax returns and supporting documents', 
+      {
+        fileName: 'Tax returns and supporting documents',
         receivedDate: '2025-02-12',
         fileUrl: '/uploads/PT-Teknologi-Nusantara/Tax-returns-supporting-documents.pdf',
         uploadedBy: 'Andi Wijaya',
@@ -3573,8 +3591,8 @@ export const mockHandovers: Handover[] = [
     milestones?: Array<{ id: string; name: string; targetDate: string; description?: string; }>;
     feeStructure?: Array<{ id: string; description: string; amount: number; percentage?: number; dueDate?: string; status?: string; }>;
     paymentTermsText?: string;
-    documentsReceived?: Array<{ 
-      fileName: string; 
+    documentsReceived?: Array<{
+      fileName: string;
       fileUrl?: string;
       receivedDate?: string;
       uploadedBy?: string;
@@ -3660,36 +3678,36 @@ export const mockHandovers: Handover[] = [
     ],
     paymentTermsText: 'Invoice DP telah diterbitkan 28 Januari 2025. Pekerjaan dimulai setelah DP diterima (estimasi 1-3 Februari 2025). Pelunasan dilakukan setelah semua deliverables final diserahkan dan mendapat approval dari management klien.',
     documentsReceived: [
-      { 
-        fileName: 'Financial statements FY 2022-2024', 
+      {
+        fileName: 'Financial statements FY 2022-2024',
         receivedDate: '2025-01-25',
         fileUrl: '/uploads/PT-Global-Mandiri/Financial-statements-FY-2022-2024.pdf',
         uploadedBy: 'Andi Wijaya',
         uploadDate: '2025-01-25T14:30:00.000Z'
       },
-      { 
-        fileName: 'Trial balance FY 2024', 
+      {
+        fileName: 'Trial balance FY 2024',
         receivedDate: '2025-01-25',
         fileUrl: '/uploads/PT-Global-Mandiri/Trial-balance-FY-2024.xlsx',
         uploadedBy: 'Andi Wijaya',
         uploadDate: '2025-01-25T15:00:00.000Z'
       },
-      { 
-        fileName: 'Organizational structure', 
+      {
+        fileName: 'Organizational structure',
         receivedDate: '2025-01-26',
         fileUrl: '/uploads/PT-Global-Mandiri/Organizational-structure.pdf',
         uploadedBy: 'Andi Wijaya',
         uploadDate: '2025-01-26T09:15:00.000Z'
       },
-      { 
-        fileName: 'Business plan 2025-2027', 
+      {
+        fileName: 'Business plan 2025-2027',
         receivedDate: '2025-01-27',
         fileUrl: '/uploads/PT-Global-Mandiri/Business-plan-2025-2027.pdf',
         uploadedBy: 'Andi Wijaya',
         uploadDate: '2025-01-27T11:20:00.000Z'
       },
-      { 
-        fileName: 'Investment proposals internal', 
+      {
+        fileName: 'Investment proposals internal',
         receivedDate: '2025-01-28',
         fileUrl: '/uploads/PT-Global-Mandiri/Investment-proposals-internal.pdf',
         uploadedBy: 'Andi Wijaya',
@@ -3763,8 +3781,8 @@ export const mockHandovers: Handover[] = [
     milestones?: Array<{ id: string; name: string; targetDate: string; description?: string; }>;
     feeStructure?: Array<{ id: string; description: string; amount: number; percentage?: number; dueDate?: string; status?: string; }>;
     paymentTermsText?: string;
-    documentsReceived?: Array<{ 
-      fileName: string; 
+    documentsReceived?: Array<{
+      fileName: string;
       fileUrl?: string;
       receivedDate?: string;
       uploadedBy?: string;
@@ -3852,29 +3870,29 @@ export const mockHandovers: Handover[] = [
     ],
     paymentTermsText: 'Invoice DP telah diterbitkan 18 Februari 2025. Pekerjaan dimulai setelah DP diterima (estimasi 25-28 Februari 2025). Pelunasan dilakukan setelah semua deliverables final diserahkan dan mendapat approval dari management klien.',
     documentsReceived: [
-      { 
-        fileName: 'Company profile and brand guidelines', 
+      {
+        fileName: 'Company profile and brand guidelines',
         receivedDate: '2025-02-15',
         fileUrl: '/uploads/PT-Cahaya-Abadi/Company-profile-brand-guidelines.pdf',
         uploadedBy: 'Andi Wijaya',
         uploadDate: '2025-02-15T10:30:00.000Z'
       },
-      { 
-        fileName: 'Product catalog and images', 
+      {
+        fileName: 'Product catalog and images',
         receivedDate: '2025-02-16',
         fileUrl: '/uploads/PT-Cahaya-Abadi/Product-catalog-images.zip',
         uploadedBy: 'Andi Wijaya',
         uploadDate: '2025-02-16T14:20:00.000Z'
       },
-      { 
-        fileName: 'Business requirements document', 
+      {
+        fileName: 'Business requirements document',
         receivedDate: '2025-02-17',
         fileUrl: '/uploads/PT-Cahaya-Abadi/Business-requirements-document.pdf',
         uploadedBy: 'Andi Wijaya',
         uploadDate: '2025-02-17T09:15:00.000Z'
       },
-      { 
-        fileName: 'Logo and brand assets', 
+      {
+        fileName: 'Logo and brand assets',
         receivedDate: '2025-02-18',
         fileUrl: '/uploads/PT-Cahaya-Abadi/Logo-brand-assets.zip',
         uploadedBy: 'Andi Wijaya',
@@ -3992,8 +4010,8 @@ export const mockHandovers: Handover[] = [
     milestones?: Array<{ id: string; name: string; targetDate: string; description?: string; }>;
     feeStructure?: Array<{ id: string; description: string; amount: number; percentage?: number; dueDate?: string; status?: string; }>;
     paymentTermsText?: string;
-    documentsReceived?: Array<{ 
-      fileName: string; 
+    documentsReceived?: Array<{
+      fileName: string;
       fileUrl?: string;
       receivedDate?: string;
       uploadedBy?: string;
@@ -4083,36 +4101,36 @@ export const mockHandovers: Handover[] = [
     ],
     paymentTermsText: 'Invoice DP telah diterbitkan 10 Oktober 2025. Pekerjaan dimulai setelah DP diterima (estimasi 15-20 Oktober 2025). Pelunasan dilakukan setelah semua deliverables final diserahkan dan mendapat approval dari management klien.',
     documentsReceived: [
-      { 
-        fileName: 'Financial statements FY 2022-2024', 
+      {
+        fileName: 'Financial statements FY 2022-2024',
         receivedDate: '2025-10-08',
         fileUrl: '/uploads/PT-Sejahtera-Bersama/Financial-statements-FY-2022-2024.pdf',
         uploadedBy: 'Rina Kusuma',
         uploadDate: '2025-10-08T10:30:00.000Z'
       },
-      { 
-        fileName: 'Group structure and ownership chart', 
+      {
+        fileName: 'Group structure and ownership chart',
         receivedDate: '2025-10-09',
         fileUrl: '/uploads/PT-Sejahtera-Bersama/Group-structure-ownership-chart.pdf',
         uploadedBy: 'Rina Kusuma',
         uploadDate: '2025-10-09T14:20:00.000Z'
       },
-      { 
-        fileName: 'Intercompany transaction details', 
+      {
+        fileName: 'Intercompany transaction details',
         receivedDate: '2025-10-10',
         fileUrl: '/uploads/PT-Sejahtera-Bersama/Intercompany-transaction-details.xlsx',
         uploadedBy: 'Rina Kusuma',
         uploadDate: '2025-10-10T09:15:00.000Z'
       },
-      { 
-        fileName: 'Related party agreements', 
+      {
+        fileName: 'Related party agreements',
         receivedDate: '2025-10-11',
         fileUrl: '/uploads/PT-Sejahtera-Bersama/Related-party-agreements.pdf',
         uploadedBy: 'Rina Kusuma',
         uploadDate: '2025-10-11T11:45:00.000Z'
       },
-      { 
-        fileName: 'Tax returns and supporting documents', 
+      {
+        fileName: 'Tax returns and supporting documents',
         receivedDate: '2025-10-12',
         fileUrl: '/uploads/PT-Sejahtera-Bersama/Tax-returns-supporting-documents.pdf',
         uploadedBy: 'Rina Kusuma',
@@ -4187,8 +4205,8 @@ export const mockHandovers: Handover[] = [
     milestones?: Array<{ id: string; name: string; targetDate: string; description?: string; }>;
     feeStructure?: Array<{ id: string; description: string; amount: number; percentage?: number; dueDate?: string; status?: string; }>;
     paymentTermsText?: string;
-    documentsReceived?: Array<{ 
-      fileName: string; 
+    documentsReceived?: Array<{
+      fileName: string;
       fileUrl?: string;
       receivedDate?: string;
       uploadedBy?: string;

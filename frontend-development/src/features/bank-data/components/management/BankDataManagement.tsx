@@ -325,6 +325,7 @@ export function BankDataManagement({ canEdit = true, onPromoteToLead }: BankData
                   </th>
                   <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">PIC / Contact</th>
                   <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Source</th>
+                  <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Entry Slug</th>
                   <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Campaign</th>
                   <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">Form</th>
                   <th className="text-left px-6 py-3 text-sm text-gray-600 font-medium">
@@ -390,6 +391,9 @@ export function BankDataManagement({ canEdit = true, onPromoteToLead }: BankData
                         </td>
                         <td className="px-6 py-4">
                           <span className="text-sm text-gray-700">{formatChannel(entry.sourceChannel)}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-xs text-gray-600 font-mono break-all">{entry.entrySlug || '-'}</span>
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-900 max-w-xs truncate">{entry.campaignName}</div>
@@ -482,14 +486,27 @@ export function BankDataManagement({ canEdit = true, onPromoteToLead }: BankData
         onClose={() => setSelectedEntry(null)}
         onReject={(reason) => {
           console.log('Reject entry:', reason);
-          // In real app: update state via service
+          // TODO: integrate with backend reject API if needed
           setSelectedEntry(null);
         }}
-        onPromote={() => {
+        onPromote={async () => {
           if (onPromoteToLead && selectedEntry) {
-            onPromoteToLead(selectedEntry.id);
+            try {
+              await onPromoteToLead(selectedEntry.id);
+              // Update status di UI menjadi PROMOTED_TO_LEAD tanpa reload penuh
+              setBankData((prev) =>
+                prev.map((entry) =>
+                  entry.id === selectedEntry.id
+                    ? { ...entry, triageStatus: 'PROMOTED_TO_LEAD' as BankDataTriageStatus }
+                    : entry
+                )
+              );
+            } finally {
+              setSelectedEntry(null);
+            }
+          } else {
+            setSelectedEntry(null);
           }
-          setSelectedEntry(null);
         }}
         canEdit={canEdit}
       />

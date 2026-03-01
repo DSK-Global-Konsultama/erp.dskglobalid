@@ -197,13 +197,13 @@ export function EngagementLetterUploadModal({
   const handleReject = () => {
     if (currentEL && onUpdateEngagementLetter) {
       onUpdateEngagementLetter(currentEL.id, {
-        status: 'REJECTED'
+        status: 'REVISION' as any
       });
       setCurrentEL({
         ...currentEL,
-        status: 'REJECTED'
+        status: 'REVISION' as any
       });
-      toast.success('Engagement Letter rejected!');
+      toast.success('Engagement Letter sent for revision!');
       handleClose();
     }
   };

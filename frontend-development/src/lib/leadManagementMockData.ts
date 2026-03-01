@@ -635,12 +635,18 @@ export interface CEOLead {
   sourceType: 'CAMPAIGN_FORM' | 'MANUAL';
   sourceCampaignName?: string;
   topicTag?: string;
+  /** Source channel of the lead (copied from bank_data_entries.source_channel when promoted). */
+  sourceChannel?: import('./leadManagementTypes').Channel;
   ceoFollowUpStatus: 'FOLLOWUP_PENDING' | 'FOLLOWED_UP' | 'DROP';
   promotedAt: string;
   promotedBy: string;
   ceoFollowUpDate?: string;
   ceoFollowUpNotes?: string;
   pipelineStatus: string;
+  /** Backend-derived tracker meta (should mirror FE deriveLeadTrackerRowMeta outputs) */
+  commercialStage?: string;
+  activeDocumentLabel?: string;
+  lastActivity?: string;
   extraData?: Record<string, any>;
   bankDataNotes?: string;
   bankDataId?: string;
@@ -657,6 +663,7 @@ export const mockCEOLeads: CEOLead[] = [
     sourceType: 'CAMPAIGN_FORM',
     sourceCampaignName: 'Webinar: Legal Entity Setup',
     topicTag: 'LEGAL_SETUP',
+    sourceChannel: 'EVENT',
     ceoFollowUpStatus: 'FOLLOWUP_PENDING',
     promotedAt: '2025-12-03 09:15:00',
     promotedBy: 'John (BD Admin)',
@@ -677,6 +684,7 @@ export const mockCEOLeads: CEOLead[] = [
     sourceType: 'CAMPAIGN_FORM',
     sourceCampaignName: 'Webinar: Tax Planning 2026',
     topicTag: 'TAX_PLANNING',
+    sourceChannel: 'EVENT',
     ceoFollowUpStatus: 'FOLLOWUP_PENDING',
     promotedAt: '2025-12-18 14:30:00',
     promotedBy: 'John (BD Admin)',
@@ -697,6 +705,7 @@ export const mockCEOLeads: CEOLead[] = [
     phone: '+62 812-9988-7766',
     sourceType: 'CAMPAIGN_FORM',
     sourceCampaignName: 'IG Story: Transfer Pricing Awareness',
+    sourceChannel: 'IG',
     ceoFollowUpStatus: 'FOLLOWUP_PENDING',
     promotedAt: '2025-12-19 10:00:00',
     promotedBy: 'Sarah (BD Admin)',
@@ -719,6 +728,7 @@ export const mockCEOLeads: CEOLead[] = [
     sourceType: 'CAMPAIGN_FORM',
     sourceCampaignName: 'Webinar: Tax Planning 2026',
     topicTag: 'TAX_PLANNING',
+    sourceChannel: 'EVENT',
     ceoFollowUpStatus: 'FOLLOWED_UP',
     promotedAt: '2025-11-28 11:20:00',
     promotedBy: 'John (BD Admin)',
@@ -740,6 +750,7 @@ export const mockCEOLeads: CEOLead[] = [
     phone: '+62 813-7777-8888',
     sourceType: 'CAMPAIGN_FORM',
     sourceCampaignName: 'Free Download: Tax Compliance Checklist',
+    sourceChannel: 'WEBSITE',
     ceoFollowUpStatus: 'FOLLOWED_UP',
     promotedAt: '2025-11-25 09:45:00',
     promotedBy: 'Sarah (BD Admin)',
@@ -761,6 +772,7 @@ export const mockCEOLeads: CEOLead[] = [
     phone: '+62 819-1111-2222',
     sourceType: 'CAMPAIGN_FORM',
     sourceCampaignName: 'IG Story: Transfer Pricing Awareness',
+    sourceChannel: 'IG',
     ceoFollowUpStatus: 'DROP',
     promotedAt: '2025-11-20 14:15:00',
     promotedBy: 'John (BD Admin)',

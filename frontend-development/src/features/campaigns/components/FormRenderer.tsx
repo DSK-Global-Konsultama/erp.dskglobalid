@@ -31,17 +31,6 @@ type FormRendererProps = {
   mode: "public" | "preview";
 };
 
-function slugify(input: string): string {
-  const base = String(input || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9\-]/g, "")
-    .replace(/\-+/g, "-")
-    .replace(/^\-+|\-+$/g, "");
-  return base || "form";
-}
-
 const resolveAssetUrl = (maybePath: string | null | undefined): string | null => {
   if (!maybePath) return null;
 
@@ -588,12 +577,9 @@ export function FormRenderer(props: FormRendererProps) {
                     const dropdownOptions = extractOptionStrings((f as any).options);
                 
                     const selectedValue = String(answers[key] ?? "");
-                    const hasOther = dropdownOptions.some(isOtherOption);
                     const otherOpt = dropdownOptions.find(isOtherOption) || "";
                     const otherKey = otherKeyOf(key);
                     const otherText = String(answers[otherKey] ?? "");
-                
-                    const isOtherSelected = hasOther && selectedValue === otherOpt;
                 
                     return (
                     <FieldCard key={key}>
@@ -627,7 +613,7 @@ export function FormRenderer(props: FormRendererProps) {
                         ))}
                         </select>
                 
-                        {hasOther && isOtherSelected ? (
+                        {otherOpt && selectedValue === otherOpt ? (
                         <div className="mt-2">
                             <Input
                             value={otherText}
@@ -646,11 +632,8 @@ export function FormRenderer(props: FormRendererProps) {
                     const radioOptions = extractOptionStrings((f as any).options);
                 
                     const selectedValue = String(answers[key] ?? "");
-                    const hasOther = radioOptions.some(isOtherOption);
-                    const otherOpt = radioOptions.find(isOtherOption) || "";
                     const otherKey = otherKeyOf(key);
                     const otherText = String(answers[otherKey] ?? "");
-                    const isOtherSelected = hasOther && selectedValue === otherOpt;
                 
                     return (
                     <FieldCard key={key}>

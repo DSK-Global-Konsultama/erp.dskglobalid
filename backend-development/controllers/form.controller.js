@@ -33,7 +33,21 @@ exports.getFormById = async (req, res) => {
       return res.status(404).json({ message: 'Form tidak ditemukan' });
     }
 
-    return res.json({ data: rows[0] });
+    // Get channel links if any
+    const [channelLinks] = await pool.query(
+      `SELECT id, form_id, channel, public_link, public_slug, public_qr_url, created_at, updated_at 
+       FROM form_channel_links 
+       WHERE form_id = ? 
+       ORDER BY channel ASC`,
+      [id]
+    );
+
+    const formData = rows[0];
+    if (channelLinks.length > 0) {
+      formData.channel_links = channelLinks;
+    }
+
+    return res.json({ data: formData });
   } catch (err) {
     console.error('[getFormById] Error:', err);
     return res.status(500).json({ message: 'Terjadi kesalahan pada server' });
@@ -58,14 +72,16 @@ exports.createForm = async (req, res) => {
   }
 
   // If provided, validate campaign exists (because we will link it)
+  let campaignChannel = null;
   if (primary_campaign_id) {
     try {
-      const [campaignCheck] = await pool.query('SELECT id FROM campaigns WHERE id = ? LIMIT 1', [
+      const [campaignCheck] = await pool.query('SELECT id, channel FROM campaigns WHERE id = ? LIMIT 1', [
         primary_campaign_id
       ]);
       if (campaignCheck.length === 0) {
         return res.status(404).json({ message: 'Campaign tidak ditemukan' });
       }
+      campaignChannel = campaignCheck[0].channel;
 
       // Enforce: unique title per campaign
       const [dupRows] = await pool.query(
@@ -134,6 +150,41 @@ exports.createForm = async (req, res) => {
       }
     }
 
+    // Auto-generate Instagram & LinkedIn links for Event campaigns
+    // (Webinar/Seminar/Brevet/dll) -> berlaku untuk seluruh event
+    if (campaignChannel && status === 'PUBLISHED') {
+      console.log(`[createForm] Auto-generating channel links for campaign. Form ID: ${nextId}, Channel: ${campaignChannel}, Status: ${status}`);
+      try {
+        const baseSlug = effectiveSlug || slugify(title);
+        const channels = ['INSTAGRAM', 'LINKEDIN'];
+
+        for (const channel of channels) {
+          const channelSlug = `${baseSlug}-${channel.toLowerCase()}`;
+          const channelLink = buildPublicFormUrl({ publicSlug: channelSlug });
+          const channelQr = buildPublicQrUrl(channelLink);
+
+          console.log(`[createForm] Creating channel link: ${channel} -> ${channelLink}`);
+
+          await connection.query(
+            `INSERT INTO form_channel_links (form_id, channel, public_link, public_slug, public_qr_url) 
+             VALUES (?, ?, ?, ?, ?)`,
+            [nextId, channel, channelLink, channelSlug, channelQr]
+          );
+
+          console.log(`[createForm] Successfully created channel link for ${channel}`);
+        }
+      } catch (err) {
+        // Log error but don't fail the form creation
+        console.error('[createForm] Auto-generate channel links error:', err);
+        console.error('[createForm] Error details:', err.message, err.code, err.sqlMessage);
+        if (err.code === 'ER_NO_SUCH_TABLE') {
+          console.error('[createForm] ERROR: Table form_channel_links does not exist! Please run migration: 20260213_add_form_channel_links.sql');
+        }
+      }
+    } else {
+      console.log(`[createForm] Skipping channel links generation. Campaign Channel: ${campaignChannel}, Status: ${status}`);
+    }
+
     const [rows] = await connection.query(
       `SELECT id, title, description, header_image_path, success_message, status, public_link, public_slug, public_qr_url, published_at, created_by, created_at, updated_at, primary_campaign_id 
        FROM forms 
@@ -141,12 +192,26 @@ exports.createForm = async (req, res) => {
       [nextId]
     );
 
+    // Get channel links if any
+    const [channelLinks] = await connection.query(
+      `SELECT id, form_id, channel, public_link, public_slug, public_qr_url, created_at, updated_at 
+       FROM form_channel_links 
+       WHERE form_id = ? 
+       ORDER BY channel ASC`,
+      [nextId]
+    );
+
     await connection.commit();
     connection.release();
 
+    const formData = rows[0];
+    if (channelLinks.length > 0) {
+      formData.channel_links = channelLinks;
+    }
+
     return res.status(201).json({
       message: 'Form berhasil dibuat',
-      data: rows[0]
+      data: formData
     });
   } catch (err) {
     try {
@@ -244,10 +309,11 @@ exports.updateForm = async (req, res) => {
   }
 
   // If publishing, ensure public_link and public_qr_url are present
+  let shouldGenerateChannelLinks = false;
   if (status === 'PUBLISHED') {
     try {
       const [existingRows] = await pool.query(
-        'SELECT title, public_slug, public_link, public_qr_url FROM forms WHERE id = ? LIMIT 1',
+        'SELECT title, public_slug, public_link, public_qr_url, primary_campaign_id FROM forms WHERE id = ? LIMIT 1',
         [id]
       );
       const existing = existingRows?.[0] || {};
@@ -268,6 +334,20 @@ exports.updateForm = async (req, res) => {
       if (public_qr_url === undefined && !existing.public_qr_url) {
         fields.push('public_qr_url = ?');
         values.push(computedQr);
+      }
+
+      // Check if we need to generate channel links for campaign forms
+      const campaignId = primary_campaign_id !== undefined ? primary_campaign_id : existing.primary_campaign_id;
+      if (campaignId) {
+        // Any campaign channel counts as Event for now; requirement: berlaku untuk seluruh Event
+        // Only generate if links don't exist yet.
+        const [existingChannelLinks] = await pool.query(
+          'SELECT id FROM form_channel_links WHERE form_id = ? LIMIT 1',
+          [id]
+        );
+        if (existingChannelLinks.length === 0) {
+          shouldGenerateChannelLinks = true;
+        }
       }
     } catch (err) {
       console.error('[updateForm] publish compute link/qr error:', err);
@@ -291,6 +371,36 @@ exports.updateForm = async (req, res) => {
       return res.status(404).json({ message: 'Form tidak ditemukan' });
     }
 
+    // Auto-generate channel links if needed (when publishing campaign form)
+    if (shouldGenerateChannelLinks) {
+      try {
+        const [formRows] = await pool.query(
+          'SELECT title, public_slug FROM forms WHERE id = ? LIMIT 1',
+          [id]
+        );
+        if (formRows.length > 0) {
+          const form = formRows[0];
+          const baseSlug = form.public_slug ? slugify(form.public_slug) : slugify(form.title);
+          const channels = ['INSTAGRAM', 'LINKEDIN'];
+          
+          for (const channel of channels) {
+            const channelSlug = `${baseSlug}-${channel.toLowerCase()}`;
+            const channelLink = buildPublicFormUrl({ publicSlug: channelSlug });
+            const channelQr = buildPublicQrUrl(channelLink);
+            
+            await pool.query(
+              `INSERT INTO form_channel_links (form_id, channel, public_link, public_slug, public_qr_url) 
+               VALUES (?, ?, ?, ?, ?)`,
+              [id, channel, channelLink, channelSlug, channelQr]
+            );
+          }
+        }
+      } catch (err) {
+        // Log error but don't fail the update
+        console.error('[updateForm] Auto-generate channel links error:', err);
+      }
+    }
+
     const [rows] = await pool.query(
       `SELECT id, title, description, header_image_path, success_message, status, public_link, public_slug, public_qr_url, published_at, created_by, created_at, updated_at, primary_campaign_id 
        FROM forms 
@@ -298,9 +408,23 @@ exports.updateForm = async (req, res) => {
       [id]
     );
 
+    // Include channel links in response
+    const [channelLinks] = await pool.query(
+      `SELECT id, form_id, channel, public_link, public_slug, public_qr_url, created_at, updated_at 
+       FROM form_channel_links 
+       WHERE form_id = ? 
+       ORDER BY channel ASC`,
+      [id]
+    );
+
+    const formData = rows[0];
+    if (channelLinks.length > 0) {
+      formData.channel_links = channelLinks;
+    }
+
     return res.json({
       message: 'Form berhasil diupdate',
-      data: rows[0]
+      data: formData
     });
   } catch (err) {
     console.error('[updateForm] Error:', err);

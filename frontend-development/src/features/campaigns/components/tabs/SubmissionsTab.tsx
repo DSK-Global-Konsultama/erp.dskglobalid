@@ -73,7 +73,7 @@ export function SubmissionsTab({ submissions, forms = [], onViewSubmission }: Su
 
   // Export to CSV
   const handleExportCSV = () => {
-    const headers = ['Client Name', 'PIC Name', 'Email', 'Phone', 'Status', 'Submitted At', 'Campaign', 'Channel'];
+    const headers = ['Client Name', 'PIC Name', 'Email', 'Phone', 'Status', 'Submitted At', 'Campaign', 'Channel', 'Entry Slug'];
     const rows = sortedSubmissions.map(s => [
       s.clientName,
       s.picName,
@@ -82,7 +82,8 @@ export function SubmissionsTab({ submissions, forms = [], onViewSubmission }: Su
       s.triageStatus,
       formatIndonesianLongDateTime(s.submittedAt),
       s.campaignName,
-      s.sourceChannel
+      s.sourceChannel,
+      (s as any).entrySlug || ''
     ]);
     
     const csvContent = [
@@ -274,6 +275,10 @@ export function SubmissionsTab({ submissions, forms = [], onViewSubmission }: Su
                         <div className="flex items-center gap-1">
                           <TrendingUp className="w-3.5 h-3.5" />
                           <span>{formatChannel(submission.sourceChannel)}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-gray-400">•</span>
+                          <span className="font-mono break-all">{(submission as any).entrySlug || '-'}</span>
                         </div>
                       </div>
                     </div>

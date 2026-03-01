@@ -118,7 +118,7 @@ export function ProposalTab({ proposals, leads, onUpdateProposal }: ProposalTabP
           onEdit={() => {}}
           onUpdateProposal={(id, updates) => {
             onUpdateProposal(id, updates);
-            if (updates.status === 'APPROVED' || updates.status === 'REJECTED') {
+            if (updates.status === 'APPROVED' || updates.status === 'REVISION') {
               setSelectedProposal(null);
             }
           }}

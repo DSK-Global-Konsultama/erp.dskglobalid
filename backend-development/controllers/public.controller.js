@@ -47,7 +47,56 @@ exports.getPublicFormBySlug = async (req, res) => {
   })();
 
   try {
-    // Prefer explicit public_slug if present; fallback to public_link; else fallback to slug(title)
+    // First: try lookup in channel links table (instagram/linkedin, etc.)
+    // If found, map to the base form_id.
+    const [channelHits] = await pool.query(
+      `SELECT form_id, channel
+       FROM form_channel_links
+       WHERE LOWER(public_slug) = LOWER(?)
+          OR LOWER(public_link) = LOWER(?)
+       LIMIT 1`,
+      [slug, slug]
+    );
+
+    if (channelHits.length > 0) {
+      const formId = channelHits[0].form_id;
+      const entryChannel = channelHits[0].channel || null;
+
+      const [directRows] = await pool.query(
+        `SELECT id, title, description, header_image_path, success_message, status, public_link, public_slug, published_at, primary_campaign_id
+         FROM forms
+         WHERE id = ?
+         LIMIT 1`,
+        [formId]
+      );
+
+      const hit = directRows?.[0];
+      if (!hit) return res.status(404).json({ message: 'Form tidak ditemukan' });
+
+      // Public read rules
+      if (hit.status === 'PAUSED') {
+        return res.status(403).json({ message: 'Form sedang di-pause. Silakan coba lagi nanti.' });
+      }
+      if (hit.status === 'ENDED') {
+        return res.status(403).json({ message: 'Form sudah berakhir (ended). Terima kasih.' });
+      }
+      if (hit.status !== 'PUBLISHED') {
+        return res.status(403).json({ message: 'Form belum dipublish' });
+      }
+
+      const channel = await getCampaignChannel(hit.primary_campaign_id);
+
+      return res.json({
+        data: {
+          ...hit,
+          source_channel: channel,
+          entry_channel: entryChannel,
+          entry_slug: slug,
+        },
+      });
+    }
+
+    // Fallback: Prefer explicit public_slug if present; fallback to public_link; else fallback to slug(title)
     const [rows] = await pool.query(
       `SELECT id, title, description, header_image_path, success_message, status, public_link, public_slug, published_at, primary_campaign_id
        FROM forms`
@@ -87,7 +136,9 @@ exports.getPublicFormBySlug = async (req, res) => {
     return res.json({
       data: {
         ...hit,
-        source_channel: channel
+        source_channel: channel,
+        entry_channel: null,
+        entry_slug: slug,
       }
     });
   } catch (err) {
@@ -166,7 +217,9 @@ exports.submitPublicForm = async (req, res) => {
     pic_name,
     email,
     phone,
-    extra_answers
+    extra_answers,
+    entry_channel, // optional: INSTAGRAM/LINKEDIN (from public slug)
+    entry_slug, // optional: the actual slug/path segment used (e.g. form-xxx-instagram)
   } = req.body;
 
   if (!client_name || !pic_name || !email || !phone) {
@@ -205,10 +258,13 @@ exports.submitPublicForm = async (req, res) => {
       return res.status(404).json({ message: 'Campaign form tidak ditemukan' });
     }
 
-    const source_channel = await getCampaignChannel(campaignId);
+    // Prefer entry_channel from request if provided; fallback to campaign channel.
+    const source_channel = entry_channel ? String(entry_channel).toUpperCase() : await getCampaignChannel(campaignId);
     if (!source_channel) {
       return res.status(500).json({ message: 'source_channel campaign tidak ditemukan' });
     }
+
+    const normalizedEntrySlug = entry_slug ? String(entry_slug).trim().slice(0, 255) : null;
 
     // Parse extra_answers if it's a string
     let extraAnswersValue = extra_answers;
@@ -228,9 +284,9 @@ exports.submitPublicForm = async (req, res) => {
 
     await pool.query(
       `INSERT INTO bank_data_entries
-       (id, campaign_id, form_id, client_name, pic_name, email, phone, source_channel, campaign_name,
+       (id, campaign_id, form_id, client_name, pic_name, email, phone, source_channel, entry_slug, campaign_name,
         topic_tag, triage_status, extra_answers, notes, submitted_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         nextId,
         campaignId,
@@ -240,6 +296,7 @@ exports.submitPublicForm = async (req, res) => {
         email,
         phone,
         source_channel,
+        normalizedEntrySlug,
         form.title,
         null,
         'RAW_NEW',
@@ -250,7 +307,7 @@ exports.submitPublicForm = async (req, res) => {
     );
 
     const [createdRows] = await pool.query(
-      `SELECT id, campaign_id, form_id, client_name, pic_name, email, phone, source_channel,
+      `SELECT id, campaign_id, form_id, client_name, pic_name, email, phone, source_channel, entry_slug,
               campaign_name, topic_tag, triage_status, extra_answers, notes, submitted_at, created_at, updated_at
        FROM bank_data_entries WHERE id = ? LIMIT 1`,
       [nextId]

@@ -7,7 +7,7 @@ exports.getAllBankDataEntries = async (req, res) => {
 
   try {
     let query = `
-      SELECT id, campaign_id, form_id, client_name, pic_name, email, phone, source_channel, 
+      SELECT id, campaign_id, form_id, client_name, pic_name, email, phone, source_channel, entry_slug,
              campaign_name, topic_tag, triage_status, extra_answers, notes, cleaned_by, cleaned_at, 
              rejected_by, rejected_at, rejected_reason, promoted_to_lead_id, promoted_by, promoted_at, 
              submitted_at, created_at, updated_at 
@@ -54,7 +54,7 @@ exports.getBankDataEntryById = async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      `SELECT id, campaign_id, form_id, client_name, pic_name, email, phone, source_channel, 
+      `SELECT id, campaign_id, form_id, client_name, pic_name, email, phone, source_channel, entry_slug,
               campaign_name, topic_tag, triage_status, extra_answers, notes, cleaned_by, cleaned_at, 
               rejected_by, rejected_at, rejected_reason, promoted_to_lead_id, promoted_by, promoted_at, 
               submitted_at, created_at, updated_at 
@@ -84,6 +84,7 @@ exports.createBankDataEntry = async (req, res) => {
     email,
     phone,
     source_channel,
+    entry_slug,
     campaign_name,
     topic_tag,
     triage_status,
@@ -135,9 +136,9 @@ exports.createBankDataEntry = async (req, res) => {
 
     await pool.query(
       `INSERT INTO bank_data_entries 
-       (id, campaign_id, form_id, client_name, pic_name, email, phone, source_channel, campaign_name, 
+       (id, campaign_id, form_id, client_name, pic_name, email, phone, source_channel, entry_slug, campaign_name, 
         topic_tag, triage_status, extra_answers, notes, submitted_at) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         nextId,
         campaign_id,
@@ -147,6 +148,7 @@ exports.createBankDataEntry = async (req, res) => {
         email,
         phone,
         source_channel,
+        entry_slug ? String(entry_slug).trim().slice(0, 255) : null,
         campaign_name,
         topic_tag || null,
         triage_status,
@@ -157,7 +159,7 @@ exports.createBankDataEntry = async (req, res) => {
     );
 
     const [rows] = await pool.query(
-      `SELECT id, campaign_id, form_id, client_name, pic_name, email, phone, source_channel, 
+      `SELECT id, campaign_id, form_id, client_name, pic_name, email, phone, source_channel, entry_slug,
               campaign_name, topic_tag, triage_status, extra_answers, notes, cleaned_by, cleaned_at, 
               rejected_by, rejected_at, rejected_reason, promoted_to_lead_id, promoted_by, promoted_at, 
               submitted_at, created_at, updated_at 
@@ -185,6 +187,7 @@ exports.updateBankDataEntry = async (req, res) => {
     email,
     phone,
     source_channel,
+    entry_slug,
     campaign_name,
     topic_tag,
     triage_status,
@@ -226,6 +229,10 @@ exports.updateBankDataEntry = async (req, res) => {
     }
     fields.push('source_channel = ?');
     values.push(source_channel);
+  }
+  if (entry_slug !== undefined) {
+    fields.push('entry_slug = ?');
+    values.push(entry_slug ? String(entry_slug).trim().slice(0, 255) : null);
   }
   if (campaign_name !== undefined) {
     fields.push('campaign_name = ?');
@@ -309,7 +316,7 @@ exports.updateBankDataEntry = async (req, res) => {
     }
 
     const [rows] = await pool.query(
-      `SELECT id, campaign_id, form_id, client_name, pic_name, email, phone, source_channel, 
+      `SELECT id, campaign_id, form_id, client_name, pic_name, email, phone, source_channel, entry_slug,
               campaign_name, topic_tag, triage_status, extra_answers, notes, cleaned_by, cleaned_at, 
               rejected_by, rejected_at, rejected_reason, promoted_to_lead_id, promoted_by, promoted_at, 
               submitted_at, created_at, updated_at 

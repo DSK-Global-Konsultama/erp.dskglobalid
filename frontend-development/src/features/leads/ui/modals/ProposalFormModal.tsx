@@ -14,10 +14,10 @@ interface ProposalFormModalProps {
   proposals: Proposal[];
   open: boolean;
   onClose: () => void;
-  onAddProposal: (proposal: Proposal) => void;
+  onAddProposal: (proposal: Proposal & { file?: File }) => void;
   onUpdateLeadStatus: (leadId: string, status: LeadStatus) => void;
   editingProposal?: Proposal | null;
-  onUpdateProposal?: (id: string, updates: Partial<Proposal>) => void;
+  onUpdateProposal?: (id: string, updates: Partial<Proposal> & { file?: File }) => void;
 }
 
 interface Termin {
@@ -161,12 +161,12 @@ export function ProposalFormModal({
   // Set default payment method based on tier (only on initial load or tier change when not in edit mode and not subcon)
   useEffect(() => {
     if (editingProposal || hasSubcon) return; // Don't override when editing or subcon is active
-    
+
     if (isDispute) {
       setPaymentMethod('DISPUTE_UM_SF');
       return;
     }
-    
+
     switch (tier) {
       case 'STRATEGIC_RETAINER':
         setPaymentMethod('MONTHLY_RETAINER');
@@ -186,7 +186,7 @@ export function ProposalFormModal({
       setIsDispute(false); // Disable dispute when subcon is active
       return;
     }
-    
+
     if (isDispute) {
       setPaymentMethod('DISPUTE_UM_SF');
       setHasSubcon(false); // Disable subcon when dispute is active
@@ -217,7 +217,7 @@ export function ProposalFormModal({
       let detectedTier: Tier = 'PREMIUM_MODULAR';
       let detectedPaymentMethod: PaymentMethod = 'TERMIN';
       let detectedDispute = false;
-      
+
       // PRIORITY 1: Check for subcon first (most important - standalone payment method)
       // Also check hasSubcon property for robustness
       if (paymentType.includes('Subkon dengan') || editingProposal.hasSubcon) {
@@ -319,7 +319,7 @@ export function ProposalFormModal({
               }
             }
           }
-          
+
           // Try to detect tier from service name
           if (editingProposal.service) {
             const serviceName = editingProposal.service;
@@ -372,7 +372,7 @@ export function ProposalFormModal({
       setProposalFee('');
       setDiscount('');
       setAttachments([]);
-      
+
       setPaymentMethod('MONTHLY_RETAINER');
       setIsDispute(false);
       setPaymentScheme('50-50');
@@ -380,14 +380,14 @@ export function ProposalFormModal({
         { percentage: 50, amount: 0, description: '' },
         { percentage: 50, amount: 0, description: '' },
       ]);
-      
+
       setContractStart('');
       setContractEnd('');
       setBillingTiming('START_OF_MONTH');
       setDownPayment('');
       setSuccessFeePercent('');
       setSuccessFeeBase('');
-      
+
       setHasSubcon(false);
       setSubconPartner('');
       setSubconPaymentTiming('UPFRONT');
@@ -639,32 +639,31 @@ export function ProposalFormModal({
         billingTiming === 'START_OF_MONTH' ? 'Awal bulan' : 'Akhir bulan';
       paymentTypeString = `Retainer bulanan: IDR ${(fee / 1_000_000).toFixed(
         0,
-      )}M/bulan; Periode ${contractStart || '-'} s/d ${
-        contractEnd || '-'
-      }; Penagihan: ${timingLabel}`;
+      )}M/bulan; Periode ${contractStart || '-'} s/d ${contractEnd || '-'
+        }; Penagihan: ${timingLabel}`;
     } else if (paymentMethod === 'DISPUTE_UM_SF') {
       const dp = Number(downPayment || 0);
       paymentTypeString = `Sengketa: Uang Muka IDR ${(dp / 1_000_000).toFixed(
         0,
-      )}M; Success Fee ${successFeePercent}% dari ${
-        successFeeBase || 'nilai kemenangan'
-      }`;
+      )}M; Success Fee ${successFeePercent}% dari ${successFeeBase || 'nilai kemenangan'
+        }`;
     }
 
     // Update existing proposal
     if (editingProposal && onUpdateProposal) {
-      // Only allow edit if status is DRAFT
-      if (editingProposal.status !== 'DRAFT') {
+      // Only allow edit if status is DRAFT or REVISION
+      if (editingProposal.status !== 'DRAFT' && editingProposal.status !== 'REVISION') {
         toast.error('Proposal tidak bisa diedit karena sudah disubmit untuk approval');
         return;
       }
-      
+
       onUpdateProposal(editingProposal.id, {
         service: service.trim(),
         proposalFee: Number(proposalFee),
         paymentType: paymentTypeString,
         hasSubcon: hasSubcon,
-        status: saveAsDraft ? 'DRAFT' : 'WAITING_APPROVAL',
+        status: saveAsDraft ? 'DRAFT' : 'WAITING_CEO_APPROVAL',
+        file: attachments[0]
       });
       toast.success(
         saveAsDraft
@@ -676,15 +675,16 @@ export function ProposalFormModal({
     }
 
     // Create new proposal object
-    const newProposal: Proposal = {
+    const newProposal: Proposal & { file?: File } = {
       id: 'p' + Date.now(),
       leadId: leadId,
       service: service.trim(),
       proposalFee: Number(proposalFee),
       paymentType: paymentTypeString,
       hasSubcon: hasSubcon,
-      status: saveAsDraft ? 'DRAFT' : 'WAITING_APPROVAL',
+      status: saveAsDraft ? 'DRAFT' : 'WAITING_CEO_APPROVAL',
       createdAt: new Date().toISOString().split('T')[0],
+      file: attachments[0]
     };
 
     onAddProposal(newProposal);
@@ -701,7 +701,7 @@ export function ProposalFormModal({
   if (!lead) return null;
 
   return (
-    <Dialog open={open || isAnimatingOut} onOpenChange={() => {}}>
+    <Dialog open={open || isAnimatingOut} onOpenChange={() => { }}>
       <style>{`
         [data-slot="dialog-overlay"] {
           pointer-events: none !important;
@@ -891,9 +891,9 @@ export function ProposalFormModal({
                 <p className="text-xs text-gray-500 mb-2">
                   {hasSubcon
                     ? 'Payment method untuk sub contract: Sub Contract'
-                    : isDispute 
-                    ? 'Payment method untuk dispute: UM + Success Fee' 
-                    : `Payment method default untuk ${tier}: ${tier === 'STRATEGIC_RETAINER' ? 'Monthly Retainer' : 'Termin'}`}
+                    : isDispute
+                      ? 'Payment method untuk dispute: UM + Success Fee'
+                      : `Payment method default untuk ${tier}: ${tier === 'STRATEGIC_RETAINER' ? 'Monthly Retainer' : 'Termin'}`}
                 </p>
                 <select
                   value={paymentMethod}
@@ -913,8 +913,8 @@ export function ProposalFormModal({
                   <option value="SUBCON" disabled={!hasSubcon}>
                     Sub Contract
                   </option>
-                  </select>
-                </div>
+                </select>
+              </div>
 
               {/* Subcon Section - Only show when subcon is active */}
               {hasSubcon && (
@@ -974,258 +974,257 @@ export function ProposalFormModal({
 
               {/* Payment / Billing Section - Hide when subcon is active */}
               {!hasSubcon && (
-              <div>
-                {/* 1. TERMIN */}
-                {paymentMethod === 'TERMIN' && (
-                  <>
-                    <label className="block text-sm text-gray-700 mb-1.5">
-                      Termin Pembayaran (Payment Type)
-                    </label>
-                    <p className="text-xs text-gray-500 mb-2">
-                      Pilih skema termin pembayaran untuk proposal ini.
-                    </p>
+                <div>
+                  {/* 1. TERMIN */}
+                  {paymentMethod === 'TERMIN' && (
+                    <>
+                      <label className="block text-sm text-gray-700 mb-1.5">
+                        Termin Pembayaran (Payment Type)
+                      </label>
+                      <p className="text-xs text-gray-500 mb-2">
+                        Pilih skema termin pembayaran untuk proposal ini.
+                      </p>
 
-                    <select
-                      value={paymentScheme}
-                      onChange={(e) =>
-                        setPaymentScheme(e.target.value as PaymentScheme)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black focus:border-black hover:border-black mb-3"
-                    >
-                      <option value="50-50">50-50</option>
-                      <option value="50-35-15">50-35-15</option>
-                      <option value="40-30-30">40-30-30</option>
-                      <option value="Custom">Custom</option>
-                    </select>
+                      <select
+                        value={paymentScheme}
+                        onChange={(e) =>
+                          setPaymentScheme(e.target.value as PaymentScheme)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black focus:border-black hover:border-black mb-3"
+                      >
+                        <option value="50-50">50-50</option>
+                        <option value="50-35-15">50-35-15</option>
+                        <option value="40-30-30">40-30-30</option>
+                        <option value="Custom">Custom</option>
+                      </select>
 
-                    <div className="border border-gray-200 rounded-lg p-3 bg-white">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-sm text-gray-600">Detail Termin</p>
-                        {paymentScheme === 'Custom' && (
-                          <button
-                            onClick={handleAddTermin}
-                            className="text-sm px-3 py-1 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-1"
-                          >
-                            <Plus className="w-4 h-4" />
-                            Tambah Termin
-                          </button>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        {termins.map((termin, index) => (
-                          <div
-                            key={index}
-                            className="border border-gray-200 rounded-lg p-2.5 bg-gray-50"
-                          >
-                            <div className="flex items-center justify-between mb-1.5">
-                              <label className="text-sm font-medium text-gray-700">
-                                Termin {index + 1}
-                              </label>
-                              {paymentScheme === 'Custom' &&
-                                termins.length > 1 && (
-                                  <button
-                                    onClick={() => handleRemoveTermin(index)}
-                                    className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                )}
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 mb-1.5">
-                              <div>
-                                <label className="block text-xs text-gray-600 mb-1">
-                                  Persentase (%)
+                      <div className="border border-gray-200 rounded-lg p-3 bg-white">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-sm text-gray-600">Detail Termin</p>
+                          {paymentScheme === 'Custom' && (
+                            <button
+                              onClick={handleAddTermin}
+                              className="text-sm px-3 py-1 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-1"
+                            >
+                              <Plus className="w-4 h-4" />
+                              Tambah Termin
+                            </button>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          {termins.map((termin, index) => (
+                            <div
+                              key={index}
+                              className="border border-gray-200 rounded-lg p-2.5 bg-gray-50"
+                            >
+                              <div className="flex items-center justify-between mb-1.5">
+                                <label className="text-sm font-medium text-gray-700">
+                                  Termin {index + 1}
                                 </label>
-                                <Input
-                                  type="number"
-                                  value={termin.percentage}
-                                  onChange={(e) =>
-                                    handleTerminChange(
-                                      index,
-                                      'percentage',
-                                      e.target.value,
-                                    )
-                                  }
-                                  disabled={paymentScheme !== 'Custom'}
-                                  className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black disabled:bg-gray-100 disabled:cursor-not-allowed"
-                                />
+                                {paymentScheme === 'Custom' &&
+                                  termins.length > 1 && (
+                                    <button
+                                      onClick={() => handleRemoveTermin(index)}
+                                      className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  )}
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 mb-1.5">
+                                <div>
+                                  <label className="block text-xs text-gray-600 mb-1">
+                                    Persentase (%)
+                                  </label>
+                                  <Input
+                                    type="number"
+                                    value={termin.percentage}
+                                    onChange={(e) =>
+                                      handleTerminChange(
+                                        index,
+                                        'percentage',
+                                        e.target.value,
+                                      )
+                                    }
+                                    disabled={paymentScheme !== 'Custom'}
+                                    className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs text-gray-600 mb-1">
+                                    Nominal (IDR)
+                                  </label>
+                                  <Input
+                                    type="text"
+                                    value={termin.amount.toLocaleString('id-ID')}
+                                    disabled
+                                    className="w-full bg-gray-100 text-gray-700 cursor-not-allowed"
+                                  />
+                                </div>
                               </div>
                               <div>
                                 <label className="block text-xs text-gray-600 mb-1">
-                                  Nominal (IDR)
+                                  Deskripsi termin
                                 </label>
                                 <Input
                                   type="text"
-                                  value={termin.amount.toLocaleString('id-ID')}
-                                  disabled
-                                  className="w-full bg-gray-100 text-gray-700 cursor-not-allowed"
+                                  value={termin.description}
+                                  onChange={(e) =>
+                                    handleTerminChange(
+                                      index,
+                                      'description',
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder="e.g., DP saat EL signed, Progress 50%, Pelunasan saat project selesai"
+                                  className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
                                 />
                               </div>
                             </div>
-                            <div>
-                              <label className="block text-xs text-gray-600 mb-1">
-                                Deskripsi termin
-                              </label>
-                              <Input
-                                type="text"
-                                value={termin.description}
-                                onChange={(e) =>
-                                  handleTerminChange(
-                                    index,
-                                    'description',
-                                    e.target.value,
-                                  )
-                                }
-                                placeholder="e.g., DP saat EL signed, Progress 50%, Pelunasan saat project selesai"
-                                className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
-                              />
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-gray-200 flex items-center justify-between">
+                          <span className="text-sm text-gray-600">
+                            Total Persentase:
+                          </span>
+                          <span
+                            className={`font-medium ${totalPercentage === 100
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                              }`}
+                          >
+                            {totalPercentage}%
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1.5">
+                          Ini adalah skema termin yang diajukan di proposal. Termin
+                          final bisa dikonfirmasi lagi setelah client setuju (deal).
+                        </p>
                       </div>
-                      <div className="mt-2 pt-2 border-t border-gray-200 flex items-center justify-between">
-                        <span className="text-sm text-gray-600">
-                          Total Persentase:
-                        </span>
-                        <span
-                          className={`font-medium ${
-                            totalPercentage === 100
-                              ? 'text-green-600'
-                              : 'text-red-600'
-                          }`}
-                        >
-                          {totalPercentage}%
-                        </span>
+                    </>
+                  )}
+
+                  {/* 2. MONTHLY_RETAINER */}
+                  {paymentMethod === 'MONTHLY_RETAINER' && (
+                    <div className="border border-gray-200 rounded-lg p-3 bg-white space-y-2.5">
+                      <p className="text-sm text-gray-600 font-medium mb-0.5">
+                        Payment – Strategic Advisory (Bulanan)
+                      </p>
+                      <p className="text-xs text-gray-500 mb-1">
+                        Proposal Fee akan dianggap sebagai fee per bulan (retainer).
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">
+                            Periode Kontrak – Mulai
+                          </label>
+                          <Input
+                            type="date"
+                            value={contractStart}
+                            onChange={(e) => setContractStart(e.target.value)}
+                            className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">
+                            Periode Kontrak – Selesai
+                          </label>
+                          <Input
+                            type="date"
+                            value={contractEnd}
+                            onChange={(e) => setContractEnd(e.target.value)}
+                            className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
+                          />
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1.5">
-                        Ini adalah skema termin yang diajukan di proposal. Termin
-                        final bisa dikonfirmasi lagi setelah client setuju (deal).
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">
+                          Waktu Penagihan
+                        </label>
+                        <div className="flex gap-4 text-sm">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              checked={billingTiming === 'START_OF_MONTH'}
+                              onChange={() =>
+                                setBillingTiming('START_OF_MONTH')
+                              }
+                            />
+                            <span>Awal bulan</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              checked={billingTiming === 'END_OF_MONTH'}
+                              onChange={() => setBillingTiming('END_OF_MONTH')}
+                            />
+                            <span>Akhir bulan</span>
+                          </label>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Contoh: IDR {proposalFee || '0'} / bulan, periode{' '}
+                        {contractStart || '...'} s/d {contractEnd || '...'}.
                       </p>
                     </div>
-                  </>
-                )}
+                  )}
 
-                {/* 2. MONTHLY_RETAINER */}
-                {paymentMethod === 'MONTHLY_RETAINER' && (
-                  <div className="border border-gray-200 rounded-lg p-3 bg-white space-y-2.5">
-                    <p className="text-sm text-gray-600 font-medium mb-0.5">
-                      Payment – Strategic Advisory (Bulanan)
-                    </p>
-                    <p className="text-xs text-gray-500 mb-1">
-                      Proposal Fee akan dianggap sebagai fee per bulan (retainer).
-                    </p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">
-                          Periode Kontrak – Mulai
-                        </label>
-                        <Input
-                          type="date"
-                          value={contractStart}
-                          onChange={(e) => setContractStart(e.target.value)}
-                          className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">
-                          Periode Kontrak – Selesai
-                        </label>
-                        <Input
-                          type="date"
-                          value={contractEnd}
-                          onChange={(e) => setContractEnd(e.target.value)}
-                          className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">
-                        Waktu Penagihan
-                      </label>
-                      <div className="flex gap-4 text-sm">
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            checked={billingTiming === 'START_OF_MONTH'}
-                            onChange={() =>
-                              setBillingTiming('START_OF_MONTH')
+                  {/* 3. DISPUTE_UM_SF */}
+                  {paymentMethod === 'DISPUTE_UM_SF' && (
+                    <div className="border border-gray-200 rounded-lg p-3 bg-white space-y-2.5">
+                      <p className="text-sm text-gray-600 font-medium mb-0.5">
+                        Payment – Sengketa (UM + Success Fee)
+                      </p>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">
+                            Uang Muka (IDR)
+                          </label>
+                          <Input
+                            type="number"
+                            value={downPayment}
+                            onChange={(e) => setDownPayment(e.target.value)}
+                            placeholder="50000000"
+                            className="focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">
+                            Success Fee (%)
+                          </label>
+                          <Input
+                            type="number"
+                            value={successFeePercent}
+                            onChange={(e) =>
+                              setSuccessFeePercent(e.target.value)
                             }
+                            placeholder="20"
+                            className="focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
                           />
-                          <span>Awal bulan</span>
-                        </label>
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            checked={billingTiming === 'END_OF_MONTH'}
-                            onChange={() => setBillingTiming('END_OF_MONTH')}
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">
+                            Basis Success Fee
+                          </label>
+                          <Input
+                            type="text"
+                            value={successFeeBase}
+                            onChange={(e) =>
+                              setSuccessFeeBase(e.target.value)
+                            }
+                            placeholder="% dari pajak yang berhasil dikurangi / restitusi"
+                            className="focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
                           />
-                          <span>Akhir bulan</span>
-                        </label>
+                        </div>
                       </div>
+                      <p className="text-xs text-gray-500">
+                        Proposal Fee di atas bisa dipakai sebagai indikasi total
+                        potensi fee, tapi struktur resmi: UM + Success Fee.
+                      </p>
                     </div>
-                    <p className="text-xs text-gray-500">
-                      Contoh: IDR {proposalFee || '0'} / bulan, periode{' '}
-                      {contractStart || '...'} s/d {contractEnd || '...'}.
-                    </p>
-                  </div>
-                )}
+                  )}
 
-                {/* 3. DISPUTE_UM_SF */}
-                {paymentMethod === 'DISPUTE_UM_SF' && (
-                  <div className="border border-gray-200 rounded-lg p-3 bg-white space-y-2.5">
-                    <p className="text-sm text-gray-600 font-medium mb-0.5">
-                      Payment – Sengketa (UM + Success Fee)
-                    </p>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">
-                          Uang Muka (IDR)
-                        </label>
-                        <Input
-                          type="number"
-                          value={downPayment}
-                          onChange={(e) => setDownPayment(e.target.value)}
-                          placeholder="50000000"
-                          className="focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">
-                          Success Fee (%)
-                        </label>
-                        <Input
-                          type="number"
-                          value={successFeePercent}
-                          onChange={(e) =>
-                            setSuccessFeePercent(e.target.value)
-                          }
-                          placeholder="20"
-                          className="focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">
-                          Basis Success Fee
-                        </label>
-                        <Input
-                          type="text"
-                          value={successFeeBase}
-                          onChange={(e) =>
-                            setSuccessFeeBase(e.target.value)
-                          }
-                          placeholder="% dari pajak yang berhasil dikurangi / restitusi"
-                          className="focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
-                        />
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Proposal Fee di atas bisa dipakai sebagai indikasi total
-                      potensi fee, tapi struktur resmi: UM + Success Fee.
-                    </p>
-                  </div>
-                )}
-
-              </div>
+                </div>
               )}
 
               {/* Attachments */}
@@ -1234,12 +1233,11 @@ export function ProposalFormModal({
                   Attachments <span className="text-red-500">*</span>
                 </label>
                 <div className="border border-gray-200 rounded-lg p-4 bg-white">
-                  <div 
-                    className={`flex flex-col items-center justify-center py-6 border-2 border-dashed rounded-lg transition-colors ${
-                      isDragOver 
-                        ? 'border-blue-500 bg-blue-50' 
+                  <div
+                    className={`flex flex-col items-center justify-center py-6 border-2 border-dashed rounded-lg transition-colors ${isDragOver
+                        ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-300 hover:border-gray-400'
-                    }`}
+                      }`}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}

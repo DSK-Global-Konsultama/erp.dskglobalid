@@ -26,6 +26,17 @@ type BackendCampaign = {
   updated_at?: string;
 };
 
+type BackendFormChannelLink = {
+  id: string | number;
+  form_id: string | number;
+  channel: string;
+  public_link?: string | null;
+  public_slug?: string | null;
+  public_qr_url?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
 type BackendForm = {
   id: string | number;
   title: string;
@@ -41,6 +52,7 @@ type BackendForm = {
   created_at?: string;
   updated_at?: string;
   primary_campaign_id?: string | null;
+  channel_links?: BackendFormChannelLink[];
 };
 
 type BackendFormFieldOption = {
@@ -75,6 +87,7 @@ type BackendBankDataEntry = {
   email: string;
   phone: string;
   source_channel: Channel | string;
+  entry_slug?: string | null;
   campaign_name: string;
   topic_tag?: string | null;
   triage_status: BankDataEntry['triageStatus'] | string;
@@ -152,7 +165,16 @@ const mapFormFromBackend = (data: BackendForm, fields: FormField[] = []): Form =
   createdBy: data.created_by || '',
   createdAt: formatIndonesianLongDateTime(data.created_at || ''),
   updatedAt: formatIndonesianLongDateTime(data.updated_at || ''),
-  publishedAt: data.published_at || undefined
+  publishedAt: data.published_at || undefined,
+  channelLinks: Array.isArray((data as any).channel_links)
+    ? (data as any).channel_links.map((l: BackendFormChannelLink) => ({
+        id: String(l.id),
+        channel: String(l.channel || '').toUpperCase(),
+        publicLink: l.public_link || undefined,
+        publicSlug: l.public_slug || undefined,
+        publicQrUrl: (l as any).public_qr_url || undefined,
+      }))
+    : undefined,
 });
 
 const mapFormFieldFromBackend = (data: BackendFormField): FormField => ({
@@ -201,6 +223,7 @@ const mapBankDataFromBackend = (data: BackendBankDataEntry): BankDataEntry => {
     email: data.email,
     phone: data.phone,
     sourceChannel: mapChannelFromBackend(data.source_channel),
+    entrySlug: (data as any).entry_slug || undefined,
     campaignName: data.campaign_name,
     topicTag: data.topic_tag || undefined,
     triageStatus: data.triage_status as BankDataEntry['triageStatus'],

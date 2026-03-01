@@ -103,7 +103,7 @@ export function ELTab({ engagementLetters, leads, onUpdateEngagementLetter }: EL
           isCEOView={true}
           onUpdateEngagementLetter={(id, updates) => {
             onUpdateEngagementLetter(id, updates);
-            if (updates.status === 'APPROVED' || updates.status === 'REJECTED') {
+            if (updates.status === 'APPROVED' || updates.status === 'REVISION') {
               setSelectedEL(null);
             }
           }}

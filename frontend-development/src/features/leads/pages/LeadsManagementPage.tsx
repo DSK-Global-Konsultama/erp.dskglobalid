@@ -5,28 +5,56 @@ import { LeadsFilters } from '../ui/management/LeadsFilters';
 import { LeadsTable } from '../ui/management/LeadsTable';
 import { LeadsPagination } from '../ui/management/LeadsPagination';
 import type { Lead } from '../../../lib/mock-data';
+import type { CEOLead } from '../../../lib/leadManagementMockData';
 
 interface LeadsManagementPageProps {
   userName: string;
   mode: 'view' | 'tracker';
   title?: string;
   onLeadClick?: (leadId: string) => void;
+  /** Optional override lead list (e.g. from backend). When provided, component won't use mock generator. */
+  leadsOverride?: CEOLead[];
 }
 
 const RELEVANT_STATUSES = [
-  'TO_BE_MEET', 'MEETING_SCHEDULED', 'NEED_NOTULEN', 'NOTULEN_SUBMITTED', 'NOTULEN_APPROVED',
-  'NEED_PROPOSAL', 'IN_PROPOSAL', 'PROPOSAL_APPROVED', 'PROPOSAL_SENT', 'PROPOSAL_ACCEPTED',
-  'PROPOSAL_EXPIRED', 'NEED_EL', 'EL_SUBMITTED', 'EL_APPROVED', 'EL_SENT', 'EL_SIGNED',
-  'NEED_HANDOVER', 'IN_HANDOVER', 'HANDOVER_SUBMITTED', 'HANDOVER_APPROVED', 'HANDOVER_SENT_TO_PM',
-  'DONE', 'DEAL_WON',
+  // meeting
+  'MEETING_NOT_STARTED',
+  'MEETING_SCHEDULED',
+  // notulen
+  'NOTULEN_NOT_STARTED',
+  'NOTULEN_DRAFT',
+  'NOTULEN_WAITING_CEO_APPROVAL',
+  'NOTULEN_REVISION',
+  'NOTULEN_APPROVED',
+  // proposal
+  'PROPOSAL_NOT_STARTED',
+  'PROPOSAL_DRAFT',
+  'PROPOSAL_WAITING_CEO_APPROVAL',
+  'PROPOSAL_REVISION',
+  'PROPOSAL_APPROVED',
+  'PROPOSAL_SENT_TO_CLIENT',
+  'PROPOSAL_ACCEPTED',
+  // EL
+  'EL_NOT_UPLOADED',
+  'EL_WAITING_CEO_APPROVAL',
+  'EL_REVISION',
+  'EL_APPROVED',
+  'EL_SENT_TO_CLIENT',
+  'EL_SIGNED',
+  // handover
+  'HANDOVER_LOCKED',
+  'HANDOVER_NOT_STARTED',
+  'HANDOVER_DRAFT',
+  'HANDOVER_WAITING_CEO_APPROVAL',
+  'HANDOVER_REVISION',
+  'HANDOVER_APPROVED',
 ];
 
-export function LeadsManagementPage({ userName: _userName, mode, title, onLeadClick }: LeadsManagementPageProps) {
+export function LeadsManagementPage({ userName: _userName, mode, title, onLeadClick, leadsOverride }: LeadsManagementPageProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSource, setFilterSource] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterCommercialStage, setFilterCommercialStage] = useState<string>('all');
-  const [filterHandoverStatus, setFilterHandoverStatus] = useState<string>('all');
   const [serviceFilter, setServiceFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
@@ -37,23 +65,25 @@ export function LeadsManagementPage({ userName: _userName, mode, title, onLeadCl
   const [leads] = useState<Lead[]>(() =>
     defaultLeads.filter((lead) => RELEVANT_STATUSES.includes((lead as Lead & { status?: string }).status))
   );
-  const myLeads = leads;
+  const useBackendTracker = mode === 'tracker' && Array.isArray(leadsOverride);
+  const myLeads: Array<Lead | CEOLead> = useBackendTracker ? (leadsOverride as CEOLead[]) : leads;
 
-  const filteredLeads = myLeads.filter((lead) => {
+  const filteredLeads = (myLeads as Array<Lead | CEOLead>).filter((lead: Lead | CEOLead) => {
     const matchesSearch =
-      lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.clientName.toLowerCase().includes(searchTerm.toLowerCase());
+      String((lead as any).company || (lead as any).sourceCampaignName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String((lead as any).clientName || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSource =
-      mode === 'tracker' ? true : filterSource === 'all' || lead.source === filterSource;
+      mode === 'tracker' ? true : filterSource === 'all' || (lead as any).source === filterSource;
     const matchesStatus = filterStatus === 'all' || (lead as Lead & { status?: string }).status === filterStatus;
     const matchesService =
       mode === 'tracker' ? (serviceFilter === 'all' || (lead as Lead & { service?: string }).service === serviceFilter) : true;
 
+    // Backend tracker list belum memiliki data meeting/notulen/proposal/EL/handover,
+    // jadi filter stage hanya aktif untuk mock tracker.
     let matchesCommercialStage = true;
-    let matchesHandoverStatus = true;
-    if (mode === 'tracker') {
+    if (mode === 'tracker' && !useBackendTracker) {
       const meta = deriveLeadTrackerRowMeta(
-        lead,
+        lead as any,
         meetings,
         notulensi,
         proposals,
@@ -61,7 +91,6 @@ export function LeadsManagementPage({ userName: _userName, mode, title, onLeadCl
         handovers
       );
       matchesCommercialStage = filterCommercialStage === 'all' || meta.commercialStage === filterCommercialStage;
-      matchesHandoverStatus = filterHandoverStatus === 'all' || meta.handoverStatus === filterHandoverStatus;
     }
 
     return (
@@ -69,14 +98,13 @@ export function LeadsManagementPage({ userName: _userName, mode, title, onLeadCl
       matchesSource &&
       matchesStatus &&
       matchesService &&
-      matchesCommercialStage &&
-      matchesHandoverStatus
+      matchesCommercialStage
     );
   });
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterSource, filterStatus, serviceFilter, filterCommercialStage, filterHandoverStatus]);
+  }, [searchTerm, filterSource, filterStatus, serviceFilter, filterCommercialStage]);
 
   useEffect(() => {
     const totalPages = Math.ceil(filteredLeads.length / itemsPerPage);
@@ -97,7 +125,13 @@ export function LeadsManagementPage({ userName: _userName, mode, title, onLeadCl
   const displayTitle = title ?? (mode === 'tracker' ? 'Lead Tracker' : 'Semua Lead');
   const services: string[] =
     mode === 'tracker'
-      ? ['all', ...Array.from(new Set(myLeads.map((l) => (l as Lead & { service?: string }).service).filter((s): s is string => Boolean(s))))]
+      ? (['all', ...Array.from(
+          new Set(
+            (myLeads as Array<Lead | CEOLead>)
+              .map((l: Lead | CEOLead) => (l as any).service)
+              .filter((s: unknown): s is string => typeof s === 'string' && Boolean(s))
+          )
+        )] as string[])
       : [];
   const leadSourcesList: string[] = Array.isArray(leadSources) ? [...leadSources] : [];
 
@@ -106,7 +140,6 @@ export function LeadsManagementPage({ userName: _userName, mode, title, onLeadCl
     setFilterSource('all');
     setFilterStatus('all');
     setFilterCommercialStage('all');
-    setFilterHandoverStatus('all');
     setServiceFilter('all');
     setCurrentPage(1);
   };
@@ -123,8 +156,6 @@ export function LeadsManagementPage({ userName: _userName, mode, title, onLeadCl
         onFilterStatusChange={setFilterStatus}
         filterCommercialStage={filterCommercialStage}
         onFilterCommercialStageChange={setFilterCommercialStage}
-        filterHandoverStatus={filterHandoverStatus}
-        onFilterHandoverStatusChange={setFilterHandoverStatus}
         serviceFilter={serviceFilter}
         onServiceFilterChange={setServiceFilter}
         onReset={handleReset}
@@ -135,7 +166,7 @@ export function LeadsManagementPage({ userName: _userName, mode, title, onLeadCl
       <LeadsTable
         mode={mode}
         title={displayTitle}
-        leads={paginatedLeads}
+        leads={paginatedLeads as any}
         meetings={meetings}
         notulensi={notulensi}
         proposals={proposals}

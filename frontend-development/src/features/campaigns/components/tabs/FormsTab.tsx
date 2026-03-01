@@ -50,6 +50,46 @@ export function FormsTab({ campaignId, forms, onCreateForm, onEditForm, onDelete
     return buildPublicLinkFromSlug(maybeSlug);
   };
 
+  const getAllPublicLinks = (form: Form): Array<{ label: string; url: string; qrUrl: string }> => {
+    // For Event forms: show ONLY channel links (instagram/linkedin). No base url.
+    // We infer this by presence of channel_links/channelLinks from backend.
+    const channelLinks = (form as any).channelLinks || (form as any).channel_links;
+    const hasChannelLinks = Array.isArray(channelLinks) && channelLinks.length > 0;
+
+    if (hasChannelLinks) {
+      const items: Array<{ label: string; url: string; qrUrl: string }> = [];
+      for (const l of channelLinks) {
+        const url = l?.publicLink || l?.public_link;
+        if (!url) continue;
+        const channel = String(l?.channel || '').toUpperCase();
+        items.push({
+          label: channel || 'Channel',
+          url,
+          qrUrl: (String(l?.publicQrUrl || l?.public_qr_url || '').trim()) ? (l.publicQrUrl || l.public_qr_url) : buildQrUrl(url),
+        });
+      }
+
+      const seen = new Set<string>();
+      return items.filter((i) => {
+        if (!i.url) return false;
+        if (seen.has(i.url)) return false;
+        seen.add(i.url);
+        return true;
+      });
+    }
+
+    // Non-event: base url only
+    const baseUrl = getEffectivePublicLink(form);
+    if (!baseUrl) return [];
+    return [
+      {
+        label: 'Base',
+        url: baseUrl,
+        qrUrl: (form.publicQrUrl && form.publicQrUrl.trim()) ? form.publicQrUrl : buildQrUrl(baseUrl),
+      },
+    ];
+  };
+
   const [editingSlugForFormId, setEditingSlugForFormId] = useState<string | null>(null);
   const [slugDraft, setSlugDraft] = useState<string>('');
   const [savingSlug, setSavingSlug] = useState(false);
@@ -94,11 +134,11 @@ export function FormsTab({ campaignId, forms, onCreateForm, onEditForm, onDelete
       ) : (
         <div className="space-y-3">
           {forms.map(form => {
-            const effectivePublicLink = getEffectivePublicLink(form);
-            const qrUrl = (form.publicQrUrl && form.publicQrUrl.trim()) ? form.publicQrUrl : buildQrUrl(effectivePublicLink);
+            const links = getAllPublicLinks(form);
+            const isEvent = Array.isArray((form as any).channelLinks) && (form as any).channelLinks.length > 0;
 
             const isEditingSlug = editingSlugForFormId === form.id;
-            const slugPreview = slugDraft.trim() ? buildPublicLinkFromSlug(slugDraft) : effectivePublicLink;
+            const slugPreview = slugDraft.trim() ? buildPublicLinkFromSlug(slugDraft) : getEffectivePublicLink(form);
 
             return (
               <div key={form.id} className="border border-gray-200 rounded-lg p-4">
@@ -213,45 +253,100 @@ export function FormsTab({ campaignId, forms, onCreateForm, onEditForm, onDelete
                   )}
                 </div>
 
-                <div className="flex items-center gap-2">
-                  {effectivePublicLink ? (
-                    <>
-                      <input
-                        type="text"
-                        value={effectivePublicLink}
-                        readOnly
-                        className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                      />
-                      <button
-                        onClick={() => copyToClipboard(effectivePublicLink)}
-                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                        title="Copy link"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setQrOpenForFormId(form.id)}
-                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                        title="QR code"
-                        aria-label="QR code"
-                      >
-                        QR
-                      </button>
-                      <a
-                        href={effectivePublicLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                        title="Open form"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                    </>
+                <div className="space-y-2">
+                  {links.length > 0 ? (
+                    links.map((l) => (
+                      <div key={`${form.id}-${l.label}-${l.url}`} className="flex items-center gap-2">
+                        <div className="w-24 shrink-0 text-xs font-medium text-gray-700">{l.label}</div>
+                        <input
+                          type="text"
+                          value={l.url}
+                          readOnly
+                          className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
+                        />
+                        <button
+                          onClick={() => copyToClipboard(l.url)}
+                          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          title="Copy link"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+
+                        {isEvent ? null : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              (window as any).__qrUrlOverride = { formId: form.id, label: l.label, qrUrl: l.qrUrl, url: l.url };
+                              setQrOpenForFormId(form.id);
+                            }}
+                            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                            title="QR code"
+                            aria-label="QR code"
+                          >
+                            QR
+                          </button>
+                        )}
+
+                        <a
+                          href={l.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          title="Open form"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      </div>
+                    ))
                   ) : (
                     <div className="flex-1 text-sm text-gray-400">Form masih draft (belum ada public link)</div>
                   )}
+                </div>
 
+                {isEvent && links.length > 0 ? (
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {links.map((l) => (
+                      <div key={`${form.id}-qr-${l.label}-${l.url}`} className="p-3 rounded-lg border border-gray-200 bg-gray-50">
+                        <div className="text-xs font-medium text-gray-700 mb-2">QR {l.label}</div>
+                        <div className="flex items-start gap-3">
+                          <img
+                            src={l.qrUrl}
+                            alt={`QR ${l.label}`}
+                            className="w-[140px] h-[140px] rounded bg-white border border-gray-200"
+                          />
+                          <div className="text-xs text-gray-700">
+                            <a
+                              href={l.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-700 hover:underline break-all"
+                            >
+                              {l.url}
+                            </a>
+                            <div className="mt-2 flex items-center gap-2">
+                              <button
+                                type="button"
+                                className="px-2 py-1 text-xs rounded-md bg-white border border-gray-300 hover:bg-gray-100"
+                                onClick={() => copyToClipboard(l.url)}
+                              >
+                                Copy Link
+                              </button>
+                              <button
+                                type="button"
+                                className="px-2 py-1 text-xs rounded-md bg-white border border-gray-300 hover:bg-gray-100"
+                                onClick={() => copyToClipboard(l.qrUrl)}
+                              >
+                                Copy QR URL
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+
+                <div className="flex items-center gap-2">
                   {onUpdateFormStatus && (
                     <>
                       <button
@@ -322,7 +417,7 @@ export function FormsTab({ campaignId, forms, onCreateForm, onEditForm, onDelete
                   )}
                 </div>
 
-                {qrOpenForFormId === form.id && (
+                {(!isEvent && qrOpenForFormId === form.id) ? (
                   <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
                     <div className="flex items-center justify-between mb-3">
                       <div className="text-sm font-medium text-gray-800">QR Code</div>
@@ -335,17 +430,17 @@ export function FormsTab({ campaignId, forms, onCreateForm, onEditForm, onDelete
                       </button>
                     </div>
                     <div className="flex items-start gap-4">
-                      <img src={qrUrl} alt="QR" className="w-[160px] h-[160px] rounded bg-white border border-gray-200" />
+                      <img src={(window as any).__qrUrlOverride?.formId === form.id ? (window as any).__qrUrlOverride.qrUrl : links[0]?.qrUrl} alt="QR" className="w-[160px] h-[160px] rounded bg-white border border-gray-200" />
                       <div className="text-sm text-gray-700">
                         <div className="mb-2">Link:</div>
-                        <a href={effectivePublicLink} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline break-all">
-                          {effectivePublicLink}
+                        <a href={(window as any).__qrUrlOverride?.formId === form.id ? (window as any).__qrUrlOverride.url : links[0]?.url} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline break-all">
+                          {(window as any).__qrUrlOverride?.formId === form.id ? (window as any).__qrUrlOverride.url : links[0]?.url}
                         </a>
                         <div className="mt-3">
                           <button
                             type="button"
                             className="px-3 py-2 text-sm rounded-md bg-white border border-gray-300 hover:bg-gray-100"
-                            onClick={() => copyToClipboard(qrUrl)}
+                            onClick={() => copyToClipboard((window as any).__qrUrlOverride?.formId === form.id ? (window as any).__qrUrlOverride.qrUrl : links[0]?.qrUrl)}
                           >
                             Copy QR Image URL
                           </button>
@@ -353,7 +448,7 @@ export function FormsTab({ campaignId, forms, onCreateForm, onEditForm, onDelete
                       </div>
                     </div>
                   </div>
-                )}
+                ) : null}
               </div>
             );
           })}
