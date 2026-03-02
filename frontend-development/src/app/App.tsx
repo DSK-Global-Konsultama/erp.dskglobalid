@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Toaster } from '../components/ui/sonner';
 import { toast } from 'sonner';
 import { Sidebar } from '../components/layout/Sidebar';
-import { Header } from '../components/layout/Header';
+import { Header, type InvoiceDetailInfo } from '../components/layout/Header';
 import { authService, type User } from '../services/authService';
 
 // CEO imports
@@ -89,6 +89,7 @@ export default function App() {
     campaignName: string;
   } | null>(null);
   const [projectDetail, setProjectDetail] = useState<{ onBack: () => void } | null>(null);
+  const [invoiceDetail, setInvoiceDetail] = useState<InvoiceDetailInfo | null>(null);
   const resetDetailRef = useRef<(() => void) | null>(null);
   const resetCampaignDetailRef = useRef<(() => void) | null>(null);
   const resetFormBuilderDetailRef = useRef<(() => void) | null>(null);
@@ -225,6 +226,11 @@ export default function App() {
       setProjectDetail(null);
     }
 
+    // Reset invoice detail when navigating away from invoices page
+    if (invoiceDetail && path !== 'invoices') {
+      setInvoiceDetail(null);
+    }
+
     setActiveNav(path);
     // Sync tab state for BD-Executive when clicking sidebar
     if (currentUser?.role === 'BD-Executive' && path === 'leads') {
@@ -303,7 +309,7 @@ export default function App() {
             case 'projects':
               return <CEOProjectsPage />;
             case 'invoices':
-              return <CEOInvoicesPage />;
+              return <CEOInvoicesPage onInvoiceDetailChange={setInvoiceDetail} />;
             case 'user-account':
               return <  SuperAdminUserManagementPage />;
             case 'settings':
@@ -331,7 +337,7 @@ export default function App() {
             case 'projects':
               return <CEOProjectsPage />;
             case 'invoices':
-              return <CEOInvoicesPage />;
+              return <CEOInvoicesPage onInvoiceDetailChange={setInvoiceDetail} />;
             case 'user-account':
               return <SuperAdminUserManagementPage />;
             case 'settings':
@@ -363,7 +369,7 @@ export default function App() {
             case 'projects':
               return <CEOProjectsPage />;
             case 'invoices':
-              return <CEOInvoicesPage />;
+              return <CEOInvoicesPage onInvoiceDetailChange={setInvoiceDetail} />;
             default:
               return <CEODashboard />;
           }
@@ -376,7 +382,7 @@ export default function App() {
             case 'projects':
               return <COOProjectsPage onProjectDetailChange={setProjectDetail} />;
             case 'invoices':
-              return <COOInvoicesPage />;
+              return <COOInvoicesPage onInvoiceDetailChange={setInvoiceDetail} />;
             default:
               return <COODashboard />;
           }
@@ -455,7 +461,7 @@ export default function App() {
             />
           );
         } else if (currentUser.role === 'Admin') {
-          return <AdminDashboard />;
+          return <AdminDashboard onInvoiceDetailChange={setInvoiceDetail} />;
         }
         return null;
     }
@@ -524,6 +530,13 @@ export default function App() {
               onBack: () => {
                 projectDetail.onBack();
                 setProjectDetail(null);
+              }
+            } : undefined}
+            invoiceDetail={invoiceDetail ? {
+              ...invoiceDetail,
+              onBack: () => {
+                invoiceDetail.onBack();
+                setInvoiceDetail(null);
               }
             } : undefined}
           />

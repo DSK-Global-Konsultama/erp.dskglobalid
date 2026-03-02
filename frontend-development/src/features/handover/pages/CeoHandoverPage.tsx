@@ -89,6 +89,7 @@ export function CeoHandoverPage({
         onToggleSection={toggleSection}
         revisionComments={handover.revisionComments || []}
         onBack={onBack}
+        proposal={proposal}
       />
 
       <div className="bg-white border-t border-gray-200 pt-6 mt-6">

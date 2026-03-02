@@ -148,6 +148,7 @@ export function HandoverMemoTab({
         handoverId={editingHandover?.id}
         proposalId={leadProposal?.id}
         leadId={leadId}
+        proposal={leadProposal}
         onBack={() => {
           setShowHandoverForm(false);
           setEditingHandover(undefined);

@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { DollarSign, AlertCircle, CheckCircle, Bell } from 'lucide-react';
 
-interface AdminStatsProps {
+export interface AdminStatsProps {
   totalReceivables: number;
   totalPending: number;
   totalOverdue: number;
@@ -9,6 +9,7 @@ interface AdminStatsProps {
   amountPaid: number;
   totalPaid: number;
   completedProjectsCount: number;
+  formatCurrency: (amount: number) => string;
 }
 
 export function AdminStats({
@@ -19,15 +20,8 @@ export function AdminStats({
   amountPaid,
   totalPaid,
   completedProjectsCount,
+  formatCurrency,
 }: AdminStatsProps) {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <Card>
@@ -36,8 +30,12 @@ export function AdminStats({
           <DollarSign className="h-4 w-4 text-orange-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold">{formatCurrency(totalReceivables)}</div>
-          <p className="text-xs text-gray-500 mt-1">{totalPending + totalOverdue} payments pending</p>
+          <div className="text-2xl font-semibold">
+            {formatCurrency(totalReceivables)}
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            {totalPending + totalOverdue} payments pending
+          </p>
         </CardContent>
       </Card>
 
@@ -47,8 +45,12 @@ export function AdminStats({
           <AlertCircle className="h-4 w-4 text-red-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold text-red-600">{totalOverdue}</div>
-          <p className="text-xs text-gray-500 mt-1">{formatCurrency(amountOverdue)}</p>
+          <div className="text-2xl font-semibold text-red-600">
+            {totalOverdue}
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            {formatCurrency(amountOverdue)}
+          </p>
         </CardContent>
       </Card>
 
@@ -58,8 +60,12 @@ export function AdminStats({
           <CheckCircle className="h-4 w-4 text-green-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold text-green-600">{formatCurrency(amountPaid)}</div>
-          <p className="text-xs text-gray-500 mt-1">{totalPaid} payments received</p>
+          <div className="text-2xl font-semibold text-green-600">
+            {formatCurrency(amountPaid)}
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            {totalPaid} payments received
+          </p>
         </CardContent>
       </Card>
 
@@ -69,11 +75,12 @@ export function AdminStats({
           <Bell className="h-4 w-4 text-yellow-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold text-yellow-600">{completedProjectsCount}</div>
+          <div className="text-2xl font-semibold text-yellow-600">
+            {completedProjectsCount}
+          </div>
           <p className="text-xs text-gray-500 mt-1">Project selesai</p>
         </CardContent>
       </Card>
     </div>
   );
 }
-

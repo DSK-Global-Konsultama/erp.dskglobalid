@@ -8,6 +8,7 @@ import { validateHandoverDraft } from '../model/validators';
 import { ALL_SECTIONS } from '../model/types';
 import type { HandoverDraft } from '../model/types';
 import type { ExtendedHandover } from '../../../lib/projectWorkflowTypes';
+import type { Proposal } from '../../../lib/mock-data';
 import type { SectionId } from '../model/types';
 
 export interface BdExecutiveHandoverPageProps {
@@ -19,6 +20,8 @@ export interface BdExecutiveHandoverPageProps {
   onSubmit: (handover: Partial<ExtendedHandover>) => void;
   existingHandover?: ExtendedHandover;
   readOnly?: boolean;
+  /** Proposal yang disetujui: untuk Fee Structure section (agree fee, diskon, subcon, metode pembayaran) */
+  proposal?: Proposal;
   leadData?: {
     clientName: string;
     companyName?: string;
@@ -49,6 +52,7 @@ export function BdExecutiveHandoverPage({
   onSubmit,
   existingHandover,
   readOnly = false,
+  proposal,
   leadData,
   engagementLetter,
   onConvertToProject,
@@ -142,6 +146,7 @@ export function BdExecutiveHandoverPage({
         revisionComments={existingHandover?.revisionComments || []}
         onBack={onBack}
         actionButtons={actionButtons}
+        proposal={proposal}
       />
     </div>
   );

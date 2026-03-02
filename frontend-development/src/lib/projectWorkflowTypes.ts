@@ -191,3 +191,14 @@ export interface ProgressLog {
   createdAt: string; // ISO
 }
 
+/** Activity tab: audit trail of project activities */
+export interface ActivityLog {
+  id: string;
+  activityType: string;
+  description: string;
+  metadata?: Record<string, unknown>;
+  actorName: string;
+  actorRole: string;
+  createdAt: string; // ISO
+}
+

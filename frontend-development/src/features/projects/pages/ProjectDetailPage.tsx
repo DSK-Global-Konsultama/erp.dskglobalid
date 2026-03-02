@@ -64,6 +64,7 @@ export function ProjectDetailPage({ handoverId, userRole, onBack }: ProjectDetai
     workflowDisplayStatus,
     requirements = [],
     documents = [],
+    activityLogs = [],
   } = bundle;
   const projectName =
     (handover as { projectName?: string }).projectName ??
@@ -107,6 +108,7 @@ export function ProjectDetailPage({ handoverId, userRole, onBack }: ProjectDetai
         requirements={requirements}
         documents={documents}
         progressLogs={progressLogs}
+        activityLogs={activityLogs}
         onAddProgress={(log) => setProgressLogs((prev) => [log, ...prev])}
         onBack={onBack}
       />

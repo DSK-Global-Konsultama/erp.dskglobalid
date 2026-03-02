@@ -87,7 +87,17 @@ export interface PaymentTerm {
 export interface Invoice {
   id: string;
   projectId: string;
+  /** Judul proyek (dari handover); untuk tampilan kolom "Nama proyek" */
+  projectTitle?: string;
+  /** Nama layanan (untuk kolom Layanan) */
+  service?: string;
   clientName: string;
+  /** Email kontak klien */
+  clientEmail?: string;
+  /** Telepon kontak klien */
+  clientPhone?: string;
+  /** Alamat klien */
+  clientAddress?: string;
   paymentTerms: PaymentTerm[]; // flexible payment schedule
   totalAmount: number;
   createdDate: string;
@@ -1421,9 +1431,14 @@ export const mockProjects: Project[] = [
 export const mockInvoices: Invoice[] = [
   // Web Dev - 3 invoices
   {
-    id: 'INV001',
+    id: 'INV-001/DSK Global/WD/2025',
     projectId: 'P001',
-    clientName: 'Budi Santoso - PT Maju Jaya',
+    projectTitle: 'Pembangunan Website Company Profile PT Maju Jaya',
+    service: 'Web Dev',
+    clientName: 'PT Maju Jaya',
+    clientEmail: 'budi.santoso@majujaya.co.id',
+    clientPhone: '021-55678901',
+    clientAddress: 'Jl. Sudirman No. 45, Jakarta Pusat 10220',
     totalAmount: 30000000,
     paymentTerms: [
       {
@@ -1449,9 +1464,14 @@ export const mockInvoices: Invoice[] = [
     createdDate: '2025-10-05',
   },
   {
-    id: 'INV002',
+    id: 'INV-002/DSK Global/WD/2025',
     projectId: 'P002',
-    clientName: 'Siti Rahayu - CV Berkah Sentosa',
+    projectTitle: 'Pengembangan Portal E-Commerce CV Berkah Sentosa',
+    service: 'Web Dev',
+    clientName: 'CV Berkah Sentosa',
+    clientEmail: 'siti.rahayu@berkahsentosa.com',
+    clientPhone: '031-78901234',
+    clientAddress: 'Jl. Ahmad Yani No. 88, Surabaya 60234',
     totalAmount: 45000000,
     paymentTerms: [
       {
@@ -1479,9 +1499,14 @@ export const mockInvoices: Invoice[] = [
   // P003 belum ada invoice karena belum assign PM
   // Audit and Assurance - 3 invoices
   {
-    id: 'INV003',
+    id: 'INV-003/DSK Global/AA/2025',
     projectId: 'P004',
-    clientName: 'Hendra Gunawan - PT Global Mandiri',
+    projectTitle: 'Audit Laporan Keuangan Tahunan PT Global Mandiri',
+    service: 'Audit and Assurance',
+    clientName: 'PT Global Mandiri',
+    clientEmail: 'hendra.gunawan@globalmandiri.co.id',
+    clientPhone: '021-77889900',
+    clientAddress: 'Gedung Global Tower Lt. 12, Jl. Thamrin, Jakarta 10350',
     totalAmount: 50000000,
     paymentTerms: [
       {
@@ -1507,9 +1532,14 @@ export const mockInvoices: Invoice[] = [
     createdDate: '2025-08-30',
   },
   {
-    id: 'INV004',
+    id: 'INV-004/DSK Global/AA/2025',
     projectId: 'P005',
-    clientName: 'Rudi Hartono - PT Cahaya Abadi',
+    projectTitle: 'Audit dan Assurance Laporan Keuangan PT Cahaya Abadi',
+    service: 'Audit and Assurance',
+    clientName: 'PT Cahaya Abadi',
+    clientEmail: 'rudi.hartono@cahayaabadi.com',
+    clientPhone: '022-87654321',
+    clientAddress: 'Kawasan Industri Cikarang, Bekasi 17530',
     totalAmount: 40000000,
     paymentTerms: [
       {
@@ -1537,9 +1567,14 @@ export const mockInvoices: Invoice[] = [
   // P006 belum ada invoice karena belum assign PM
   // Tax Compliance - 3 invoices
   {
-    id: 'INV005',
+    id: 'INV-005/DSK Global/TC/2025',
     projectId: 'P007',
-    clientName: 'Dewi Lestari - UD Makmur Sejahtera',
+    projectTitle: 'Konsultasi Tax Compliance UD Makmur Sejahtera',
+    service: 'Tax Compliance',
+    clientName: 'UD Makmur Sejahtera',
+    clientEmail: 'dewi.lestari@udmakmur.com',
+    clientPhone: '0274-5566778',
+    clientAddress: 'Jl. Solo No. 123, Yogyakarta 55281',
     totalAmount: 25000000,
     paymentTerms: [
       {
@@ -1565,9 +1600,14 @@ export const mockInvoices: Invoice[] = [
     createdDate: '2025-07-20',
   },
   {
-    id: 'INV006',
+    id: 'INV-006/DSK Global/TC/2025',
     projectId: 'P008',
-    clientName: 'Bambang Suryadi - PT Sejahtera Makmur',
+    projectTitle: 'Review dan Compliance Pajak PT Sejahtera Makmur',
+    service: 'Tax Compliance',
+    clientName: 'PT Sejahtera Makmur',
+    clientEmail: 'bambang.suryadi@sejahteramakmur.co.id',
+    clientPhone: '021-65432109',
+    clientAddress: 'Jl. Gatot Subroto Kav. 21, Jakarta Selatan 12190',
     totalAmount: 30000000,
     paymentTerms: [
       {
@@ -1593,9 +1633,14 @@ export const mockInvoices: Invoice[] = [
     createdDate: '2025-09-10',
   },
   {
-    id: 'INV007',
+    id: 'INV-007/DSK Global/TC/2025',
     projectId: 'P009',
-    clientName: 'Sari Indrawati - PT Indah Permai',
+    projectTitle: 'Layanan Tax Compliance Tahunan PT Indah Permai',
+    service: 'Tax Compliance',
+    clientName: 'PT Indah Permai',
+    clientEmail: 'sari.indrawati@indahpermai.com',
+    clientPhone: '031-98765432',
+    clientAddress: 'Jl. Basuki Rahmat 77, Surabaya 60271',
     totalAmount: 20000000,
     paymentTerms: [
       {
@@ -1622,9 +1667,14 @@ export const mockInvoices: Invoice[] = [
   },
   // Tax Dispute - 3 invoices
   {
-    id: 'INV008',
+    id: 'INV-008/DSK Global/TD/2025',
     projectId: 'P010',
-    clientName: 'Agus Setiawan - PT Bumi Nusantara',
+    projectTitle: 'Pendampingan Tax Dispute dan Banding PT Bumi Nusantara',
+    service: 'Tax Dispute',
+    clientName: 'PT Bumi Nusantara',
+    clientEmail: 'agus.setiawan@buminusantara.co.id',
+    clientPhone: '021-76543210',
+    clientAddress: 'Wisma Bumi Nusantara, Jl. Kuningan Barat, Jakarta 12920',
     totalAmount: 60000000,
     paymentTerms: [
       {
@@ -1660,9 +1710,14 @@ export const mockInvoices: Invoice[] = [
     createdDate: '2025-08-15',
   },
   {
-    id: 'INV009',
+    id: 'INV-009/DSK Global/TD/2025',
     projectId: 'P011',
-    clientName: 'Ratna Dewi - PT Harmoni Jaya',
+    projectTitle: 'Penyelesaian Sengketa Pajak PT Harmoni Jaya',
+    service: 'Tax Dispute',
+    clientName: 'PT Harmoni Jaya',
+    clientEmail: 'ratna.dewi@harmonijaya.com',
+    clientPhone: '021-88990011',
+    clientAddress: 'Jl. Rasuna Said Kav. B-1, Jakarta 12920',
     totalAmount: 80000000,
     paymentTerms: [
       {
@@ -1699,9 +1754,14 @@ export const mockInvoices: Invoice[] = [
     createdDate: '2025-09-20',
   },
   {
-    id: 'INV010',
+    id: 'INV-010/DSK Global/TD/2025',
     projectId: 'P012',
-    clientName: 'Bambang Wijaya - PT Sentosa Abadi',
+    projectTitle: 'Konsultasi dan Pendampingan Tax Dispute PT Sentosa Abadi',
+    service: 'Tax Dispute',
+    clientName: 'PT Sentosa Abadi',
+    clientEmail: 'bambang.wijaya@sentosabadi.co.id',
+    clientPhone: '021-55667788',
+    clientAddress: 'Plaza Sentosa Lt. 5, Jl. HR Rasuna Said, Jakarta 12940',
     totalAmount: 70000000,
     paymentTerms: [
       {
@@ -1737,9 +1797,14 @@ export const mockInvoices: Invoice[] = [
   },
   // Transfer Pricing - 3 invoices
   {
-    id: 'INV011',
+    id: 'INV-011/DSK Global/TP/2025',
     projectId: 'P013',
-    clientName: 'Ahmad Kurniawan - PT Alam Lestari',
+    projectTitle: 'Dokumentasi Transfer Pricing PT Alam Lestari',
+    service: 'Transfer Pricing',
+    clientName: 'PT Alam Lestari',
+    clientEmail: 'ahmad.kurniawan@alamlestari.co.id',
+    clientPhone: '022-77889900',
+    clientAddress: 'Jl. Raya Bandung No. 200, Bandung 40123',
     totalAmount: 55000000,
     paymentTerms: [
       {
@@ -1765,9 +1830,14 @@ export const mockInvoices: Invoice[] = [
     createdDate: '2025-08-25',
   },
   {
-    id: 'INV012',
+    id: 'INV-012/DSK Global/TP/2025',
     projectId: 'P014',
-    clientName: 'Siti Nurhaliza - PT Karya Mandiri',
+    projectTitle: 'Transfer Pricing Documentation dan Policy PT Karya Mandiri',
+    service: 'Transfer Pricing',
+    clientName: 'PT Karya Mandiri',
+    clientEmail: 'siti.nurhaliza@karyamandiri.com',
+    clientPhone: '021-99887766',
+    clientAddress: 'Gedung Karya Mandiri, Jl. Sudirman Kav. 52-53, Jakarta 12190',
     totalAmount: 65000000,
     paymentTerms: [
       {

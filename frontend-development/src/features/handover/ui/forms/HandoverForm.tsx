@@ -5,6 +5,7 @@ import { Input } from '../../../../components/ui/input';
 import { Label } from '../../../../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import type { RevisionComment } from '../../../../lib/projectWorkflowTypes';
+import type { Proposal } from '../../../../lib/mock-data';
 import type { SectionId, HandoverDraft } from '../../model/types';
 import { ALL_SECTIONS } from '../../model/types';
 import { HANDOVER_CONSTANTS } from '../../model/constants';
@@ -12,7 +13,7 @@ import { getSectionCompletion, hasRevisionForSection } from '../../model/selecto
 import { ProjectInformationSection } from '../sections/ProjectInformationSection';
 import { BackgroundSummarySection } from '../sections/BackgroundSummarySection';
 import { ScopeOfWorkSection } from '../sections/ScopeOfWorkSection';
-import { FeeStructureSection } from '../sections/FeeStructureSection';
+import { FeeStructureSection, buildProposalSummary } from '../sections/FeeStructureSection';
 import { ClientDocumentsSection } from '../sections/ClientDocumentsSection';
 import { DataRequirementsSection } from '../sections/DataRequirementsSection';
 import { RisksSection } from '../sections/RisksSection';
@@ -37,6 +38,8 @@ export interface HandoverFormProps {
   actionButtons?: React.ReactNode;
   /** When false, hide the Form Completion progress card (e.g. on project detail Handover tab). Default true. */
   showFormCompletion?: boolean;
+  /** Proposal yang disetujui: dipakai di Fee Structure section (agree fee, diskon, subcon, metode pembayaran) */
+  proposal?: Proposal;
 }
 
 const VISIBLE_SECTIONS = ALL_SECTIONS;
@@ -54,7 +57,8 @@ export function HandoverForm({
   hiddenSections = [],
   onBack,
   actionButtons,
-  showFormCompletion = true
+  showFormCompletion = true,
+  proposal,
 }: HandoverFormProps) {
   const isApproved = existingHandover?.workflowStatus === 'APPROVED_BY_CEO';
   const effectiveReadOnly = readOnly || isApproved;
@@ -238,6 +242,7 @@ export function HandoverForm({
           readOnly={effectiveReadOnly}
           revisionComments={revisionComments}
           onToggle={() => onToggleSection(4)}
+          proposalSummary={proposal ? buildProposalSummary(proposal) : undefined}
         />
       )}
 

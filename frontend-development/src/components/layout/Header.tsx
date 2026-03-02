@@ -1,6 +1,7 @@
 import { Bell, ArrowLeft } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { LeadDetailHeaderBar } from '../../features/leads';
+import { Badge } from '../ui/badge';
 
 type UserRole = 'CEO' | 'COO-Tax-Audit' | 'COO-Legal-TP-SR' | 'BD-MEO' | 'BD-Executive' | 'PM' | 'Admin' | 'IT' | 'ITSpecialist' | 'SuperAdmin';
 
@@ -33,6 +34,14 @@ interface ProjectDetailInfo {
   onBack: () => void;
 }
 
+export interface InvoiceDetailInfo {
+  invoiceId: string;
+  clientName: string;
+  projectTitle?: string;
+  status: string;
+  onBack: () => void;
+}
+
 interface HeaderProps {
   role: UserRole;
   userName?: string;
@@ -43,9 +52,16 @@ interface HeaderProps {
   campaignDetail?: CampaignDetailInfo;
   formBuilderDetail?: FormBuilderDetailInfo;
   projectDetail?: ProjectDetailInfo | null;
+  invoiceDetail?: InvoiceDetailInfo | null;
 }
 
-export function Header({ role, userName, userProfileImagePath, userProfileImageUrl, activeNav = 'dashboard', leadDetail, campaignDetail, formBuilderDetail, projectDetail }: HeaderProps) {
+function getInvoiceStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
+  if (status === 'Lunas') return 'default';
+  if (status === 'Ada Overdue') return 'destructive';
+  return 'secondary';
+}
+
+export function Header({ role, userName, userProfileImagePath, userProfileImageUrl, activeNav = 'dashboard', leadDetail, campaignDetail, formBuilderDetail, projectDetail, invoiceDetail }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationCount] = useState(3); // Placeholder for notification count
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -479,6 +495,79 @@ export function Header({ role, userName, userProfileImagePath, userProfileImageU
               <div className="h-6 w-px bg-white/30" />
 
               {/* User Section */}
+              <div className="flex items-center gap-3 pr-6">
+                {UserAvatar}
+                <div className="flex flex-col items-start min-w-0">
+                  <p className="text-[10px] text-gray-400 font-semibold">{getRoleName()}</p>
+                  <p className="text-xs font-bold text-white truncate">{getDisplayName()}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  // If invoiceDetail is provided, show invoice detail header (back + no. invoice + status + subtitle) – layout sama seperti lead tracker
+  if (invoiceDetail) {
+    return (
+      <header className="bg-gray-50 px-6 pt-3 sticky top-0 z-10">
+        <div className="flex items-center justify-between">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  invoiceDetail.onBack();
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h1 className="text-lg font-semibold text-gray-900">{invoiceDetail.invoiceId}</h1>
+                  <Badge variant={getInvoiceStatusVariant(invoiceDetail.status)}>
+                    {invoiceDetail.status}
+                  </Badge>
+                </div>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  {invoiceDetail.clientName}
+                  {invoiceDetail.projectTitle ? ` • ${invoiceDetail.projectTitle}` : ''}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex-shrink-0">
+            <div className="px-4 py-2 rounded-lg flex items-center gap-4 shadow-lg border border-gray-800/30" style={{ backgroundColor: '#1e1e1e' }}>
+              <div className="relative" ref={notificationRef}>
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
+                >
+                  <Bell className="w-5 h-5 text-white" strokeWidth={2} fill="none" />
+                  {notificationCount > 0 && (
+                    <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-gray-900">
+                      {notificationCount > 9 ? '9+' : notificationCount}
+                    </span>
+                  )}
+                </button>
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="px-4 py-2 border-b border-gray-200">
+                      <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
+                        <p className="text-sm text-gray-900">No new notifications</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="h-6 w-px bg-white/30" />
               <div className="flex items-center gap-3 pr-6">
                 {UserAvatar}
                 <div className="flex flex-col items-start min-w-0">

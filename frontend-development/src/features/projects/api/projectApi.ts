@@ -5,6 +5,8 @@ import type {
   RequirementStatus,
   DocumentCategory,
   ProgressLog,
+  ActivityLog,
+  ProjectPhase,
 } from '../../../lib/projectWorkflowTypes';
 import type { Project, Lead, Proposal, EngagementLetter } from '../../../lib/mock-data';
 import {
@@ -42,6 +44,7 @@ export interface ProjectDetailBundle {
   requirements: Requirement[];
   documents: ProjectDocument[];
   progressLogs: ProgressLog[];
+  activityLogs: ActivityLog[];
 }
 
 /**
@@ -131,7 +134,14 @@ export const projectApi = {
       project?.assignedPM ? 'PM_ASSIGNED' : (handover.workflowStatus ?? undefined);
     const requirements = mapHandoverDataRequirementsToRequirements(handover, handoverId);
     const documents = getDocumentsForHandover(handover);
-    const progressLogs: ProgressLog[] = [];
+    const progressLogs = getDummyProgressLogs(handoverId, project?.assignedPM);
+    const activityLogs = getDummyActivityLogs(
+      handoverId,
+      progressLogs,
+      requirements,
+      documents,
+      project?.assignedPM
+    );
     return {
       handover,
       lead,
@@ -144,6 +154,7 @@ export const projectApi = {
       requirements,
       documents,
       progressLogs,
+      activityLogs,
     };
   },
 };
@@ -197,6 +208,150 @@ function getDocumentsForHandover(handover: ExtendedHandover): ProjectDocument[] 
       fileUrl: doc.fileUrl,
     };
   });
+}
+
+/** Dummy progress logs for project detail (newest first). Sinkron dengan activity: setiap entry punya PROGRESS_UPDATED di activity. */
+function getDummyProgressLogs(handoverId: string, pmName?: string): ProgressLog[] {
+  const createdBy = pmName ?? 'PM';
+  const base = new Date();
+  const entries: { daysAgo: number; phase: ProjectPhase; pct: number; note: string; blockers?: string; nextSteps?: string }[] = [
+    { daysAgo: 0, phase: 'Drafting', pct: 45, note: 'Draft section 2–3 selesai; menunggu data tambahan dari client.', nextSteps: 'Finalisasi section 4 dan kirim draft ke review internal.' },
+    { daysAgo: 7, phase: 'Analysis', pct: 30, note: 'Analisis data utama selesai. Sedang validasi dengan tim client.', blockers: 'Menunggu konfirmasi jadwal meeting review.', nextSteps: 'Mulai drafting laporan.' },
+    { daysAgo: 14, phase: 'Data Collection', pct: 15, note: 'Kick-off selesai. Kebutuhan data sudah dikirim ke client.', nextSteps: 'Follow-up dokumen pendukung dan jadwal wawancara.' },
+  ];
+  return entries.map((e, i) => {
+    const d = new Date(base);
+    d.setDate(d.getDate() - e.daysAgo);
+    d.setHours(10, 30, 0, 0);
+    return {
+      id: `${handoverId}-progress-${i + 1}`,
+      handoverId,
+      progressPercentage: e.pct,
+      phase: e.phase,
+      updateNote: e.note,
+      blockers: e.blockers,
+      nextSteps: e.nextSteps,
+      createdBy,
+      createdAt: d.toISOString(),
+    };
+  });
+}
+
+/** Dummy activity logs (newest first). Konsisten dengan documents/requirements; PROGRESS_UPDATED sinkron dengan progressLogs. */
+function getDummyActivityLogs(
+  handoverId: string,
+  progressLogs: ProgressLog[],
+  requirements: Requirement[],
+  documents: ProjectDocument[],
+  pmName?: string
+): ActivityLog[] {
+  const pm = pmName ?? 'PM';
+  const base = new Date();
+  const ts = (daysAgo: number, hour = 9) => {
+    const d = new Date(base);
+    d.setDate(d.getDate() - daysAgo);
+    d.setHours(hour, 0, 0, 0);
+    return d.toISOString();
+  };
+
+  const activities: ActivityLog[] = [];
+
+  // Workflow & lifecycle (oldest first, we reverse at end)
+  activities.push({
+    id: `${handoverId}-act-handover-created`,
+    activityType: 'HANDOVER_CREATED',
+    description: 'Handover project dibuat oleh BD.',
+    actorName: 'Budi Santoso',
+    actorRole: 'BD',
+    createdAt: ts(45),
+  });
+  activities.push({
+    id: `${handoverId}-act-handover-submitted`,
+    activityType: 'HANDOVER_SUBMITTED',
+    description: 'Handover diserahkan ke CEO untuk persetujuan.',
+    actorName: 'Budi Santoso',
+    actorRole: 'BD',
+    createdAt: ts(42),
+  });
+  activities.push({
+    id: `${handoverId}-act-ceo-approved`,
+    activityType: 'CEO_APPROVED',
+    description: 'CEO menyetujui handover dan mengalokasikan ke PM.',
+    actorName: 'Ahmad Wijaya',
+    actorRole: 'CEO',
+    createdAt: ts(40),
+  });
+  activities.push({
+    id: `${handoverId}-act-pm-assigned`,
+    activityType: 'PM_ASSIGNED',
+    description: `Project ditugaskan ke ${pm}.`,
+    metadata: { assignedTo: pm },
+    actorName: 'Ahmad Wijaya',
+    actorRole: 'CEO',
+    createdAt: ts(38),
+  });
+  activities.push({
+    id: `${handoverId}-act-pm-accepted`,
+    activityType: 'PM_ACCEPTED',
+    description: `${pm} menerima penugasan dan memulai project.`,
+    actorName: pm,
+    actorRole: 'PM',
+    createdAt: ts(37),
+  });
+
+  // Document uploads (satu atau dua, mengikuti jumlah documents)
+  documents.slice(0, 2).forEach((doc, i) => {
+    activities.push({
+      id: `${handoverId}-act-doc-${doc.id}`,
+      activityType: 'DOCUMENT_UPLOADED',
+      description: `Dokumen "${doc.fileName}" diunggah ke Document Center.`,
+      metadata: { category: doc.category, fileType: doc.fileType },
+      actorName: doc.uploadedBy || pm,
+      actorRole: 'PM',
+      createdAt: doc.uploadedAt || ts(30 - i),
+    });
+  });
+
+  // Requirement updated (jika ada yang RECEIVED)
+  const receivedReqs = requirements.filter((r) => r.status === 'RECEIVED');
+  if (receivedReqs.length > 0) {
+    activities.push({
+      id: `${handoverId}-act-req-updated`,
+      activityType: 'REQUIREMENT_UPDATED',
+      description: `${receivedReqs.length} item requirement ditandai Received.`,
+      metadata: { count: receivedReqs.length },
+      actorName: pm,
+      actorRole: 'PM',
+      createdAt: ts(25),
+    });
+  }
+
+  // PROGRESS_UPDATED: satu per progress log (sinkron dengan tab Progress)
+  progressLogs.forEach((pl) => {
+    activities.push({
+      id: `${handoverId}-act-progress-${pl.id}`,
+      activityType: 'PROGRESS_UPDATED',
+      description: `Progress diperbarui: ${pl.progressPercentage}% – ${pl.phase}. ${pl.updateNote}`,
+      metadata: { progressPercentage: pl.progressPercentage, phase: pl.phase },
+      actorName: pl.createdBy,
+      actorRole: 'PM',
+      createdAt: pl.createdAt,
+    });
+  });
+
+  // STATUS_CHANGED (umum)
+  activities.push({
+    id: `${handoverId}-act-status`,
+    activityType: 'STATUS_CHANGED',
+    description: 'Status project diperbarui menjadi Active.',
+    metadata: { status: 'PROJECT_ACTIVE' },
+    actorName: pm,
+    actorRole: 'PM',
+    createdAt: ts(35),
+  });
+
+  // Newest first (sama seperti progressLogs)
+  return activities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export type { Project };
