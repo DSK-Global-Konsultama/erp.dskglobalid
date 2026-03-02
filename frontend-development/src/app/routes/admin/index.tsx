@@ -4,12 +4,22 @@ import {
   ActionRequiredAlert,
   AdminStats,
   InvoicesManagementPage,
+  InvoiceDetailPage,
+  invoiceApi,
+  getInvoiceOverallStatus,
 } from '../../../features/invoices';
+import type { InvoiceDetailInfo } from '../../../components/layout/Header';
+import { toast } from 'sonner';
 
-export function AdminDashboard() {
+interface AdminDashboardProps {
+  onInvoiceDetailChange?: (detail: InvoiceDetailInfo | null) => void;
+}
+
+export function AdminDashboard({ onInvoiceDetailChange }: AdminDashboardProps) {
   const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
   const [projects, setProjects] = useState<Project[]>(mockProjects);
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
 
   const formatCurrency = useMemo(
     () => (amount: number) =>
@@ -53,6 +63,60 @@ export function AdminDashboard() {
   const totalReceivables = amountPending + amountOverdue;
   const completedProjects = projects.filter((p) => p.status === 'waiting-final-payment');
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const handleMarkTermAsPaid = (invoiceId: string, termId: string) => {
+    const updated = invoiceApi.markTermAsPaid(invoiceId, termId, invoices);
+    setInvoices(updated);
+    toast.success('Payment berhasil dikonfirmasi!');
+  };
+
+  const detailInvoice = selectedInvoiceId
+    ? invoices.find((inv) => inv.id === selectedInvoiceId)
+    : null;
+
+  useEffect(() => {
+    if (!onInvoiceDetailChange) return;
+    if (detailInvoice) {
+      const status = getInvoiceOverallStatus(detailInvoice);
+      onInvoiceDetailChange({
+        invoiceId: detailInvoice.id,
+        clientName: detailInvoice.clientName,
+        projectTitle: detailInvoice.projectTitle,
+        status,
+        onBack: () => {
+          setSelectedInvoiceId(null);
+          onInvoiceDetailChange?.(null);
+        },
+      });
+    } else {
+      onInvoiceDetailChange(null);
+    }
+  }, [detailInvoice, onInvoiceDetailChange]);
+
+  if (detailInvoice) {
+    return (
+      <InvoiceDetailPage
+        invoice={detailInvoice}
+        onBack={() => {
+          setSelectedInvoiceId(null);
+          onInvoiceDetailChange?.(null);
+        }}
+        formatCurrency={formatCurrency}
+        formatDate={formatDate}
+        onMarkTermAsPaid={handleMarkTermAsPaid}
+        canMarkAsPaid
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <ActionRequiredAlert completedProjects={completedProjects} />
@@ -75,6 +139,7 @@ export function AdminDashboard() {
         onUpdateInvoices={setInvoices}
         filterStatus={filterStatus}
         onFilterChange={setFilterStatus}
+        onInvoiceClick={setSelectedInvoiceId}
       />
     </div>
   );

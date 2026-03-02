@@ -20,17 +20,44 @@ interface ProposalFormModalProps {
   onUpdateProposal?: (id: string, updates: Partial<Proposal> & { file?: File }) => void;
 }
 
-interface Termin {
+type Tier = 'STRATEGIC_RETAINER' | 'PREMIUM_MODULAR' | 'STANDARDIZED_MODULAR';
+
+/** Cara bayar: jadwal tagihan (list item) / retainer bulanan / dispute UM+SF */
+type PlanMode = 'INSTALLMENTS' | 'MONTHLY_RETAINER' | 'DISPUTE_UM_SF';
+
+/** Satu item di jadwal tagihan: Down Payment atau Termin 1, 2, ... */
+interface BillingScheduleItem {
+  id: string;
+  order: number;
+  kind: 'DOWN_PAYMENT' | 'TERM';
+  label: string;
   percentage: number;
-  amount: number;
   description: string;
 }
 
-type PaymentScheme = '50-50' | '50-35-15' | '40-30-30' | 'Custom';
+function createBillingItem(
+  order: number,
+  kind: BillingScheduleItem['kind'],
+  label: string,
+  percentage: number,
+  description = ''
+): BillingScheduleItem {
+  return {
+    id: `bi-${Date.now()}-${order}-${Math.random().toString(36).slice(2)}`,
+    order,
+    kind,
+    label,
+    percentage,
+    description,
+  };
+}
 
-type Tier = 'STRATEGIC_RETAINER' | 'PREMIUM_MODULAR' | 'STANDARDIZED_MODULAR';
-
-type PaymentMethod = 'MONTHLY_RETAINER' | 'TERMIN' | 'DISPUTE_UM_SF' | 'SUBCON';
+function defaultBillingSchedule(): BillingScheduleItem[] {
+  return [
+    createBillingItem(0, 'DOWN_PAYMENT', 'Down Payment', 50),
+    createBillingItem(1, 'TERM', 'Termin 1', 50),
+  ];
+}
 
 // Service options by tier
 const SERVICE_OPTIONS: Record<Tier, string[]> = {
@@ -77,133 +104,47 @@ export function ProposalFormModal({
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
 
-  // Payment Method
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('MONTHLY_RETAINER');
-  const [isDispute, setIsDispute] = useState(false);
+  // Cara bayar: INSTALLMENTS (jadwal tagihan) | MONTHLY_RETAINER | DISPUTE_UM_SF (dipilih lewat dropdown)
+  const [planMode, setPlanMode] = useState<PlanMode>('MONTHLY_RETAINER');
 
-  // Payment Scheme for TERMIN
-  const [paymentScheme, setPaymentScheme] = useState<PaymentScheme>('50-50');
-  const [termins, setTermins] = useState<Termin[]>([
-    { percentage: 50, amount: 0, description: '' },
-    { percentage: 50, amount: 0, description: '' },
-  ]);
+  // Jadwal tagihan: Down Payment + Termin 1, 2, ... (hanya dipakai saat planMode === INSTALLMENTS)
+  const [billingItems, setBillingItems] = useState<BillingScheduleItem[]>(() => defaultBillingSchedule());
 
-  // Monthly Retainer fields
+  // Monthly Retainer
   const [contractStart, setContractStart] = useState('');
   const [contractEnd, setContractEnd] = useState('');
   const [billingTiming, setBillingTiming] = useState<
     'START_OF_MONTH' | 'END_OF_MONTH'
   >('START_OF_MONTH');
 
-  // Dispute fields (UM + Success Fee)
+  // Dispute (UM + Success Fee)
   const [downPayment, setDownPayment] = useState('');
   const [successFeePercent, setSuccessFeePercent] = useState('');
   const [successFeeBase, setSuccessFeeBase] = useState('');
 
-  // Subkon (white kitchen / nebeng bendera) - separate toggle
+  // Subcontract: info tambahan saja (bisa dipakai bareng termin/retainer)
   const [hasSubcon, setHasSubcon] = useState(false);
   const [subconPartner, setSubconPartner] = useState('');
-  const [subconPaymentTiming, setSubconPaymentTiming] = useState<
-    'UPFRONT' | 'END'
-  >('UPFRONT');
+  const [subconPayer, setSubconPayer] = useState<'PARTNER' | 'CLIENT' | ''>('');
 
-  // Reset service when tier changes
+  // Reset service when tier changes (service list depends on tier)
   useEffect(() => {
     const availableServices = SERVICE_OPTIONS[tier];
     if (availableServices.length > 0) {
-      // Reset to first option or empty if current service not in tier options
-      if (!availableServices.includes(service)) {
-        setService('');
-      }
+      if (!availableServices.includes(service)) setService('');
     } else {
       setService('');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tier]);
+  }, [tier, service]);
 
-  // Handle subcon toggle - changes payment method similar to dispute
+  // Subcon ON: clear field dispute saja; metode pembayaran tetap bebas dipilih user
   useEffect(() => {
     if (hasSubcon) {
-      setPaymentMethod('SUBCON');
-      setIsDispute(false); // Dispute tidak berlaku saat subcon
-      // Clear irrelevant fields
-      setContractStart('');
-      setContractEnd('');
-      setBillingTiming('START_OF_MONTH');
       setDownPayment('');
       setSuccessFeePercent('');
       setSuccessFeeBase('');
-      setPaymentScheme('50-50');
-      setTermins([
-        { percentage: 50, amount: 0, description: '' },
-        { percentage: 50, amount: 0, description: '' },
-      ]);
-    } else if (!editingProposal) {
-      // Reset to tier default when subcon is turned off
-      if (isDispute) {
-        setPaymentMethod('DISPUTE_UM_SF');
-      } else {
-        switch (tier) {
-          case 'STRATEGIC_RETAINER':
-            setPaymentMethod('MONTHLY_RETAINER');
-            break;
-          case 'PREMIUM_MODULAR':
-          case 'STANDARDIZED_MODULAR':
-            setPaymentMethod('TERMIN');
-            setPaymentScheme('50-50');
-            break;
-        }
-      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasSubcon]);
-
-  // Set default payment method based on tier (only on initial load or tier change when not in edit mode and not subcon)
-  useEffect(() => {
-    if (editingProposal || hasSubcon) return; // Don't override when editing or subcon is active
-
-    if (isDispute) {
-      setPaymentMethod('DISPUTE_UM_SF');
-      return;
-    }
-
-    switch (tier) {
-      case 'STRATEGIC_RETAINER':
-        setPaymentMethod('MONTHLY_RETAINER');
-        break;
-      case 'PREMIUM_MODULAR':
-      case 'STANDARDIZED_MODULAR':
-        setPaymentMethod('TERMIN');
-        setPaymentScheme('50-50');
-        break;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tier, isDispute]);
-
-  // Handle dispute toggle (only when not subcon)
-  useEffect(() => {
-    if (hasSubcon) {
-      setIsDispute(false); // Disable dispute when subcon is active
-      return;
-    }
-
-    if (isDispute) {
-      setPaymentMethod('DISPUTE_UM_SF');
-      setHasSubcon(false); // Disable subcon when dispute is active
-    } else if (!editingProposal) {
-      // Reset to tier default only if not editing
-      switch (tier) {
-        case 'STRATEGIC_RETAINER':
-          setPaymentMethod('MONTHLY_RETAINER');
-          break;
-        case 'PREMIUM_MODULAR':
-        case 'STANDARDIZED_MODULAR':
-          setPaymentMethod('TERMIN');
-          break;
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDispute, hasSubcon]);
 
   // Update form data when editingProposal changes
   useEffect(() => {
@@ -215,250 +156,169 @@ export function ProposalFormModal({
       // Parse paymentType for backward compatibility
       const paymentType = editingProposal.paymentType || '';
       let detectedTier: Tier = 'PREMIUM_MODULAR';
-      let detectedPaymentMethod: PaymentMethod = 'TERMIN';
       let detectedDispute = false;
 
-      // PRIORITY 1: Check for subcon first (most important - standalone payment method)
+      // Subcon (legacy: standalone) -> sekarang hanya info; planMode tetap dari termin/retainer (most important - standalone payment method)
       // Also check hasSubcon property for robustness
       if (paymentType.includes('Subkon dengan') || editingProposal.hasSubcon) {
         setHasSubcon(true);
-        detectedPaymentMethod = 'SUBCON';
-        setIsDispute(false); // Dispute tidak berlaku saat subcon
-        const partnerMatch = paymentType.match(/Subkon dengan (.+?):/);
-        const timingMatch = paymentType.match(/pembayaran (.+?) oleh partner/);
-        if (partnerMatch) {
-          setSubconPartner(partnerMatch[1]);
-        }
-        if (timingMatch && timingMatch[1].includes('awal')) {
-          setSubconPaymentTiming('UPFRONT');
-        } else {
-          setSubconPaymentTiming('END');
-        }
-        // Clear all other payment fields
-        setContractStart('');
-        setContractEnd('');
-        setBillingTiming('START_OF_MONTH');
-        setDownPayment('');
-        setSuccessFeePercent('');
-        setSuccessFeeBase('');
-        setPaymentScheme('50-50');
-        setTermins([
-          { percentage: 50, amount: 0, description: '' },
-          { percentage: 50, amount: 0, description: '' },
-        ]);
+        const partnerMatch = paymentType.match(/Subkon dengan (.+?)(?::| \|)/);
+        if (partnerMatch) setSubconPartner(partnerMatch[1].trim());
+        setPlanMode('INSTALLMENTS');
+        setBillingItems([createBillingItem(0, 'DOWN_PAYMENT', 'Down Payment', 100)]);
       } else {
-        // Only parse other payment methods if not subcon
         setHasSubcon(false);
         setSubconPartner('');
-        setSubconPaymentTiming('UPFRONT');
+        setSubconPayer('');
 
-        // Check for dispute (only if not subcon)
         if (paymentType.includes('Sengketa') || paymentType.includes('Uang Muka')) {
           detectedDispute = true;
-          setIsDispute(true);
-          detectedPaymentMethod = 'DISPUTE_UM_SF';
+          setPlanMode('DISPUTE_UM_SF');
+          setHasSubcon(false);
           const dpMatch = paymentType.match(/Uang Muka IDR ([\d.]+)M/);
           const sfMatch = paymentType.match(/Success Fee (\d+)%/);
-          const baseMatch = paymentType.match(/Basis: (.+)/);
-          if (dpMatch) {
-            setDownPayment((parseFloat(dpMatch[1]) * 1000000).toString());
-          }
-          if (sfMatch) {
-            setSuccessFeePercent(sfMatch[1]);
-          }
-          if (baseMatch) {
-            setSuccessFeeBase(baseMatch[1]);
-          }
+          const baseMatch = paymentType.match(/dari (.+?)(?:$|;)/);
+          if (dpMatch) setDownPayment((parseFloat(dpMatch[1]) * 1_000_000).toString());
+          if (sfMatch) setSuccessFeePercent(sfMatch[1]);
+          if (baseMatch) setSuccessFeeBase(baseMatch[1].trim());
         } else {
-          setIsDispute(false);
           setDownPayment('');
           setSuccessFeePercent('');
           setSuccessFeeBase('');
         }
 
-        // Check for retainer (STRATEGIC_RETAINER) - only if not subcon and not dispute
         if ((paymentType.includes('Retainer bulanan') || paymentType.includes('Periode')) && !detectedDispute) {
           detectedTier = 'STRATEGIC_RETAINER';
-          detectedPaymentMethod = 'MONTHLY_RETAINER';
+          setPlanMode('MONTHLY_RETAINER');
           const periodMatch = paymentType.match(/Periode (.+?) s\/d (.+?);/);
           const timingMatch = paymentType.match(/Penagihan: (.+)/);
           if (periodMatch) {
-            setContractStart(periodMatch[1]);
-            setContractEnd(periodMatch[2]);
+            setContractStart(periodMatch[1].trim());
+            setContractEnd(periodMatch[2].trim());
           }
-          if (timingMatch && timingMatch[1].includes('Awal')) {
-            setBillingTiming('START_OF_MONTH');
-          } else {
-            setBillingTiming('END_OF_MONTH');
+          if (timingMatch?.[1].includes('Awal')) setBillingTiming('START_OF_MONTH');
+          else setBillingTiming('END_OF_MONTH');
+        } else if (!detectedDispute && paymentType.includes('Termin')) {
+          setPlanMode('INSTALLMENTS');
+          const terminRe = /Termin (\d+):\s*(\d+)%\s*\(IDR [\d.]+M\)(?:\s*-\s*(.+?))?(?=\s*\|\s*|$)/g;
+          const items: BillingScheduleItem[] = [];
+          const downMatch = paymentType.match(/Down Payment:\s*(\d+)%/);
+          let order = 0;
+          if (downMatch) {
+            items.push(createBillingItem(0, 'DOWN_PAYMENT', 'Down Payment', parseInt(downMatch[1], 10)));
+            order = 1;
           }
-        } else if (!detectedDispute) {
-          // Check for termin - only if not subcon and not dispute
-          if (paymentType.includes('Termin')) {
-            detectedPaymentMethod = 'TERMIN';
-            // Parse termin data
-            const terminMatches = paymentType.matchAll(/Termin (\d+): (\d+)% \(IDR ([\d.]+)M\)(?: - (.+))?/g);
-            const parsedTermins: Termin[] = [];
-            for (const match of terminMatches) {
-              parsedTermins.push({
-                percentage: parseInt(match[2]),
-                amount: parseFloat(match[3]) * 1000000,
-                description: match[4] || '',
-              });
-            }
-            if (parsedTermins.length > 0) {
-              setTermins(parsedTermins);
-              // Determine payment scheme
-              if (parsedTermins.length === 2 && parsedTermins[0].percentage === 50 && parsedTermins[1].percentage === 50) {
-                setPaymentScheme('50-50');
-              } else if (parsedTermins.length === 3 && parsedTermins[0].percentage === 50 && parsedTermins[1].percentage === 35 && parsedTermins[2].percentage === 15) {
-                setPaymentScheme('50-35-15');
-              } else if (parsedTermins.length === 3 && parsedTermins[0].percentage === 40 && parsedTermins[1].percentage === 30 && parsedTermins[2].percentage === 30) {
-                setPaymentScheme('40-30-30');
+          let mm: RegExpExecArray | null;
+          while ((mm = terminRe.exec(paymentType)) !== null) {
+            const num = parseInt(mm[1], 10);
+            const pct = parseInt(mm[2], 10);
+            const desc = mm[3]?.trim() ?? '';
+            items.push(createBillingItem(order++, 'TERM', `Termin ${num}`, pct, desc));
+          }
+          if (items.length === 0) {
+            const legacyRe = paymentType.matchAll(/Termin (\d+):\s*(\d+)%\s*\(IDR [\d.]+M\)(?:\s*-\s*(.+?))?(?=\s*\|\s*|$)/g);
+            for (const match of legacyRe) {
+              const num = parseInt(match[1], 10);
+              const pct = parseInt(match[2], 10);
+              const desc = match[3]?.trim() ?? '';
+              if (items.length === 0) {
+                items.push(createBillingItem(0, 'DOWN_PAYMENT', 'Down Payment', pct, desc));
               } else {
-                setPaymentScheme('Custom');
+                items.push(createBillingItem(items.length, 'TERM', `Termin ${num}`, pct, desc));
               }
             }
           }
+          if (items.length > 0) setBillingItems(items.map((it, i) => ({ ...it, order: i })));
+          else setBillingItems(defaultBillingSchedule());
+        }
 
-          // Try to detect tier from service name
-          if (editingProposal.service) {
-            const serviceName = editingProposal.service;
-            if (SERVICE_OPTIONS.STRATEGIC_RETAINER.includes(serviceName)) {
-              detectedTier = 'STRATEGIC_RETAINER';
-              detectedPaymentMethod = 'MONTHLY_RETAINER';
-            } else if (SERVICE_OPTIONS.STANDARDIZED_MODULAR.includes(serviceName)) {
-              detectedTier = 'STANDARDIZED_MODULAR';
-              detectedPaymentMethod = 'TERMIN';
-            } else {
-              detectedTier = 'PREMIUM_MODULAR';
-              detectedPaymentMethod = 'TERMIN';
-            }
+        if (editingProposal.service) {
+          const sn = editingProposal.service;
+          if (SERVICE_OPTIONS.STRATEGIC_RETAINER.includes(sn)) {
+            detectedTier = 'STRATEGIC_RETAINER';
+            if (!detectedDispute && !paymentType.includes('Termin')) setPlanMode('MONTHLY_RETAINER');
+          } else if (SERVICE_OPTIONS.STANDARDIZED_MODULAR.includes(sn)) {
+            detectedTier = 'STANDARDIZED_MODULAR';
+            if (!detectedDispute && !paymentType.includes('Retainer')) setPlanMode('INSTALLMENTS');
+          } else {
+            detectedTier = 'PREMIUM_MODULAR';
+            if (!detectedDispute && !paymentType.includes('Retainer')) setPlanMode('INSTALLMENTS');
           }
         }
       }
 
       setTier(detectedTier);
-      setPaymentMethod(detectedPaymentMethod);
-
-      // Reset fields that don't match (only if not subcon)
-      if (detectedPaymentMethod === 'SUBCON') {
-        // Subcon is standalone - all other fields already cleared above
-        // No need to reset again
-      } else {
-        if (detectedPaymentMethod !== 'TERMIN') {
-          setPaymentScheme('50-50');
-          setTermins([
-            { percentage: 50, amount: 0, description: '' },
-            { percentage: 50, amount: 0, description: '' },
-          ]);
-        }
-        if (detectedPaymentMethod !== 'MONTHLY_RETAINER') {
-          setContractStart('');
-          setContractEnd('');
-          setBillingTiming('START_OF_MONTH');
-        }
-        if (detectedPaymentMethod !== 'DISPUTE_UM_SF') {
-          setDownPayment('');
-          setSuccessFeePercent('');
-          setSuccessFeeBase('');
-        }
-      }
-
       setAttachments([]);
     } else {
-      // Reset all fields
       setTier('STRATEGIC_RETAINER');
       setService('');
       setProposalFee('');
       setDiscount('');
       setAttachments([]);
-
-      setPaymentMethod('MONTHLY_RETAINER');
-      setIsDispute(false);
-      setPaymentScheme('50-50');
-      setTermins([
-        { percentage: 50, amount: 0, description: '' },
-        { percentage: 50, amount: 0, description: '' },
-      ]);
-
+      setPlanMode('MONTHLY_RETAINER');
+      setBillingItems(defaultBillingSchedule());
       setContractStart('');
       setContractEnd('');
       setBillingTiming('START_OF_MONTH');
       setDownPayment('');
       setSuccessFeePercent('');
       setSuccessFeeBase('');
-
       setHasSubcon(false);
       setSubconPartner('');
-      setSubconPaymentTiming('UPFRONT');
+      setSubconPayer('');
     }
   }, [editingProposal, open]);
 
-  // Update termins when payment scheme changes (for project termin)
-  useEffect(() => {
-    if (paymentScheme === '50-50') {
-      setTermins([
-        { percentage: 50, amount: 0, description: '' },
-        { percentage: 50, amount: 0, description: '' },
+  const feeNum = Number(proposalFee) || 0;
+  const totalPercentage = billingItems.reduce((sum, it) => sum + it.percentage, 0);
+
+  function getItemAmountIdr(item: BillingScheduleItem): number {
+    return Math.round((feeNum * item.percentage) / 100);
+  }
+
+  const applyTemplate = (template: '50-50' | '50-35-15' | '40-30-30') => {
+    if (template === '50-50') {
+      setBillingItems([
+        createBillingItem(0, 'DOWN_PAYMENT', 'Down Payment', 50),
+        createBillingItem(1, 'TERM', 'Termin 1', 50),
       ]);
-    } else if (paymentScheme === '50-35-15') {
-      setTermins([
-        { percentage: 50, amount: 0, description: '' },
-        { percentage: 35, amount: 0, description: '' },
-        { percentage: 15, amount: 0, description: '' },
+    } else if (template === '50-35-15') {
+      setBillingItems([
+        createBillingItem(0, 'DOWN_PAYMENT', 'Down Payment', 50),
+        createBillingItem(1, 'TERM', 'Termin 1', 35),
+        createBillingItem(2, 'TERM', 'Termin 2', 15),
       ]);
-    } else if (paymentScheme === '40-30-30') {
-      setTermins([
-        { percentage: 40, amount: 0, description: '' },
-        { percentage: 30, amount: 0, description: '' },
-        { percentage: 30, amount: 0, description: '' },
+    } else {
+      setBillingItems([
+        createBillingItem(0, 'DOWN_PAYMENT', 'Down Payment', 40),
+        createBillingItem(1, 'TERM', 'Termin 1', 30),
+        createBillingItem(2, 'TERM', 'Termin 2', 30),
       ]);
     }
-  }, [paymentScheme]);
-
-  // Calculate termin amounts whenever proposalFee or termins change
-  useEffect(() => {
-    if (proposalFee) {
-      const fee = Number(proposalFee);
-      setTermins((prev) =>
-        prev.map((t) => ({
-          ...t,
-          amount: Math.round((fee * t.percentage) / 100),
-        })),
-      );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [proposalFee]);
-
-  const totalPercentage = termins.reduce((sum, t) => sum + t.percentage, 0);
+  };
 
   const handleAddTermin = () => {
-    setTermins([...termins, { percentage: 0, amount: 0, description: '' }]);
+    const nextOrder = billingItems.length;
+    const nextNum = billingItems.filter((i) => i.kind === 'TERM').length + 1;
+    setBillingItems([...billingItems, createBillingItem(nextOrder, 'TERM', `Termin ${nextNum}`, 0)]);
   };
 
-  const handleRemoveTermin = (index: number) => {
-    if (termins.length > 1) {
-      setTermins(termins.filter((_, i) => i !== index));
-    }
+  const handleRemoveBillingItem = (index: number) => {
+    if (index === 0 || billingItems.length <= 2) return;
+    const next = billingItems.filter((_, i) => i !== index).map((it, i) => ({ ...it, order: i }));
+    setBillingItems(next);
   };
 
-  const handleTerminChange = (
-    index: number,
-    field: keyof Termin,
-    value: string | number,
-  ) => {
-    const updated = [...termins];
-    if (field === 'percentage') {
-      const newPercentage = Number(value);
-      updated[index].percentage = newPercentage;
-      if (proposalFee) {
-        const fee = Number(proposalFee);
-        updated[index].amount = Math.round((fee * newPercentage) / 100);
-      }
-    } else if (field === 'description') {
-      updated[index].description = value as string;
-    }
-    setTermins(updated);
+  const handleBillingItemChange = (index: number, value: string) => {
+    const updated = [...billingItems];
+    updated[index] = { ...updated[index], description: value ?? '' };
+    setBillingItems(updated);
+  };
+
+  const handleBillingItemPercentChange = (index: number, percent: number) => {
+    const updated = [...billingItems];
+    updated[index] = { ...updated[index], percentage: percent };
+    setBillingItems(updated);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -568,86 +428,79 @@ export function ProposalFormModal({
     };
   }, [open, isAnimatingOut]);
 
+  function generatePaymentTypeString(): string {
+    let main = '';
+    if (planMode === 'INSTALLMENTS' && billingItems.length >= 2) {
+      main = billingItems
+        .map(
+          (it) =>
+            `${it.label}: ${it.percentage}% (IDR ${(getItemAmountIdr(it) / 1_000_000).toFixed(0)}M)${it.description ? ' - ' + it.description : ''}`,
+        )
+        .join(' | ');
+    } else if (planMode === 'MONTHLY_RETAINER') {
+      const fee = Number(proposalFee) || 0;
+      const timingLabel = billingTiming === 'START_OF_MONTH' ? 'Awal bulan' : 'Akhir bulan';
+      main = `Retainer bulanan: IDR ${(fee / 1_000_000).toFixed(0)}M/bulan; Periode ${contractStart || '-'} s/d ${contractEnd || '-'}; Penagihan: ${timingLabel}`;
+    } else if (planMode === 'DISPUTE_UM_SF') {
+      const dp = Number(downPayment || 0);
+      main = `Sengketa: Uang Muka IDR ${(dp / 1_000_000).toFixed(0)}M; Success Fee ${successFeePercent}% dari ${successFeeBase || 'nilai kemenangan'}`;
+    }
+    if (hasSubcon && subconPartner.trim()) {
+      const payerText = subconPayer === 'PARTNER' ? '; Pembayar: Partner' : subconPayer === 'CLIENT' ? '; Pembayar: Client' : '';
+      main = main ? `${main} | Subkon: ${subconPartner}${payerText}` : `Subkon: ${subconPartner}${payerText}`;
+    }
+    return main || 'Payment plan';
+  }
+
   const handleSubmit = (saveAsDraft: boolean) => {
     if (!lead) return;
 
-    // Basic validation
     if (!service.trim()) {
       toast.error('Mohon pilih Service Type');
       return;
     }
-    if (!proposalFee || isNaN(Number(proposalFee))) {
+    if (planMode !== 'DISPUTE_UM_SF' && (!proposalFee || isNaN(Number(proposalFee)))) {
       toast.error('Mohon masukkan Proposal Fee yang valid');
       return;
     }
 
-    // Payment method specific validation
-    if (paymentMethod === 'SUBCON' && !saveAsDraft) {
-      if (!subconPartner) {
-        toast.error('Mohon isi nama partner/flag untuk subkon');
+    if (hasSubcon && !saveAsDraft && !subconPartner.trim()) {
+      toast.error('Mohon isi nama partner/flag untuk subkon');
+      return;
+    }
+
+    if (planMode === 'INSTALLMENTS' && !saveAsDraft) {
+      const dpFirst = billingItems[0]?.kind === 'DOWN_PAYMENT';
+      if (!dpFirst || billingItems.length < 2) {
+        toast.error('Minimal 2 item: Down Payment + minimal 1 Termin. Total harus 100%.');
+        return;
+      }
+      if (totalPercentage !== 100) {
+        toast.error('Total persentase harus 100%');
         return;
       }
     }
 
-    if (paymentMethod === 'TERMIN' && !saveAsDraft && totalPercentage !== 100) {
-      toast.error('Total payment percentage must equal 100%');
-      return;
-    }
-
-    if (paymentMethod === 'MONTHLY_RETAINER' && !saveAsDraft) {
+    if (planMode === 'MONTHLY_RETAINER' && !saveAsDraft) {
       if (!contractStart || !contractEnd) {
         toast.error('Mohon isi periode kontrak untuk monthly retainer');
         return;
       }
     }
 
-    if (paymentMethod === 'DISPUTE_UM_SF' && !saveAsDraft) {
+    if (planMode === 'DISPUTE_UM_SF' && !saveAsDraft) {
       if (!downPayment || !successFeePercent) {
         toast.error('Mohon isi Uang Muka dan Success Fee untuk sengketa');
         return;
       }
     }
 
-    // Attachments validation
     if (attachments.length === 0) {
       toast.error('Mohon tambahkan minimal 1 attachment');
       return;
     }
 
-    // Build paymentType string from payment method
-    let paymentTypeString = '';
-
-    if (paymentMethod === 'SUBCON') {
-      // Subcon is standalone payment method - format tunggal
-      const timingText =
-        subconPaymentTiming === 'UPFRONT'
-          ? '100% di awal'
-          : '100% di akhir';
-      paymentTypeString = `Subkon dengan ${subconPartner}: pembayaran ${timingText} oleh partner`;
-    } else if (paymentMethod === 'TERMIN') {
-      paymentTypeString = termins
-        .map(
-          (t, i) =>
-            `Termin ${i + 1}: ${t.percentage}% (IDR ${(
-              t.amount / 1_000_000
-            ).toFixed(0)}M)${t.description ? ' - ' + t.description : ''}`,
-        )
-        .join(' | ');
-    } else if (paymentMethod === 'MONTHLY_RETAINER') {
-      const fee = Number(proposalFee);
-      const timingLabel =
-        billingTiming === 'START_OF_MONTH' ? 'Awal bulan' : 'Akhir bulan';
-      paymentTypeString = `Retainer bulanan: IDR ${(fee / 1_000_000).toFixed(
-        0,
-      )}M/bulan; Periode ${contractStart || '-'} s/d ${contractEnd || '-'
-        }; Penagihan: ${timingLabel}`;
-    } else if (paymentMethod === 'DISPUTE_UM_SF') {
-      const dp = Number(downPayment || 0);
-      paymentTypeString = `Sengketa: Uang Muka IDR ${(dp / 1_000_000).toFixed(
-        0,
-      )}M; Success Fee ${successFeePercent}% dari ${successFeeBase || 'nilai kemenangan'
-        }`;
-    }
+    const paymentTypeString = generatePaymentTypeString();
 
     // Update existing proposal
     if (editingProposal && onUpdateProposal) {
@@ -679,7 +532,7 @@ export function ProposalFormModal({
       id: 'p' + Date.now(),
       leadId: leadId,
       service: service.trim(),
-      proposalFee: Number(proposalFee),
+      proposalFee: planMode === 'DISPUTE_UM_SF' ? (Number(proposalFee) || 0) : Number(proposalFee),
       paymentType: paymentTypeString,
       hasSubcon: hasSubcon,
       status: saveAsDraft ? 'DRAFT' : 'WAITING_CEO_APPROVAL',
@@ -806,277 +659,184 @@ export function ProposalFormModal({
                 </select>
               </div>
 
-              {/* Fees - 3 columns */}
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm text-gray-700 mb-1.5">
-                    Proposal Fee (IDR) <span className="text-red-500">*</span>
+              {/* Subcon: checklist + section (partner, payer) di dalam wadah yang sama */}
+              <div className="border border-gray-200 rounded-lg bg-white p-3 space-y-3">
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 flex-shrink-0 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={hasSubcon}
+                      onChange={(e) => setHasSubcon(e.target.checked)}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Sub Contract (White Kitchen)?
+                    </span>
                   </label>
-                  <Input
-                    type="number"
-                    value={proposalFee}
-                    onChange={(e) => setProposalFee(e.target.value)}
-                    placeholder="150000000"
-                    className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
-                  />
+                  <p className="text-xs text-gray-500">
+                    Subcontract hanya informasi tambahan (partner + pembayar).
+                  </p>
                 </div>
-                <div>
-                  <label className="block text-sm text-gray-700 mb-1.5">
-                    Diskon (IDR)
-                  </label>
-                  <Input
-                    type="number"
-                    value={discount}
-                    onChange={(e) => setDiscount(e.target.value)}
-                    placeholder="15000000"
-                    className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-700 mb-1.5">
-                    Agree Fee
-                  </label>
-                  <Input
-                    type="text"
-                    disabled
-                    placeholder="Akan diisi setelah deal disetujui client"
-                    className="w-full bg-gray-100 text-gray-500 cursor-not-allowed"
-                  />
-                </div>
+                {hasSubcon && (
+                  <>
+                    <div className="border-t border-gray-200 pt-3" />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">
+                          Partner / Flag <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                          type="text"
+                          value={subconPartner}
+                          onChange={(e) => setSubconPartner(e.target.value)}
+                          placeholder="Asahi"
+                          className="focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">
+                          Pembayar (opsional)
+                        </label>
+                        <select
+                          value={subconPayer}
+                          onChange={(e) => setSubconPayer(e.target.value as 'PARTNER' | 'CLIENT' | '')}
+                          className="h-9 w-full rounded-lg border border-gray-300 px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black hover:border-black"
+                        >
+                          <option value="">— Pilih —</option>
+                          <option value="PARTNER">Partner</option>
+                          <option value="CLIENT">Client</option>
+                        </select>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Proposal Fee di atas adalah nilai yang dibayarkan partner ke perusahaan kita. Jadwal tagihan mengikuti skema di bawah.
+                    </p>
+                  </>
+                )}
               </div>
 
-              {/* Dispute Toggle */}
-              <div className={`flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-white ${hasSubcon ? 'opacity-60' : ''}`}>
-                <label className={`flex items-center gap-2 flex-shrink-0 ${hasSubcon ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
-                  <input
-                    type="checkbox"
-                    checked={isDispute}
-                    onChange={(e) => setIsDispute(e.target.checked)}
-                    disabled={hasSubcon}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    Dispute (Sengketa)?
-                  </span>
-                </label>
-                <p className="text-xs text-gray-500">
-                  Jika aktif, payment method akan menjadi UM + Success Fee (hanya untuk dispute)
-                </p>
-              </div>
-
-              {/* Subcon Toggle */}
-              <div className={`flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-white ${isDispute ? 'opacity-60' : ''}`}>
-                <label className={`flex items-center gap-2 flex-shrink-0 ${isDispute ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
-                  <input
-                    type="checkbox"
-                    checked={hasSubcon}
-                    onChange={(e) => setHasSubcon(e.target.checked)}
-                    disabled={isDispute}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    Sub Contract (White Kitchen)?
-                  </span>
-                </label>
-                <p className="text-xs text-gray-500">
-                  Jika aktif, payment method akan menjadi Sub Contract
-                </p>
-              </div>
-
-              {/* Payment Method */}
+              {/* Metode Pembayaran */}
               <div>
                 <label className="block text-sm text-gray-700 mb-1.5">
-                  Payment Method
+                  Metode Pembayaran
                 </label>
-                <p className="text-xs text-gray-500 mb-2">
-                  {hasSubcon
-                    ? 'Payment method untuk sub contract: Sub Contract'
-                    : isDispute
-                      ? 'Payment method untuk dispute: UM + Success Fee'
-                      : `Payment method default untuk ${tier}: ${tier === 'STRATEGIC_RETAINER' ? 'Monthly Retainer' : 'Termin'}`}
-                </p>
                 <select
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                  disabled={isDispute || hasSubcon}
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black focus:border-black hover:border-black ${isDispute || hasSubcon ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                  value={planMode}
+                  onChange={(e) => setPlanMode(e.target.value as PlanMode)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black focus:border-black hover:border-black"
                 >
-                  <option value="MONTHLY_RETAINER" disabled={isDispute || hasSubcon}>
-                    Monthly Retainer
-                  </option>
-                  <option value="TERMIN" disabled={isDispute || hasSubcon}>
-                    Termin
-                  </option>
-                  <option value="DISPUTE_UM_SF" disabled={!isDispute || hasSubcon}>
-                    Dispute (UM + Success Fee)
-                  </option>
-                  <option value="SUBCON" disabled={!hasSubcon}>
-                    Sub Contract
-                  </option>
+                  <option value="INSTALLMENTS">Termin (Jadwal Tagihan)</option>
+                  <option value="MONTHLY_RETAINER">Retainer Bulanan</option>
+                  <option value="DISPUTE_UM_SF">Dispute (UM + Success Fee)</option>
                 </select>
               </div>
 
-              {/* Subcon Section - Only show when subcon is active */}
-              {hasSubcon && (
-                <div className="border border-gray-200 rounded-lg p-3 bg-white space-y-2.5">
-                  <p className="text-sm text-gray-600 font-medium mb-0.5">
-                    Payment – Sub Contract (White Kitchen)
-                  </p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">
-                        Partner / Flag <span className="text-red-500">*</span>
-                      </label>
-                      <Input
-                        type="text"
-                        value={subconPartner}
-                        onChange={(e) =>
-                          setSubconPartner(e.target.value)
-                        }
-                        placeholder="Asahi"
-                        className="focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">
-                        Payment Timing <span className="text-red-500">*</span>
-                      </label>
-                      <div className="flex gap-4 text-sm mt-1">
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            checked={subconPaymentTiming === 'UPFRONT'}
-                            onChange={() =>
-                              setSubconPaymentTiming('UPFRONT')
-                            }
-                          />
-                          <span>100% di awal</span>
-                        </label>
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            checked={subconPaymentTiming === 'END'}
-                            onChange={() =>
-                              setSubconPaymentTiming('END')
-                            }
-                          />
-                          <span>100% di akhir</span>
-                        </label>
-                      </div>
-                    </div>
+              {/* Proposal Fee, Diskon, Agree Fee – disembunyikan jika Dispute */}
+              {planMode !== 'DISPUTE_UM_SF' && (
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1.5">
+                      Proposal Fee (IDR) <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="number"
+                      value={proposalFee}
+                      onChange={(e) => setProposalFee(e.target.value)}
+                      placeholder="150000000"
+                      className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
+                    />
                   </div>
-                  <p className="text-xs text-gray-500">
-                    Proposal Fee di atas adalah nilai yang dibayarkan partner
-                    (mis. Asahi) ke perusahaan kita.
-                  </p>
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1.5">
+                      Diskon (IDR)
+                    </label>
+                    <Input
+                      type="number"
+                      value={discount}
+                      onChange={(e) => setDiscount(e.target.value)}
+                      placeholder="15000000"
+                      className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1.5">
+                      Agree Fee
+                    </label>
+                    <Input
+                      type="text"
+                      disabled
+                      placeholder="Akan diisi setelah deal disetujui client"
+                      className="w-full bg-gray-100 text-gray-500 cursor-not-allowed"
+                    />
+                  </div>
                 </div>
               )}
 
-              {/* Payment / Billing Section - Hide when subcon is active */}
-              {!hasSubcon && (
-                <div>
-                  {/* 1. TERMIN */}
-                  {paymentMethod === 'TERMIN' && (
+              {/* Detail (Payment / Billing - by planMode) */}
+              <div>
+                  {/* 1. Jadwal tagihan (Down Payment + Termin 1, 2, ...) */}
+                  {planMode === 'INSTALLMENTS' && (
                     <>
                       <label className="block text-sm text-gray-700 mb-1.5">
-                        Termin Pembayaran (Payment Type)
+                        Jadwal Tagihan (Payment Type)
                       </label>
                       <p className="text-xs text-gray-500 mb-2">
-                        Pilih skema termin pembayaran untuk proposal ini.
+                        Item pertama Down Payment, lalu Termin 1, 2, … Total 100%. Gunakan template cepat atau edit manual.
                       </p>
-
-                      <select
-                        value={paymentScheme}
-                        onChange={(e) =>
-                          setPaymentScheme(e.target.value as PaymentScheme)
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black focus:border-black hover:border-black mb-3"
-                      >
-                        <option value="50-50">50-50</option>
-                        <option value="50-35-15">50-35-15</option>
-                        <option value="40-30-30">40-30-30</option>
-                        <option value="Custom">Custom</option>
-                      </select>
-
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        <Button type="button" variant="outline" size="sm" onClick={() => applyTemplate('50-50')} className="border-gray-300">50-50</Button>
+                        <Button type="button" variant="outline" size="sm" onClick={() => applyTemplate('50-35-15')} className="border-gray-300">50-35-15</Button>
+                        <Button type="button" variant="outline" size="sm" onClick={() => applyTemplate('40-30-30')} className="border-gray-300">40-30-30</Button>
+                      </div>
                       <div className="border border-gray-200 rounded-lg p-3 bg-white">
                         <div className="flex items-center justify-between mb-2">
-                          <p className="text-sm text-gray-600">Detail Termin</p>
-                          {paymentScheme === 'Custom' && (
-                            <button
-                              onClick={handleAddTermin}
-                              className="text-sm px-3 py-1 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-1"
-                            >
-                              <Plus className="w-4 h-4" />
-                              Tambah Termin
-                            </button>
-                          )}
+                          <p className="text-sm text-gray-600">Detail</p>
+                          <button
+                            type="button"
+                            onClick={handleAddTermin}
+                            className="text-sm px-3 py-1 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-1"
+                          >
+                            <Plus className="w-4 h-4" /> Tambah Termin
+                          </button>
                         </div>
                         <div className="space-y-2">
-                          {termins.map((termin, index) => (
-                            <div
-                              key={index}
-                              className="border border-gray-200 rounded-lg p-2.5 bg-gray-50"
-                            >
+                          {billingItems.map((item, index) => (
+                            <div key={item.id} className="border border-gray-200 rounded-lg p-2.5 bg-gray-50">
                               <div className="flex items-center justify-between mb-1.5">
-                                <label className="text-sm font-medium text-gray-700">
-                                  Termin {index + 1}
-                                </label>
-                                {paymentScheme === 'Custom' &&
-                                  termins.length > 1 && (
-                                    <button
-                                      onClick={() => handleRemoveTermin(index)}
-                                      className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
-                                  )}
+                                <label className="text-sm font-medium text-gray-700">{item.label}</label>
+                                {index > 0 && billingItems.length > 2 && (
+                                  <button type="button" onClick={() => handleRemoveBillingItem(index)} className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors">
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
                               </div>
                               <div className="grid grid-cols-2 gap-2 mb-1.5">
                                 <div>
-                                  <label className="block text-xs text-gray-600 mb-1">
-                                    Persentase (%)
-                                  </label>
+                                  <label className="block text-xs text-gray-600 mb-1">Persentase (%)</label>
                                   <Input
                                     type="number"
-                                    value={termin.percentage}
-                                    onChange={(e) =>
-                                      handleTerminChange(
-                                        index,
-                                        'percentage',
-                                        e.target.value,
-                                      )
-                                    }
-                                    disabled={paymentScheme !== 'Custom'}
-                                    className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                    value={item.percentage}
+                                    onChange={(e) => handleBillingItemPercentChange(index, Number(e.target.value) || 0)}
+                                    className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-xs text-gray-600 mb-1">
-                                    Nominal (IDR)
-                                  </label>
+                                  <label className="block text-xs text-gray-600 mb-1">Nominal (IDR)</label>
                                   <Input
                                     type="text"
-                                    value={termin.amount.toLocaleString('id-ID')}
+                                    value={getItemAmountIdr(item).toLocaleString('id-ID')}
                                     disabled
                                     className="w-full bg-gray-100 text-gray-700 cursor-not-allowed"
                                   />
                                 </div>
                               </div>
                               <div>
-                                <label className="block text-xs text-gray-600 mb-1">
-                                  Deskripsi termin
-                                </label>
+                                <label className="block text-xs text-gray-600 mb-1">Deskripsi (opsional)</label>
                                 <Input
                                   type="text"
-                                  value={termin.description}
-                                  onChange={(e) =>
-                                    handleTerminChange(
-                                      index,
-                                      'description',
-                                      e.target.value,
-                                    )
-                                  }
-                                  placeholder="e.g., DP saat EL signed, Progress 50%, Pelunasan saat project selesai"
+                                  value={item.description ?? ''}
+                                  onChange={(e) => handleBillingItemChange(index, e.target.value)}
+                                  placeholder="e.g., DP saat EL signed, Pelunasan saat project selesai"
                                   className="w-full focus-visible:ring-black focus-visible:ring-1 focus-visible:border-black hover:border-black"
                                 />
                               </div>
@@ -1084,28 +844,16 @@ export function ProposalFormModal({
                           ))}
                         </div>
                         <div className="mt-2 pt-2 border-t border-gray-200 flex items-center justify-between">
-                          <span className="text-sm text-gray-600">
-                            Total Persentase:
-                          </span>
-                          <span
-                            className={`font-medium ${totalPercentage === 100
-                                ? 'text-green-600'
-                                : 'text-red-600'
-                              }`}
-                          >
-                            {totalPercentage}%
-                          </span>
+                          <span className="text-sm text-gray-600">Total Persentase:</span>
+                          <span className={`font-medium ${totalPercentage === 100 ? 'text-green-600' : 'text-red-600'}`}>{totalPercentage}%</span>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1.5">
-                          Ini adalah skema termin yang diajukan di proposal. Termin
-                          final bisa dikonfirmasi lagi setelah client setuju (deal).
-                        </p>
+                        <p className="text-xs text-gray-500 mt-1.5">Minimal 2 item (Down Payment + 1 Termin). Total harus 100%.</p>
                       </div>
                     </>
                   )}
 
                   {/* 2. MONTHLY_RETAINER */}
-                  {paymentMethod === 'MONTHLY_RETAINER' && (
+                  {planMode === 'MONTHLY_RETAINER' && (
                     <div className="border border-gray-200 rounded-lg p-3 bg-white space-y-2.5">
                       <p className="text-sm text-gray-600 font-medium mb-0.5">
                         Payment – Strategic Advisory (Bulanan)
@@ -1170,7 +918,7 @@ export function ProposalFormModal({
                   )}
 
                   {/* 3. DISPUTE_UM_SF */}
-                  {paymentMethod === 'DISPUTE_UM_SF' && (
+                  {planMode === 'DISPUTE_UM_SF' && (
                     <div className="border border-gray-200 rounded-lg p-3 bg-white space-y-2.5">
                       <p className="text-sm text-gray-600 font-medium mb-0.5">
                         Payment – Sengketa (UM + Success Fee)
@@ -1225,7 +973,6 @@ export function ProposalFormModal({
                   )}
 
                 </div>
-              )}
 
               {/* Attachments */}
               <div>

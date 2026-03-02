@@ -46,7 +46,6 @@ export function InvoicesTable({
               <TableRow>
                 <TableHead>No Invoice</TableHead>
                 <TableHead>Nama perusahaan</TableHead>
-                <TableHead>Nama proyek</TableHead>
                 <TableHead>Layanan</TableHead>
                 <TableHead className="text-center">Jumlah invoice</TableHead>
                 <TableHead className="text-right">Total tagihan</TableHead>
@@ -57,7 +56,7 @@ export function InvoicesTable({
             <TableBody>
               {invoices.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     <div className="flex flex-col items-center justify-center text-gray-500">
                       <p className="text-sm font-medium">Belum ada data invoice</p>
                       <p className="text-xs mt-1">Tidak ada invoice di sistem</p>
@@ -84,9 +83,13 @@ export function InvoicesTable({
                       onClick={() => onViewDetail(invoice)}
                     >
                       <TableCell className="font-medium">{invoice.id}</TableCell>
-                      <TableCell>{invoice.clientName}</TableCell>
                       <TableCell>
-                        {invoice.projectName ?? invoice.projectId}
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-semibold">{invoice.clientName}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {invoice.projectTitle ?? invoice.projectName ?? invoice.projectId}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell>
                         {invoice.service ?? '-'}

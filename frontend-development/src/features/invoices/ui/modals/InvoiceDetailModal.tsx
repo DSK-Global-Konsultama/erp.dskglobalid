@@ -51,8 +51,8 @@ export function InvoiceDetailModal({
               <p className="text-lg mt-1">{formatCurrency(invoice.totalAmount)}</p>
             </div>
             <div>
-              <Label>Project ID:</Label>
-              <p className="text-sm mt-1">{invoice.projectId}</p>
+              <Label>Nama proyek:</Label>
+              <p className="text-sm mt-1">{invoice.projectTitle ?? invoice.projectId}</p>
             </div>
           </div>
 

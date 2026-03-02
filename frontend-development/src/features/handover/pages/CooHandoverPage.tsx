@@ -63,6 +63,7 @@ export function CooHandoverPage({
         revisionComments={handover.revisionComments || []}
         hiddenSections={COO_HIDDEN_SECTIONS}
         onBack={onBack}
+        proposal={proposal}
       />
     </div>
   );

@@ -78,6 +78,7 @@ export function ProjectHandoverTab({
       revisionComments={handover.revisionComments ?? []}
       hiddenSections={hiddenSections}
       showFormCompletion={false}
+      proposal={proposal}
     />
   );
 }

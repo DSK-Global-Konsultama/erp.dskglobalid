@@ -26,5 +26,7 @@ export {
   ActionRequiredAlert,
   StafAdminInvoiceList,
 } from './ui/management';
+export { InvoiceDetailPage } from './pages';
+export { PaymentTermDetailDrawer } from './ui/drawers/PaymentTermDetailDrawer';
 export { InvoiceDetailModal } from './ui/modals/InvoiceDetailModal';
 export { PaymentTermStatusBadge } from './ui/shared/PaymentTermStatusBadge';

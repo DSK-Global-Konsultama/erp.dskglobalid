@@ -5,9 +5,7 @@ import { InvoicesFilters } from '../ui/management/InvoicesFilters';
 import { InvoicesTable } from '../ui/management/InvoicesTable';
 import { InvoicesPagination } from '../ui/management/InvoicesPagination';
 import { InvoicesStatsCards } from '../ui/management/InvoicesStatsCards';
-import { InvoiceDetailModal } from '../ui/modals/InvoiceDetailModal';
 import type { Invoice } from '../../../lib/mock-data';
-import { toast } from 'sonner';
 
 export interface InvoicesManagementPageProps {
   /** Mode: 'invoice' untuk CEO/COO, 'payment' untuk Admin */
@@ -27,6 +25,11 @@ export interface InvoicesManagementPageProps {
   /** Filter status (controlled) */
   filterStatus?: string;
   onFilterChange?: (status: string) => void;
+  /** Filter layanan (controlled) */
+  filterService?: string;
+  onFilterServiceChange?: (service: string) => void;
+  /** Callback saat user klik baris invoice (untuk beralih ke halaman detail, seperti leads) */
+  onInvoiceClick?: (invoiceId: string) => void;
 }
 
 export function InvoicesManagementPage({
@@ -37,25 +40,27 @@ export function InvoicesManagementPage({
   canApprove = false,
   userRole,
   invoices: externalInvoices,
-  onUpdateInvoices,
+  onUpdateInvoices: _onUpdateInvoices,
   filterStatus: externalFilterStatus,
   onFilterChange,
+  filterService: externalFilterService,
+  onFilterServiceChange,
+  onInvoiceClick,
 }: InvoicesManagementPageProps) {
-  const [internalInvoices, setInternalInvoices] = useState<Invoice[]>(() =>
-    invoiceApi.getAll()
-  );
+  const [internalInvoices] = useState<Invoice[]>(() => invoiceApi.getAll());
   const [internalFilterStatus, setInternalFilterStatus] = useState<string>('all');
+  const [internalFilterService, setInternalFilterService] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   const invoices = externalInvoices ?? internalInvoices;
-  const setInvoices = onUpdateInvoices ?? setInternalInvoices;
   const filterStatus =
     externalFilterStatus !== undefined ? externalFilterStatus : internalFilterStatus;
   const setFilterStatus = onFilterChange ?? setInternalFilterStatus;
+  const filterService =
+    externalFilterService !== undefined ? externalFilterService : internalFilterService;
+  const setFilterService = onFilterServiceChange ?? setInternalFilterService;
 
   const filteredInvoices = invoices.filter((inv) => {
     const matchesSearch =
@@ -64,12 +69,14 @@ export function InvoicesManagementPage({
     const matchesStatus =
       filterStatus === 'all' ||
       inv.paymentTerms.some((t) => t.status === filterStatus);
-    return matchesSearch && matchesStatus;
+    const matchesService =
+      filterService === 'all' || (inv.service && inv.service === filterService);
+    return matchesSearch && matchesStatus && matchesService;
   });
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterStatus]);
+  }, [searchTerm, filterStatus, filterService]);
 
   useEffect(() => {
     const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage) || 1;
@@ -92,41 +99,17 @@ export function InvoicesManagementPage({
       minimumFractionDigits: 0,
     }).format(amount);
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  const handleMarkTermAsPaid = (invoiceId: string, termId: string) => {
-    if (mode === 'invoice' && !canApprove) {
-      toast.error(
-        'Anda tidak memiliki wewenang untuk approve invoice. Hanya CEO yang bisa approve.'
-      );
-      return;
-    }
-    const updated = invoiceApi.markTermAsPaid(invoiceId, termId, invoices);
-    setInvoices(updated);
-    toast.success(
-      mode === 'payment'
-        ? 'Payment berhasil dikonfirmasi!'
-        : 'Payment term berhasil ditandai sebagai dibayar!'
-    );
-  };
-
   const handleReset = () => {
     setSearchTerm('');
     setFilterStatus('all');
+    setFilterService('all');
     setCurrentPage(1);
   };
 
   const displayTitle =
     title ??
     (mode === 'payment'
-      ? `Daftar Payment (${filteredInvoices.length})`
+      ? `Kelola Invoice (${filteredInvoices.length})`
       : `Daftar Invoice (${filteredInvoices.length})`);
 
   const displayDescription =
@@ -144,6 +127,8 @@ export function InvoicesManagementPage({
         onSearchTermChange={setSearchTerm}
         filterStatus={filterStatus}
         onFilterStatusChange={setFilterStatus}
+        filterService={filterService}
+        onFilterServiceChange={setFilterService}
         onReset={handleReset}
       />
 
@@ -156,10 +141,7 @@ export function InvoicesManagementPage({
         description={displayDescription}
         invoices={paginatedInvoices}
         formatCurrency={formatCurrency}
-        onViewDetail={(inv) => {
-          setSelectedInvoice(inv);
-          setIsDetailOpen(true);
-        }}
+        onViewDetail={(inv) => onInvoiceClick?.(inv.id)}
         pagination={
           filteredInvoices.length > 0 ? (
             <InvoicesPagination
@@ -173,17 +155,6 @@ export function InvoicesManagementPage({
             />
           ) : undefined
         }
-      />
-
-      <InvoiceDetailModal
-        open={isDetailOpen}
-        onOpenChange={setIsDetailOpen}
-        invoice={selectedInvoice}
-        mode={mode}
-        canApprove={canApprove}
-        formatCurrency={formatCurrency}
-        formatDate={formatDate}
-        onMarkTermAsPaid={handleMarkTermAsPaid}
       />
     </div>
   );
