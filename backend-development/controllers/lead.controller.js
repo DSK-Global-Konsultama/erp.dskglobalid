@@ -1073,11 +1073,43 @@ exports.updateLeadProposal = async (req, res) => {
     payload,
   } = req.body || {};
 
+  // NOTE: when multipart/form-data is used, req.body values may be strings.
   const fileUrl = req.file ? `/uploads/proposal/${req.file.filename}` : bodyFileUrl;
 
   if (!id || !proposalId) {
     return res.status(400).json({ message: 'Lead id dan proposalId wajib diisi' });
   }
+
+  // Helper: do not overwrite existing column when field is not provided.
+  // We must pass NULL to COALESCE when we want to keep existing value, and pass
+  // actual NULL only when caller explicitly sends null.
+  const keepIfUndefined = (v) => (v === undefined ? null : v);
+
+  // Helper: allow explicit null to clear. If not provided, keep existing.
+  const dateOrKeep = (v) => {
+    if (v === undefined) return null;
+    if (v === null || v === '') return null; // explicit clear
+    return new Date(v);
+  };
+
+  // numeric parsing best-effort (form-data may send numbers as strings)
+  const numOrKeep = (v) => {
+    if (v === undefined) return null;
+    if (v === null || v === '') return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const boolOrKeep = (v) => {
+    if (v === undefined) return null;
+    if (v === null) return null;
+    if (typeof v === 'boolean') return v ? 1 : 0;
+    // accept 'true'/'false'/'1'/'0'
+    const s = String(v).toLowerCase();
+    if (s === 'true' || s === '1') return 1;
+    if (s === 'false' || s === '0') return 0;
+    return null;
+  };
 
   try {
     const [result] = await pool.query(
@@ -1098,19 +1130,19 @@ exports.updateLeadProposal = async (req, res) => {
            updated_at = CURRENT_TIMESTAMP
        WHERE id = ? AND lead_id = ?`,
       [
-        clientName ?? null,
-        service ?? null,
-        proposalFee != null ? proposalFee : null,
-        agreeFee != null ? agreeFee : null,
-        paymentType ?? null,
-        paymentTypeFinal ?? null,
-        dealDate ?? null,
-        hasSubcon != null ? (hasSubcon ? 1 : 0) : null,
-        status ?? null,
-        sentAt ? new Date(sentAt) : null,
-        fileUrl ?? null,
-        revisionNotes !== undefined ? revisionNotes : null,
-        payload ? JSON.stringify(payload) : null,
+        keepIfUndefined(clientName),
+        keepIfUndefined(service),
+        proposalFee === undefined ? null : numOrKeep(proposalFee),
+        agreeFee === undefined ? null : numOrKeep(agreeFee),
+        keepIfUndefined(paymentType),
+        keepIfUndefined(paymentTypeFinal),
+        keepIfUndefined(dealDate),
+        hasSubcon === undefined ? null : boolOrKeep(hasSubcon),
+        keepIfUndefined(status),
+        dateOrKeep(sentAt),
+        keepIfUndefined(fileUrl),
+        revisionNotes === undefined ? null : revisionNotes, // allow explicit null to clear
+        payload === undefined ? null : (payload ? JSON.stringify(payload) : null),
         proposalId,
         id,
       ]

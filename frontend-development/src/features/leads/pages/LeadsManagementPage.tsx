@@ -78,19 +78,25 @@ export function LeadsManagementPage({ userName: _userName, mode, title, onLeadCl
     const matchesService =
       mode === 'tracker' ? (serviceFilter === 'all' || (lead as Lead & { service?: string }).service === serviceFilter) : true;
 
-    // Backend tracker list belum memiliki data meeting/notulen/proposal/EL/handover,
-    // jadi filter stage hanya aktif untuk mock tracker.
+    // Commercial stage filter:
+    // - For backend tracker list: use backend-provided commercialStage.
+    // - For mock tracker list: derive from mock docs.
     let matchesCommercialStage = true;
-    if (mode === 'tracker' && !useBackendTracker) {
-      const meta = deriveLeadTrackerRowMeta(
-        lead as any,
-        meetings,
-        notulensi,
-        proposals,
-        engagementLetters,
-        handovers
-      );
-      matchesCommercialStage = filterCommercialStage === 'all' || meta.commercialStage === filterCommercialStage;
+    if (mode === 'tracker') {
+      if (useBackendTracker) {
+        const stage = String((lead as any).commercialStage || '');
+        matchesCommercialStage = filterCommercialStage === 'all' || stage === filterCommercialStage;
+      } else {
+        const meta = deriveLeadTrackerRowMeta(
+          lead as any,
+          meetings,
+          notulensi,
+          proposals,
+          engagementLetters,
+          handovers
+        );
+        matchesCommercialStage = filterCommercialStage === 'all' || meta.commercialStage === filterCommercialStage;
+      }
     }
 
     return (

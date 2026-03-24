@@ -4,6 +4,7 @@ import { Card, CardContent } from '../../../../components/ui/card';
 import { Button } from '../../../../components/ui/button';
 import { Badge } from '../../../../components/ui/badge';
 import { ProposalDetailModal } from '../../../leads';
+import { leadsService } from '../../../leads/services/leadsService';
 import type { Proposal, Lead } from '../../../../lib/mock-data';
 
 interface ProposalTabProps {
@@ -116,8 +117,19 @@ export function ProposalTab({ proposals, leads, onUpdateProposal }: ProposalTabP
           open={true}
           onClose={() => setSelectedProposal(null)}
           onEdit={() => {}}
-          onUpdateProposal={(id, updates) => {
+          onUpdateProposal={async (id, updates) => {
+            // optimistic update in parent
             onUpdateProposal(id, updates);
+
+            const leadId = selectedProposal.leadId;
+            try {
+              const updated = await leadsService.updateProposal(leadId, id, updates);
+              onUpdateProposal(id, updated);
+              setSelectedProposal((prev) => (prev ? { ...prev, ...updated } : prev));
+            } catch {
+              // keep optimistic state
+            }
+
             if (updates.status === 'APPROVED' || updates.status === 'REVISION') {
               setSelectedProposal(null);
             }
