@@ -504,9 +504,10 @@ export function ProposalFormModal({
 
     // Update existing proposal
     if (editingProposal && onUpdateProposal) {
-      // Only allow edit if status is DRAFT or REVISION
-      if (editingProposal.status !== 'DRAFT' && editingProposal.status !== 'REVISION') {
-        toast.error('Proposal tidak bisa diedit karena sudah disubmit untuk approval');
+      // Allow edit for BD lifecycle states until client accepted
+      const editableStatuses: Array<Proposal['status']> = ['DRAFT', 'REVISION', 'APPROVED', 'SENT'];
+      if (!editableStatuses.includes(editingProposal.status)) {
+        toast.error('Proposal tidak bisa diedit pada status ini');
         return;
       }
 
@@ -515,7 +516,9 @@ export function ProposalFormModal({
         proposalFee: Number(proposalFee),
         paymentType: paymentTypeString,
         hasSubcon: hasSubcon,
+        // If saving as draft, keep DRAFT; otherwise submit to CEO approval again for changes
         status: saveAsDraft ? 'DRAFT' : 'WAITING_CEO_APPROVAL',
+        sentAt: undefined,
         file: attachments[0]
       });
       toast.success(

@@ -252,7 +252,6 @@ export interface Proposal {
   | 'APPROVED'
   | 'SENT'
   | 'ACCEPTED'
-  | 'REJECTED'
   | 'PROPOSAL_EXPIRED';
   revisionNotes?: string;
   createdAt: string;

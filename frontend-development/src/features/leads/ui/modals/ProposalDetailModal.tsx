@@ -6,6 +6,7 @@ import { Dialog, DialogContent } from '../../../../components/ui/dialog';
 import { Input } from '../../../../components/ui/input';
 import { Button } from '../../../../components/ui/button';
 import { AgreeFeeModal } from './AgreeFeeModal';
+import { leadsService } from '../../services/leadsService';
 import type { Proposal, Lead } from '../../../../lib/mock-data';
 
 interface ProposalDetailModalProps {
@@ -102,12 +103,20 @@ export function ProposalDetailModal({
   }, [open, isAnimatingOut]);
 
   const handleEdit = () => {
-    if (!proposal || !onEdit) return;
+    if (!currentProposal || !onEdit) return;
     if (isAnimatingOut) return;
+
+    // Guard: edit only for BD flow states
+    const editableStatuses: Array<Proposal['status']> = ['DRAFT', 'REVISION', 'APPROVED', 'SENT'];
+    if (!editableStatuses.includes(currentProposal.status)) {
+      toast.error('Proposal tidak bisa diedit pada status ini');
+      return;
+    }
+
     const dialogContent = document.querySelector('[data-proposal-detail-modal]') as HTMLElement;
     if (dialogContent) {
       setIsAnimatingOut(true);
-      onEdit(proposal);
+      onEdit(currentProposal);
       animate(dialogContent, { x: '100%' }, {
         duration: 0.8,
         ease: 'easeInOut',
@@ -118,40 +127,67 @@ export function ProposalDetailModal({
       });
     } else {
       onClose();
-      onEdit(proposal);
+      onEdit(currentProposal);
     }
   };
 
-  const handleSendToClient = () => {
-    if (currentProposal && onUpdateProposal) {
-      onUpdateProposal(currentProposal.id, {
-        status: 'SENT',
-        sentAt: new Date().toISOString().split('T')[0]
-      });
-      setCurrentProposal({
-        ...currentProposal,
-        status: 'SENT',
-        sentAt: new Date().toISOString().split('T')[0]
-      });
-      toast.success('Proposal sent to client!');
+  const handleSendToClient = async () => {
+    if (!currentProposal) return;
+
+    const updates: Partial<Proposal> = {
+      status: 'SENT',
+      sentAt: new Date().toISOString().split('T')[0],
+    };
+
+    // Optimistic local update
+    setCurrentProposal({ ...currentProposal, ...updates });
+
+    // Update parent state if provided
+    if (onUpdateProposal) {
+      onUpdateProposal(currentProposal.id, updates);
     }
+
+    // Ensure backend persistence
+    try {
+      const updated = await leadsService.updateProposal(currentProposal.leadId, currentProposal.id, updates);
+      setCurrentProposal((prev) => (prev ? { ...prev, ...updated } : prev));
+    } catch {
+      // keep optimistic state
+    }
+
+    toast.success('Proposal sent to client!');
   };
 
-  const handleSaveAgreeFee = (updates: { agreeFee: number; paymentTypeFinal: string; dealDate: string }) => {
-    if (currentProposal && onUpdateProposal) {
+  const handleSaveAgreeFee = async (updates: { agreeFee: number; paymentTypeFinal: string; dealDate: string }) => {
+    if (!currentProposal) return;
+
+    // Optimistic update
+    setCurrentProposal({
+      ...currentProposal,
+      ...updates,
+      status: 'ACCEPTED'
+    });
+
+    // Persist via parent callback (keeps existing behavior/state sync)
+    if (onUpdateProposal) {
       onUpdateProposal(currentProposal.id, {
         ...updates,
         status: 'ACCEPTED'
       });
-      // Update local proposal state immediately
-      setCurrentProposal({
-        ...currentProposal,
+    }
+
+    // Ensure backend is updated even if parent is in mock mode / does not persist
+    try {
+      const updated = await leadsService.updateProposal(currentProposal.leadId, currentProposal.id, {
         ...updates,
         status: 'ACCEPTED'
       });
-      // Close AgreeFeeModal immediately
-      setShowAgreeFeeModal(false);
+      setCurrentProposal((prev) => (prev ? { ...prev, ...updated } : prev));
+    } catch {
+      // keep optimistic state
     }
+
+    setShowAgreeFeeModal(false);
   };
 
   const handleSubmitForApproval = () => {
@@ -159,10 +195,7 @@ export function ProposalDetailModal({
       onUpdateProposal(currentProposal.id, {
         status: 'WAITING_CEO_APPROVAL'
       });
-      setCurrentProposal({
-        ...currentProposal,
-        status: 'WAITING_CEO_APPROVAL'
-      });
+      setCurrentProposal((prev) => (prev ? { ...prev, status: 'WAITING_CEO_APPROVAL' } : prev));
       toast.success('Proposal submitted for approval!');
     }
   };
@@ -172,10 +205,7 @@ export function ProposalDetailModal({
       onUpdateProposal(currentProposal.id, {
         status: 'APPROVED'
       });
-      setCurrentProposal({
-        ...currentProposal,
-        status: 'APPROVED'
-      });
+      setCurrentProposal((prev) => (prev ? { ...prev, status: 'APPROVED' } : prev));
       toast.success('Proposal approved!');
       handleClose();
     }
@@ -194,11 +224,7 @@ export function ProposalDetailModal({
         status: 'REVISION' as any,
         revisionNotes: revisionNotes
       });
-      setCurrentProposal({
-        ...currentProposal,
-        status: 'REVISION' as any,
-        revisionNotes: revisionNotes
-      });
+      setCurrentProposal((prev) => (prev ? { ...prev, status: 'REVISION' as any, revisionNotes } : prev));
       toast.success('Proposal sent for revision!');
       handleClose();
     }
@@ -880,6 +906,15 @@ export function ProposalDetailModal({
                 </Button>
                 <Button
                   type="button"
+                  variant="outline"
+                  onClick={handleEdit}
+                  className="flex items-center gap-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit
+                </Button>
+                <Button
+                  type="button"
                   onClick={handleSendToClient}
                 >
                   Send to Client
@@ -895,14 +930,21 @@ export function ProposalDetailModal({
                 >
                   Close
                 </Button>
-                {!currentProposal.agreeFee && (
-                  <Button
-                    type="button"
-                    onClick={() => setShowAgreeFeeModal(true)}
-                  >
-                    Setujui Deal & Isi Agree Fee
-                  </Button>
-                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleEdit}
+                  className="flex items-center gap-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => setShowAgreeFeeModal(true)}
+                >
+                  Accept (Client) & Isi Agree Fee
+                </Button>
               </>
             ) : currentProposal.status === 'ACCEPTED' ? (
               <Button

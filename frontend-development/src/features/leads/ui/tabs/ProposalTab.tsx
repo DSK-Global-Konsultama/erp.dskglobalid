@@ -189,8 +189,10 @@ export function ProposalTab({ leadId, leads, proposals, readOnly = false, onAddP
           }}
           onUpdateProposal={readOnly ? undefined : (id, updates) => {
             onUpdateProposal(id, updates);
-            const updatedProposal = proposals.find(p => p.id === id);
-            if (updatedProposal) setSelectedProposal({ ...updatedProposal, ...updates });
+            setSelectedProposal((prev) => {
+              if (!prev || prev.id !== id) return prev;
+              return { ...prev, ...updates };
+            });
           }}
           readOnly={readOnly}
         />
