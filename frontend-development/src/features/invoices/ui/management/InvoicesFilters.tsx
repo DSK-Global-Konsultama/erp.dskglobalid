@@ -49,9 +49,12 @@ export function InvoicesFilters({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="waiting approval">Waiting Approval</SelectItem>
+              <SelectItem value="approve">Approve</SelectItem>
+              <SelectItem value="sent">Sent</SelectItem>
               <SelectItem value="paid">Paid</SelectItem>
-              <SelectItem value="overdue">Overdue</SelectItem>
+              <SelectItem value="revision">Revision</SelectItem>
             </SelectContent>
           </Select>
           <Select value={filterService} onValueChange={onFilterServiceChange}>

@@ -27,6 +27,5 @@ export {
   StafAdminInvoiceList,
 } from './ui/management';
 export { InvoiceDetailPage } from './pages';
-export { PaymentTermDetailDrawer } from './ui/drawers/PaymentTermDetailDrawer';
-export { InvoiceDetailModal } from './ui/modals/InvoiceDetailModal';
+export { PaymentTermDetailModal } from './ui/modals/PaymentTermDetailModal';
 export { PaymentTermStatusBadge } from './ui/shared/PaymentTermStatusBadge';

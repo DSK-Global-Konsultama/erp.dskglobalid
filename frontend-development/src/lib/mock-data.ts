@@ -73,15 +73,71 @@ export interface Project {
   progressPercentage?: number; // Progress percentage (0-100) yang diisi oleh PM
 }
 
+/** Status pembayaran per termin pada daftar termin (legacy, prefer processStatus/paymentStatus) */
+export type PaymentTermStatus =
+  | 'draft'
+  | 'waiting approval'
+  | 'approve'
+  | 'sent'
+  | 'paid'
+  | 'revision';
+
+/** Alur proses termin: draft -> upload -> submit CEO -> approve -> kirim klien */
+export type ProcessStatus =
+  | 'DRAFT'
+  | 'READY_FOR_APPROVAL'
+  | 'PENDING_CEO_APPROVAL'
+  | 'CEO_APPROVED'
+  | 'CEO_REJECTED'
+  | 'SENT_TO_CLIENT';
+
+/** Status pembayaran setelah dikirim ke klien */
+export type PaymentStatus = 'UNPAID' | 'PARTIAL' | 'PAID' | 'OVERDUE';
+
+export interface TermPayment {
+  id: string;
+  amount: number;
+  date: string;
+  proofUrl: string;
+  note?: string;
+}
+
 export interface PaymentTerm {
   id: string;
   termNumber: number;
   percentage: number;
   amount: number;
-  description: string; // e.g., "Saat EL", "Saat Selesai", "Progress 50%"
-  status: 'pending' | 'paid' | 'overdue';
-  dueDate?: string;
-  paidDate?: string;
+  description: string;
+  /** @deprecated Use processStatus + paymentStatus */
+  status?: PaymentTermStatus;
+  processStatus: ProcessStatus;
+  paymentStatus: PaymentStatus;
+  invoiceNumber?: string | null;
+  invoiceDate?: string | null;
+  sentAt?: string | null;
+  dueDate?: string | null;
+  invoiceFileUrl?: string | null;
+  ceoRejectReason?: string | null;
+  paidDate?: string | null;
+  paidAmount?: number;
+  payments?: TermPayment[];
+  /** Tax config */
+  vatEnabled?: boolean;
+  vatRate?: number;
+  vatMode?: 'EXCLUSIVE' | 'INCLUSIVE';
+  withholdingEnabled?: boolean;
+  withholdingRate?: number;
+  withholdingBase?: 'DPP' | 'GROSS';
+  subtotal?: number;
+  total?: number;
+  withholdingTax?: number;
+  /** Legacy / preview fields */
+  issueDate?: string;
+  billToName?: string;
+  billToAddress?: string;
+  invoiceDescription?: string;
+  taxRate?: number;
+  other?: number;
 }
 
 export interface Invoice {
@@ -92,15 +148,33 @@ export interface Invoice {
   /** Nama layanan (untuk kolom Layanan) */
   service?: string;
   clientName: string;
+  /** Nama perusahaan (fallback untuk ringkasan invoice) */
+  companyName?: string;
   /** Email kontak klien */
   clientEmail?: string;
   /** Telepon kontak klien */
   clientPhone?: string;
   /** Alamat klien */
   clientAddress?: string;
+  /** No. invoice (fallback untuk ringkasan) */
+  invoiceNumber?: string;
+  /** Tanggal terbit (fallback: createdDate) */
+  issueDate?: string;
+  /** Deskripsi invoice */
+  description?: string;
   paymentTerms: PaymentTerm[]; // flexible payment schedule
   totalAmount: number;
   createdDate: string;
+  /** Tax rate decimal atau persen (fallback ringkasan) */
+  taxRate?: number;
+  /** Withholding rate (fallback) */
+  withholdingRate?: number;
+  /** PPh dipotong (fallback) */
+  withholdingTax?: number;
+  /** Biaya lain (fallback) */
+  other?: number;
+  /** Total (fallback) */
+  total?: number;
 }
 
 export interface Meeting {
@@ -1447,9 +1521,20 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 15000000,
         description: 'Saat EL disetujui',
-        status: 'paid',
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'PAID',
         dueDate: '2025-10-10',
+        invoiceDate: '2025-10-05',
+        sentAt: '2025-10-05',
         paidDate: '2025-10-09',
+        paidAmount: 15000000,
+        invoiceNumber: 'INV-001/DSK Global/WD/2025',
+        invoiceFileUrl: '/files/inv-001-pt1.pdf',
+        payments: [{ id: 'pay1', amount: 15000000, date: '2025-10-09', proofUrl: '/proof/1.pdf' }],
+        vatEnabled: false,
+        withholdingEnabled: true,
+        withholdingRate: 0.02,
+        withholdingBase: 'DPP',
       },
       {
         id: 'PT002',
@@ -1457,8 +1542,14 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 15000000,
         description: 'Saat project selesai',
-        status: 'pending',
-        dueDate: '2025-12-15',
+        processStatus: 'DRAFT',
+        paymentStatus: 'UNPAID',
+        invoiceNumber: null,
+        invoiceDate: null,
+        sentAt: null,
+        dueDate: null,
+        invoiceFileUrl: null,
+        paidAmount: 0,
       },
     ],
     createdDate: '2025-10-05',
@@ -1480,9 +1571,15 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 22500000,
         description: 'Saat EL disetujui',
-        status: 'paid',
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'PAID',
         dueDate: '2025-10-12',
+        invoiceDate: '2025-10-08',
+        sentAt: '2025-10-08',
         paidDate: '2025-10-12',
+        paidAmount: 22500000,
+        invoiceNumber: 'INV-002/DSK Global/WD/2025',
+        invoiceFileUrl: '/files/inv-002-pt1.pdf',
       },
       {
         id: 'PT004',
@@ -1490,8 +1587,14 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 22500000,
         description: 'Saat project selesai',
-        status: 'pending', // Waiting final payment
-        dueDate: '2025-10-20',
+        processStatus: 'CEO_APPROVED',
+        paymentStatus: 'UNPAID',
+        dueDate: '2025-11-20',
+        invoiceDate: '2025-10-08',
+        sentAt: null,
+        invoiceNumber: 'INV-002/DSK Global/WD/2025',
+        invoiceFileUrl: '/files/inv-002-pt2.pdf',
+        paidAmount: 0,
       },
     ],
     createdDate: '2025-10-08',
@@ -1515,9 +1618,15 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 25000000,
         description: 'Saat EL disetujui',
-        status: 'paid',
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'PAID',
         dueDate: '2025-09-05',
+        invoiceDate: '2025-08-30',
+        sentAt: '2025-08-30',
         paidDate: '2025-09-05',
+        paidAmount: 25000000,
+        invoiceNumber: 'INV-003/DSK Global/AA/2025',
+        invoiceFileUrl: '/files/inv-003-pt1.pdf',
       },
       {
         id: 'PT006',
@@ -1525,8 +1634,14 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 25000000,
         description: 'Saat project selesai',
-        status: 'overdue', // Overdue
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'OVERDUE',
         dueDate: '2025-10-15',
+        invoiceDate: '2025-09-01',
+        sentAt: '2025-09-01',
+        invoiceNumber: 'INV-003/DSK Global/AA/2025',
+        invoiceFileUrl: '/files/inv-003-pt2.pdf',
+        paidAmount: 0,
       },
     ],
     createdDate: '2025-08-30',
@@ -1548,9 +1663,15 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 20000000,
         description: 'Saat EL disetujui',
-        status: 'paid',
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'PAID',
         dueDate: '2025-10-12',
+        invoiceDate: '2025-10-08',
+        sentAt: '2025-10-08',
         paidDate: '2025-10-12',
+        paidAmount: 20000000,
+        invoiceNumber: 'INV-004/DSK Global/AA/2025',
+        invoiceFileUrl: '/files/inv-004-pt1.pdf',
       },
       {
         id: 'PT008',
@@ -1558,8 +1679,10 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 20000000,
         description: 'Saat project selesai',
-        status: 'pending',
-        dueDate: '2025-10-28', // Dekat deadline
+        processStatus: 'DRAFT',
+        paymentStatus: 'UNPAID',
+        dueDate: '2025-10-28',
+        paidAmount: 0,
       },
     ],
     createdDate: '2025-10-08',
@@ -1583,9 +1706,15 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 12500000,
         description: 'Saat EL disetujui',
-        status: 'paid',
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'PAID',
         dueDate: '2025-07-28',
+        invoiceDate: '2025-07-20',
+        sentAt: '2025-07-20',
         paidDate: '2025-07-28',
+        paidAmount: 12500000,
+        invoiceNumber: 'INV-005/DSK Global/TC/2025',
+        invoiceFileUrl: '/files/inv-005-pt1.pdf',
       },
       {
         id: 'PT010',
@@ -1593,8 +1722,10 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 12500000,
         description: 'Saat project selesai',
-        status: 'pending', // Waiting final payment
+        processStatus: 'DRAFT',
+        paymentStatus: 'UNPAID',
         dueDate: '2025-09-30',
+        paidAmount: 0,
       },
     ],
     createdDate: '2025-07-20',
@@ -1616,9 +1747,15 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 15000000,
         description: 'Saat EL disetujui',
-        status: 'paid',
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'PAID',
         dueDate: '2025-09-15',
+        invoiceDate: '2025-09-10',
+        sentAt: '2025-09-10',
         paidDate: '2025-09-15',
+        paidAmount: 15000000,
+        invoiceNumber: 'INV-006/DSK Global/TC/2025',
+        invoiceFileUrl: '/files/inv-006-pt1.pdf',
       },
       {
         id: 'PT012',
@@ -1626,8 +1763,10 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 15000000,
         description: 'Saat project selesai',
-        status: 'pending',
-        dueDate: '2025-11-05', // Dekat deadline
+        processStatus: 'DRAFT',
+        paymentStatus: 'UNPAID',
+        dueDate: '2025-11-05',
+        paidAmount: 0,
       },
     ],
     createdDate: '2025-09-10',
@@ -1649,9 +1788,15 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 10000000,
         description: 'Saat EL disetujui',
-        status: 'paid',
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'PAID',
         dueDate: '2025-10-05',
+        invoiceDate: '2025-10-01',
+        sentAt: '2025-10-01',
         paidDate: '2025-10-05',
+        paidAmount: 10000000,
+        invoiceNumber: 'INV-007/DSK Global/TC/2025',
+        invoiceFileUrl: '/files/inv-007-pt1.pdf',
       },
       {
         id: 'PT014',
@@ -1659,8 +1804,14 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 10000000,
         description: 'Saat project selesai',
-        status: 'overdue', // Overdue
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'OVERDUE',
         dueDate: '2025-10-10',
+        invoiceDate: '2025-10-01',
+        sentAt: '2025-10-01',
+        invoiceNumber: 'INV-007/DSK Global/TC/2025',
+        invoiceFileUrl: '/files/inv-007-pt2.pdf',
+        paidAmount: 0,
       },
     ],
     createdDate: '2025-10-01',
@@ -1683,9 +1834,15 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 30000000,
         description: 'Saat EL disetujui',
-        status: 'paid',
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'PAID',
         dueDate: '2025-08-20',
+        invoiceDate: '2025-08-15',
+        sentAt: '2025-08-15',
         paidDate: '2025-08-20',
+        paidAmount: 30000000,
+        invoiceNumber: 'INV-008/DSK Global/TD/2025',
+        invoiceFileUrl: '/files/inv-008-pt1.pdf',
       },
       {
         id: 'PT016',
@@ -1693,9 +1850,15 @@ export const mockInvoices: Invoice[] = [
         percentage: 35,
         amount: 21000000,
         description: 'Progress 50% pengerjaan',
-        status: 'paid',
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'PAID',
         dueDate: '2025-09-20',
+        invoiceDate: '2025-08-15',
+        sentAt: '2025-08-15',
         paidDate: '2025-09-18',
+        paidAmount: 21000000,
+        invoiceNumber: 'INV-008/DSK Global/TD/2025',
+        invoiceFileUrl: '/files/inv-008-pt2.pdf',
       },
       {
         id: 'PT017',
@@ -1703,8 +1866,10 @@ export const mockInvoices: Invoice[] = [
         percentage: 15,
         amount: 9000000,
         description: 'Pelunasan saat project selesai',
-        status: 'pending',
+        processStatus: 'DRAFT',
+        paymentStatus: 'UNPAID',
         dueDate: '2025-11-20',
+        paidAmount: 0,
       },
     ],
     createdDate: '2025-08-15',
@@ -1726,9 +1891,15 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 40000000,
         description: 'Saat EL disetujui',
-        status: 'paid',
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'PAID',
         dueDate: '2025-09-25',
+        invoiceDate: '2025-09-20',
+        sentAt: '2025-09-20',
         paidDate: '2025-09-25',
+        paidAmount: 40000000,
+        invoiceNumber: 'INV-009/DSK Global/TD/2025',
+        invoiceFileUrl: '/files/inv-009-pt1.pdf',
       },
       {
         id: 'PT019',
@@ -1736,9 +1907,15 @@ export const mockInvoices: Invoice[] = [
         percentage: 35,
         amount: 28000000,
         description: 'Progress 50% pengerjaan',
-        status: 'paid',
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'PAID',
         dueDate: '2025-09-28',
+        invoiceDate: '2025-09-20',
+        sentAt: '2025-09-20',
         paidDate: '2025-09-27',
+        paidAmount: 28000000,
+        invoiceNumber: 'INV-009/DSK Global/TD/2025',
+        invoiceFileUrl: '/files/inv-009-pt2.pdf',
       },
       {
         id: 'PT020',
@@ -1746,9 +1923,15 @@ export const mockInvoices: Invoice[] = [
         percentage: 15,
         amount: 12000000,
         description: 'Pelunasan saat project selesai',
-        status: 'paid', // Sudah dibayar semua
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'PAID',
         dueDate: '2025-10-01',
+        invoiceDate: '2025-09-20',
+        sentAt: '2025-09-20',
         paidDate: '2025-10-01',
+        paidAmount: 12000000,
+        invoiceNumber: 'INV-009/DSK Global/TD/2025',
+        invoiceFileUrl: '/files/inv-009-pt3.pdf',
       },
     ],
     createdDate: '2025-09-20',
@@ -1770,9 +1953,15 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 35000000,
         description: 'Saat EL disetujui',
-        status: 'paid',
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'PAID',
         dueDate: '2025-10-15',
+        invoiceDate: '2025-10-10',
+        sentAt: '2025-10-10',
         paidDate: '2025-10-15',
+        paidAmount: 35000000,
+        invoiceNumber: 'INV-010/DSK Global/TD/2025',
+        invoiceFileUrl: '/files/inv-010-pt1.pdf',
       },
       {
         id: 'PT022',
@@ -1780,8 +1969,10 @@ export const mockInvoices: Invoice[] = [
         percentage: 35,
         amount: 24500000,
         description: 'Progress 50% pengerjaan',
-        status: 'pending',
-        dueDate: '2025-11-01', // Dekat deadline
+        processStatus: 'DRAFT',
+        paymentStatus: 'UNPAID',
+        dueDate: '2025-11-01',
+        paidAmount: 0,
       },
       {
         id: 'PT023',
@@ -1789,8 +1980,10 @@ export const mockInvoices: Invoice[] = [
         percentage: 15,
         amount: 10500000,
         description: 'Pelunasan saat project selesai',
-        status: 'pending',
+        processStatus: 'DRAFT',
+        paymentStatus: 'UNPAID',
         dueDate: '2025-11-20',
+        paidAmount: 0,
       },
     ],
     createdDate: '2025-10-10',
@@ -1813,9 +2006,15 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 27500000,
         description: 'Saat EL disetujui',
-        status: 'paid',
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'PAID',
         dueDate: '2025-08-30',
+        invoiceDate: '2025-08-25',
+        sentAt: '2025-08-25',
         paidDate: '2025-08-30',
+        paidAmount: 27500000,
+        invoiceNumber: 'INV-011/DSK Global/TP/2025',
+        invoiceFileUrl: '/files/inv-011-pt1.pdf',
       },
       {
         id: 'PT025',
@@ -1823,8 +2022,10 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 27500000,
         description: 'Saat project selesai',
-        status: 'pending',
+        processStatus: 'DRAFT',
+        paymentStatus: 'UNPAID',
         dueDate: '2025-11-15',
+        paidAmount: 0,
       },
     ],
     createdDate: '2025-08-25',
@@ -1846,9 +2047,15 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 32500000,
         description: 'Saat EL disetujui',
-        status: 'paid',
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'PAID',
         dueDate: '2025-09-20',
+        invoiceDate: '2025-09-15',
+        sentAt: '2025-09-15',
         paidDate: '2025-09-20',
+        paidAmount: 32500000,
+        invoiceNumber: 'INV-012/DSK Global/TP/2025',
+        invoiceFileUrl: '/files/inv-012-pt1.pdf',
       },
       {
         id: 'PT027',
@@ -1856,9 +2063,15 @@ export const mockInvoices: Invoice[] = [
         percentage: 50,
         amount: 32500000,
         description: 'Saat project selesai',
-        status: 'paid', // Sudah dibayar semua
+        processStatus: 'SENT_TO_CLIENT',
+        paymentStatus: 'PAID',
         dueDate: '2025-10-05',
+        invoiceDate: '2025-09-15',
+        sentAt: '2025-09-15',
         paidDate: '2025-10-05',
+        paidAmount: 32500000,
+        invoiceNumber: 'INV-012/DSK Global/TP/2025',
+        invoiceFileUrl: '/files/inv-012-pt2.pdf',
       },
     ],
     createdDate: '2025-09-15',

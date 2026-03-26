@@ -48,14 +48,14 @@ export function AdminDashboard({ onInvoiceDetailChange }: AdminDashboardProps) {
   }, [invoices]);
 
   const allTerms = invoices.flatMap((inv) => inv.paymentTerms);
-  const totalPending = allTerms.filter((t) => t.status === 'pending').length;
-  const totalOverdue = allTerms.filter((t) => t.status === 'overdue').length;
+  const totalPending = allTerms.filter((t) => t.status !== 'paid').length;
+  const totalOverdue = allTerms.filter((t) => t.status === 'revision').length;
   const totalPaid = allTerms.filter((t) => t.status === 'paid').length;
   const amountPending = allTerms
-    .filter((t) => t.status === 'pending')
+    .filter((t) => t.status !== 'paid')
     .reduce((sum, t) => sum + t.amount, 0);
   const amountOverdue = allTerms
-    .filter((t) => t.status === 'overdue')
+    .filter((t) => t.status === 'revision')
     .reduce((sum, t) => sum + t.amount, 0);
   const amountPaid = allTerms
     .filter((t) => t.status === 'paid')

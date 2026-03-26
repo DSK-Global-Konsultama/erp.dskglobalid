@@ -25,7 +25,7 @@ features/invoices/
 │   │   ├── AdminStats.tsx
 │   │   └── ActionRequiredAlert.tsx
 │   ├── modals/
-│   │   └── InvoiceDetailModal.tsx
+│   │   └── PaymentTermDetailModal.tsx
 │   └── shared/
 │       └── PaymentTermStatusBadge.tsx
 ├── index.tsx
@@ -70,8 +70,8 @@ features/invoices/
 ### `ui/management/ActionRequiredAlert.tsx`
 - Alert untuk project yang selesai dan perlu final tagging.
 
-### `ui/modals/InvoiceDetailModal.tsx`
-- Modal detail invoice + payment schedule + tombol Approve/Konfirmasi per term.
+### `ui/modals/PaymentTermDetailModal.tsx`
+- Modal detail termin pembayaran (slide dari kanan, animasi seperti ProposalFormModal).
 
 ### `ui/shared/PaymentTermStatusBadge.tsx`
 - Badge status termin: Pending, Paid, Overdue.
@@ -83,4 +83,4 @@ features/invoices/
 - **Admin:** Dashboard pakai `ActionRequiredAlert`, `AdminStats`, `InvoicesManagementPage` (mode payment, controlled invoices/filter).
 - **CEO / COO:** `InvoicesManagementPage` (mode invoice, canApprove hanya CEO).
 
-Import dari `features/invoices` (index): pages, api, selectors, AdminStats, ActionRequiredAlert, InvoiceDetailModal, PaymentTermStatusBadge.
+Import dari `features/invoices` (index): pages, api, selectors, AdminStats, ActionRequiredAlert, PaymentTermDetailModal, PaymentTermStatusBadge.

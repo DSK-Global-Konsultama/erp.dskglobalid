@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import type { Invoice, PaymentTerm } from '../../../lib/mock-data';
 import { PaymentTermStatusBadge } from '../ui/shared/PaymentTermStatusBadge';
-import { PaymentTermDetailDrawer } from '../ui/drawers/PaymentTermDetailDrawer';
+import { PaymentTermDetailModal } from '../ui/modals/PaymentTermDetailModal';
 
 export interface InvoiceDetailPageProps {
   invoice: Invoice;
@@ -37,23 +37,136 @@ export interface InvoiceDetailPageProps {
   canMarkAsPaid?: boolean;
 }
 
+function addDays(dateStr: string, days: number): string {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 export function InvoiceDetailPage({
-  invoice,
+  invoice: invoiceProp,
   onBack: _onBack,
   formatCurrency,
   formatDate,
   onMarkTermAsPaid,
   canMarkAsPaid = false,
 }: InvoiceDetailPageProps) {
+  const [invoice, setInvoice] = useState<Invoice>(invoiceProp);
   const [selectedTerm, setSelectedTerm] = useState<PaymentTerm | null>(null);
 
-  const paidAmount = invoice.paymentTerms
-    .filter((t: PaymentTerm) => t.status === 'paid')
-    .reduce((sum: number, t: PaymentTerm) => sum + t.amount, 0);
-  const remainingAmount = invoice.totalAmount - paidAmount;
+  useEffect(() => {
+    setInvoice(invoiceProp);
+  }, [invoiceProp.id, invoiceProp]);
+
+  const updateTerm = (termId: string, updater: (t: PaymentTerm) => PaymentTerm) => {
+    setInvoice((prev) => ({
+      ...prev,
+      paymentTerms: prev.paymentTerms.map((t) =>
+        t.id === termId ? updater(t) : t
+      ),
+    }));
+    setSelectedTerm((prev) =>
+      prev?.id === termId ? updater(prev) : prev
+    );
+  };
+
+  const handleUpdateTermMeta = (
+    _invoiceId: string,
+    termId: string,
+    patch: Partial<PaymentTerm>
+  ) => {
+    updateTerm(termId, (t) => ({ ...t, ...patch }));
+  };
+
+  const handleUploadInvoiceFile = (_invoiceId: string, termId: string, _file: File) => {
+    updateTerm(termId, (t) => ({
+      ...t,
+      processStatus: 'READY_FOR_APPROVAL' as const,
+      invoiceFileUrl: '/uploaded/invoice.pdf',
+    }));
+  };
+
+  const handleSubmitTermToCeo = (_invoiceId: string, termId: string) => {
+    updateTerm(termId, (t) => ({
+      ...t,
+      processStatus: 'PENDING_CEO_APPROVAL' as const,
+    }));
+  };
+
+  const handleSendTermToClient = (_invoiceId: string, termId: string) => {
+    const now = new Date().toISOString().slice(0, 10);
+    updateTerm(termId, (t) => ({
+      ...t,
+      processStatus: 'SENT_TO_CLIENT' as const,
+      sentAt: now,
+      invoiceDate: t.invoiceDate ?? now,
+      dueDate: t.dueDate ?? addDays(t.invoiceDate ?? now, 30),
+    }));
+  };
+
+  const handleUploadPaymentProof = (
+    _invoiceId: string,
+    termId: string,
+    payload: { amount: number; date: string; file: File; note?: string }
+  ) => {
+    updateTerm(termId, (t) => {
+      const prevPaid = t.paidAmount ?? 0;
+      const newPaid = prevPaid + payload.amount;
+      const grossTotal = t.amount;
+      const paymentStatus =
+        newPaid >= grossTotal
+          ? ('PAID' as const)
+          : newPaid > 0
+            ? ('PARTIAL' as const)
+            : ('UNPAID' as const);
+      const newPayment = {
+        id: `pay-${Date.now()}`,
+        amount: payload.amount,
+        date: payload.date,
+        proofUrl: URL.createObjectURL(payload.file),
+        note: payload.note,
+      };
+      return {
+        ...t,
+        paidAmount: newPaid,
+        paidDate: payload.date,
+        payments: [...(t.payments ?? []), newPayment],
+        paymentStatus,
+      };
+    });
+  };
+
+  const handleMarkTermAsPaid = (invId: string, termId: string) => {
+    onMarkTermAsPaid?.(invId, termId);
+    const term = invoice.paymentTerms.find((t) => t.id === termId);
+    if (term) {
+      const today = new Date().toISOString().slice(0, 10);
+      updateTerm(termId, (t) => ({
+        ...t,
+        paidAmount: t.amount,
+        paidDate: today,
+        paymentStatus: 'PAID' as const,
+        payments: [
+          ...(t.payments ?? []),
+          {
+            id: `pay-${Date.now()}`,
+            amount: t.amount,
+            date: today,
+            proofUrl: '',
+          },
+        ],
+      }));
+    }
+  };
+
+  const totalPaid = invoice.paymentTerms.reduce(
+    (sum: number, t: PaymentTerm) => sum + (t.paidAmount ?? 0),
+    0
+  );
+  const remainingAmount = invoice.totalAmount - totalPaid;
   const paymentProgress =
     invoice.totalAmount > 0
-      ? (paidAmount / invoice.totalAmount) * 100
+      ? (totalPaid / invoice.totalAmount) * 100
       : 0;
 
   return (
@@ -164,7 +277,7 @@ export function InvoiceDetailPage({
                       const isOverdue =
                         term.dueDate &&
                         new Date(term.dueDate) < new Date() &&
-                        term.status !== 'paid';
+                        term.paymentStatus !== 'PAID';
                       return (
                         <TableRow
                           key={term.id}
@@ -176,7 +289,7 @@ export function InvoiceDetailPage({
                           </TableCell>
                           <TableCell>
                             <div className="font-mono text-sm font-medium">
-                              {invoice.id}
+                              {term.invoiceNumber ?? '—'}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -207,7 +320,7 @@ export function InvoiceDetailPage({
                             </span>
                           </TableCell>
                           <TableCell>
-                            <PaymentTermStatusBadge status={term.status} />
+                            <PaymentTermStatusBadge term={term} />
                           </TableCell>
                           <TableCell className="text-right">
                             <Button
@@ -246,7 +359,7 @@ export function InvoiceDetailPage({
                     <p className="text-lg font-semibold text-green-600">
                       {
                         invoice.paymentTerms.filter(
-                          (t: PaymentTerm) => t.status === 'paid'
+                          (t: PaymentTerm) => t.paymentStatus === 'PAID'
                         ).length
                       }
                     </p>
@@ -258,7 +371,7 @@ export function InvoiceDetailPage({
                     <p className="text-lg font-semibold text-orange-600">
                       {
                         invoice.paymentTerms.filter(
-                          (t: PaymentTerm) => t.status !== 'paid'
+                          (t: PaymentTerm) => t.paymentStatus !== 'PAID'
                         ).length
                       }
                     </p>
@@ -292,9 +405,9 @@ export function InvoiceDetailPage({
                 <p className="text-sm text-muted-foreground mb-1">
                   Sudah Dibayar
                 </p>
-                <p className="text-lg font-semibold text-green-600">
-                  {formatCurrency(paidAmount)}
-                </p>
+                    <p className="text-lg font-semibold text-green-600">
+                      {formatCurrency(totalPaid)}
+                    </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">
@@ -330,7 +443,7 @@ export function InvoiceDetailPage({
                     <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
                       <CheckCircle className="h-4 w-4 text-green-600" />
                     </div>
-                    {invoice.paymentTerms.some((t) => t.status === 'paid') && (
+                    {invoice.paymentTerms.some((t) => t.paymentStatus === 'PAID') && (
                       <div className="w-0.5 h-full min-h-[8px] bg-gray-200 mt-1" />
                     )}
                   </div>
@@ -342,7 +455,7 @@ export function InvoiceDetailPage({
                   </div>
                 </div>
                   {invoice.paymentTerms
-                    .filter((t: PaymentTerm) => t.status === 'paid' && t.paidDate)
+                    .filter((t: PaymentTerm) => t.paymentStatus === 'PAID' && t.paidDate)
                     .map((term: PaymentTerm) => (
                     <div key={term.id} className="flex gap-3">
                       <div className="flex flex-col items-center">
@@ -355,10 +468,10 @@ export function InvoiceDetailPage({
                           Pembayaran Termin {term.termNumber}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {formatDate(term.paidDate)}
+                          {formatDate(term.paidDate ?? undefined)}
                         </p>
                         <p className="text-xs text-green-600 font-semibold">
-                          {formatCurrency(term.amount)}
+                          {formatCurrency(term.paidAmount ?? term.amount)}
                         </p>
                       </div>
                     </div>
@@ -369,17 +482,22 @@ export function InvoiceDetailPage({
         </div>
       </div>
 
-      {/* Termin Detail Drawer */}
+      {/* Termin Detail Modal */}
       {selectedTerm && (
-        <PaymentTermDetailDrawer
+        <PaymentTermDetailModal
           term={selectedTerm}
           invoice={invoice}
           open={!!selectedTerm}
           onOpenChange={(open) => !open && setSelectedTerm(null)}
           formatCurrency={formatCurrency}
           formatDate={formatDate}
-          onMarkAsPaid={onMarkTermAsPaid}
+          onMarkAsPaid={handleMarkTermAsPaid}
           canMarkAsPaid={canMarkAsPaid}
+          onUploadInvoiceFile={handleUploadInvoiceFile}
+          onSubmitTermToCeo={handleSubmitTermToCeo}
+          onSendTermToClient={handleSendTermToClient}
+          onUploadPaymentProof={handleUploadPaymentProof}
+          onUpdateTermMeta={handleUpdateTermMeta}
         />
       )}
     </div>

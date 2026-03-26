@@ -39,10 +39,10 @@ export function useBODStats() {
     const waitingPayment = mockProjects.filter((p: Project) => p.status === 'waiting-first-payment').length;
 
     const allPaymentTerms = mockInvoices.flatMap((inv: Invoice) => inv.paymentTerms);
-    const pendingPayments = allPaymentTerms.filter((t: any) => t.status === 'pending').length;
-    const overduePayments = allPaymentTerms.filter((t: any) => t.status === 'overdue').length;
+    const pendingPayments = allPaymentTerms.filter((t: any) => t.status !== 'paid').length;
+    const overduePayments = allPaymentTerms.filter((t: any) => t.status === 'revision').length;
     const totalPendingAmount = allPaymentTerms
-      .filter((t: any) => t.status === 'pending' || t.status === 'overdue')
+      .filter((t: any) => t.status !== 'paid')
       .reduce((sum: number, t: any) => sum + t.amount, 0);
 
     setStats({

@@ -1,7 +1,13 @@
 /**
- * Payment term status used in invoice management.
+ * Payment term status used in invoice management (daftar termin).
  */
-export type PaymentTermStatus = 'pending' | 'paid' | 'overdue';
+export type PaymentTermStatus =
+  | 'draft'
+  | 'waiting approval'
+  | 'approve'
+  | 'sent'
+  | 'paid'
+  | 'revision';
 
 /**
  * Overall invoice status derived from payment terms.

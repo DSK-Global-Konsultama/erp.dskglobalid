@@ -6,9 +6,9 @@ import type { InvoiceOverallStatus } from './types';
  */
 export function getInvoiceOverallStatus(invoice: Invoice): InvoiceOverallStatus {
   const allPaid = invoice.paymentTerms.every((t) => t.status === 'paid');
-  const anyOverdue = invoice.paymentTerms.some((t) => t.status === 'overdue');
+  const anyRevision = invoice.paymentTerms.some((t) => t.status === 'revision');
   if (allPaid) return 'Lunas';
-  if (anyOverdue) return 'Ada Overdue';
+  if (anyRevision) return 'Ada Overdue';
   return 'Dalam Proses';
 }
 
@@ -27,14 +27,14 @@ export interface InvoiceStats {
 export function getInvoiceStats(invoices: Invoice[]): InvoiceStats {
   const allTerms = invoices.flatMap((inv) => inv.paymentTerms);
   return {
-    totalPending: allTerms.filter((t) => t.status === 'pending').length,
-    totalOverdue: allTerms.filter((t) => t.status === 'overdue').length,
+    totalPending: allTerms.filter((t) => t.status !== 'paid').length,
+    totalOverdue: allTerms.filter((t) => t.status === 'revision').length,
     totalPaid: allTerms.filter((t) => t.status === 'paid').length,
     amountPending: allTerms
-      .filter((t) => t.status === 'pending')
+      .filter((t) => t.status !== 'paid')
       .reduce((sum, t) => sum + t.amount, 0),
     amountOverdue: allTerms
-      .filter((t) => t.status === 'overdue')
+      .filter((t) => t.status === 'revision')
       .reduce((sum, t) => sum + t.amount, 0),
     amountPaid: allTerms
       .filter((t) => t.status === 'paid')
