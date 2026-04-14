@@ -158,18 +158,16 @@ export function EngagementLetterUploadModal({
       return;
     }
 
-    // Here you would normally upload the file to a server
-    // For now, we'll just update the engagement letter with a placeholder
     if (onUpdateEngagementLetter) {
       const uploadDate = new Date().toISOString().split('T')[0];
       onUpdateEngagementLetter(currentEL.id, {
-        status: 'WAITING_APPROVAL',
+        status: 'WAITING_CEO_APPROVAL',
         createdAt: uploadDate
       });
       // Update local state to reflect the upload
       setCurrentEL({
         ...currentEL,
-        status: 'WAITING_APPROVAL',
+        status: 'WAITING_CEO_APPROVAL',
         createdAt: uploadDate
       });
       setSelectedFile(null);
@@ -422,7 +420,7 @@ export function EngagementLetterUploadModal({
               >
                 Close
               </Button>
-            ) : isCEOView && currentEL.status === 'WAITING_APPROVAL' ? (
+            ) : isCEOView && currentEL.status === 'WAITING_CEO_APPROVAL' ? (
               <>
                 <Button
                   type="button"
@@ -430,7 +428,7 @@ export function EngagementLetterUploadModal({
                   onClick={handleReject}
                   className="border-red-300 text-red-700 hover:bg-red-50"
                 >
-                  Reject
+                  Revision
                 </Button>
                 <Button
                   type="button"

@@ -29,7 +29,6 @@ const mapProposalStatusToPipelineStatus = (status) => {
       return 'NEED_ENGAGEMENT_LETTER';
     case 'SENT':
     case 'APPROVED':
-    case 'WAITING_APPROVAL':
     case 'WAITING_CEO_APPROVAL':
     case 'REVISION':
     case 'DRAFT':
@@ -44,7 +43,7 @@ const mapELStatusToPipelineStatus = (status) => {
       return 'EL_SIGNED';
     case 'SENT':
     case 'APPROVED':
-    case 'WAITING_APPROVAL':
+    case 'WAITING_CEO_APPROVAL':
     case 'REVISION':
     case 'DRAFT':
     default:
@@ -230,8 +229,9 @@ exports.getCEOApprovals = async (req, res) => {
     }
 
     if (wantEL) {
-      // EL module still uses WAITING_APPROVAL
-      clauses.push(`EXISTS (SELECT 1 FROM lead_engagement_letters e WHERE e.lead_id = l.id AND e.status = 'WAITING_APPROVAL')`);
+      clauses.push(
+        `EXISTS (SELECT 1 FROM lead_engagement_letters e WHERE e.lead_id = l.id AND e.status = 'WAITING_CEO_APPROVAL')`
+      );
     }
 
     if (wantHandover) {
@@ -435,7 +435,7 @@ exports.getLeadTrackerLeads = async (req, res) => {
       switch (status) {
         case 'DRAFT':
           return 'Not Uploaded';
-        case 'WAITING_APPROVAL':
+        case 'WAITING_CEO_APPROVAL':
           return 'Waiting CEO Approval';
         case 'APPROVED':
           return 'Approved';
@@ -454,7 +454,6 @@ exports.getLeadTrackerLeads = async (req, res) => {
       switch (status) {
         case 'DRAFT':
           return 'Draft';
-        case 'WAITING_APPROVAL':
         case 'WAITING_CEO_APPROVAL':
           return 'Waiting CEO Approval';
         case 'APPROVED':
@@ -536,7 +535,7 @@ exports.getLeadTrackerLeads = async (req, res) => {
         const substatus = getELSubstatusLabel(latestEL.status);
         const commercial_stage = (() => {
           switch (latestEL.status) {
-            case 'WAITING_APPROVAL':
+            case 'WAITING_CEO_APPROVAL':
               return 'EL_WAITING_CEO_APPROVAL';
             case 'APPROVED':
               return 'EL_APPROVED';
@@ -564,7 +563,6 @@ exports.getLeadTrackerLeads = async (req, res) => {
         const substatus = getProposalSubstatusLabel(latestProposal.status);
         const commercial_stage = (() => {
           switch (latestProposal.status) {
-            case 'WAITING_APPROVAL':
             case 'WAITING_CEO_APPROVAL':
               return 'PROPOSAL_WAITING_CEO_APPROVAL';
             case 'APPROVED':

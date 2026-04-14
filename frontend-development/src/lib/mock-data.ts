@@ -246,7 +246,6 @@ export interface Proposal {
   fileUrl?: string;
   status:
   | 'DRAFT'
-  | 'WAITING_APPROVAL'
   | 'WAITING_CEO_APPROVAL'
   | 'REVISION'
   | 'APPROVED'
@@ -267,7 +266,7 @@ export interface EngagementLetter {
   hasSubcon: boolean;
   paymentType: string;
   paymentTypeFinal?: string;
-  status: 'DRAFT' | 'WAITING_APPROVAL' | 'REVISION' | 'APPROVED' | 'SENT' | 'SIGNED';
+  status: 'DRAFT' | 'WAITING_CEO_APPROVAL' | 'REVISION' | 'APPROVED' | 'SENT' | 'SIGNED';
   clientName: string;
   createdAt?: string;
   signedDate?: string;

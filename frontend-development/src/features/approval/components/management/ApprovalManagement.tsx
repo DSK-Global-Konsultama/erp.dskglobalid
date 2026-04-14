@@ -94,7 +94,7 @@ export function ApprovalManagement() {
 
   const waitingNotulensi = notulensi.filter(n => n.status === 'WAITING_CEO_APPROVAL');
   const waitingProposals = proposals.filter(p => p.status === 'WAITING_CEO_APPROVAL');
-  const waitingELs = engagementLetters.filter(el => el.status === 'WAITING_APPROVAL');
+  const waitingELs = engagementLetters.filter(el => el.status === 'WAITING_CEO_APPROVAL');
   const waitingHandovers = handovers.filter(h => h.status === 'WAITING_CEO_APPROVAL');
 
   const handleUpdateNotulensi = async (id: string, updates: Partial<Notulensi>) => {

@@ -886,7 +886,7 @@ export function ProposalDetailModal({
                   Submit for Approval
                 </Button>
               </>
-            ) : currentProposal.status === 'WAITING_APPROVAL' ? (
+            ) : currentProposal.status === 'WAITING_CEO_APPROVAL' ? (
               <Button
                 type="button"
                 onClick={handleClose}

@@ -35,7 +35,8 @@ export function StatusChip({ status }: StatusChipProps) {
         return 'bg-yellow-100 text-yellow-700';
       case 'CEO_APPROVED':
         return 'bg-green-100 text-green-700';
-      case 'WAITING_APPROVAL':
+      case 'WAITING_CEO_APPROVAL':
+      case 'Waiting':
         return 'bg-yellow-100 text-yellow-700';
       case 'DEAL_WON':
         return 'bg-green-100 text-green-700';
@@ -45,9 +46,6 @@ export function StatusChip({ status }: StatusChipProps) {
         return 'bg-red-100 text-red-700';
       case 'DRAFT':
         return 'bg-gray-100 text-gray-600';
-      case 'WAITING_CEO_APPROVAL':
-      case 'Waiting':
-        return 'bg-yellow-100 text-yellow-700';
       case 'REVISION_REQUESTED':
         return 'bg-yellow-100 text-yellow-700';
       case 'APPROVED':

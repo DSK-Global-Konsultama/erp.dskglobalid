@@ -100,7 +100,7 @@ export function deriveLeadTrackerRowMeta(
     const substatus = getELSubstatusLabel(latestEL.status);
     const commercialStage: CommercialStage = (() => {
       switch (latestEL.status) {
-        case 'WAITING_APPROVAL':
+        case 'WAITING_CEO_APPROVAL':
           return 'EL_WAITING_CEO_APPROVAL';
         case 'APPROVED':
           return 'EL_APPROVED';
@@ -128,7 +128,6 @@ export function deriveLeadTrackerRowMeta(
     const substatus = getProposalSubstatusLabel(latestProposal.status);
     const commercialStage: CommercialStage = (() => {
       switch (latestProposal.status) {
-        case 'WAITING_APPROVAL':
         case 'WAITING_CEO_APPROVAL':
           return 'PROPOSAL_WAITING_CEO_APPROVAL';
         case 'APPROVED':
@@ -218,7 +217,7 @@ function getHandoverSubstatusLabel(status: Handover['status']): string {
 
 function getELSubstatusLabel(status: EngagementLetter['status']): string {
   switch (status) {
-    case 'WAITING_APPROVAL':
+    case 'WAITING_CEO_APPROVAL':
       return 'Waiting CEO Approval';
     case 'APPROVED':
       return 'Approved';
@@ -238,7 +237,6 @@ function getProposalSubstatusLabel(status: Proposal['status']): string {
   switch (status) {
     case 'DRAFT':
       return 'Draft';
-    case 'WAITING_APPROVAL':
     case 'WAITING_CEO_APPROVAL':
       return 'Waiting CEO Approval';
     case 'APPROVED':
